@@ -17,7 +17,7 @@ tab:Toggle({Id = "effects", Title = "Effects", Value = true, Callback = function
 end})
 ```
 
-The example pins the published `v1.5.0-rc.3` tag so later changes on `main` do not silently change the interface used by your script. This local guide describes rc.4 candidate fixes that are not in the pinned remote file. The repository is configured for the GitHub owner `Gabibou455`; check Releases for future publication status. The [remote example](gabibou_ui/remote_example.luau) includes clearer fetch and compile errors.
+The example pins the published `v1.5.0-rc.3` tag so later changes on `main` do not silently change the interface used by your script. This local guide describes rc.4 candidate fixes that are not in the pinned remote file. The repository is configured for the GitHub owner `Gabibou455`; check the [Releases page](https://github.com/Gabibou455/GabibouUI/releases) for published versions and downloads. Future releases use the stable ZIP asset name `GabibouUI.zip`; version details remain in each release tag, title, source, and changelog. The [remote example](gabibou_ui/remote_example.luau) includes clearer fetch and compile errors.
 
 Standard Roblox Studio client scripts use `ModuleScript` and `require`; they do not support this remote `loadstring` pattern. Follow the [Studio installation guide](gabibou_ui/README.md#installation-and-quick-start) for that environment.
 
@@ -50,7 +50,7 @@ Start with the [complete developer guide](gabibou_ui/DEVELOPER_GUIDE.md): one sm
 | [Publishing guide](PUBLISHING.md) | Repository, version tag and release steps |
 | [Mintlify documentation](gabibou_ui/mintlify/README.md) | English pages and navigation ready for a documentation site |
 
-Download the release ZIP and open `GabibouUI_Icons/index.html` locally to use the icon browser. Its HTML is an offline tool; the GitHub file view does not run it.
+Download `GabibouUI.zip` from the [GitHub Releases page](https://github.com/Gabibou455/GabibouUI/releases), then open `GabibouUI_Icons/index.html` locally to use the icon browser. Its HTML is an offline tool; the GitHub file view does not run it.
 
 ## Source layout
 

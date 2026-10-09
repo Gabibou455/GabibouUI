@@ -24,7 +24,9 @@ Keep unrelated development workspace files out of the repository. The published 
 
 ## Create a versioned release
 
-On GitHub, open **Releases** and choose **Draft a new release**. Create a new immutable tag (for example, `v1.5.0-rc.3`) from the reviewed commit, add release notes, and attach the matching ZIP archive. Mark a release candidate as a **pre-release**. Use a stable release label only after the supported environments and remaining items in `QUALITY.md` have been reviewed.
+On GitHub, open **Releases** and choose **Draft a new release**. Create a new immutable tag (for example, `v1.5.0-rc.3`) from the reviewed commit, add release notes, and attach the matching ZIP archive named `GabibouUI.zip`. Use this same asset filename for every future release so download instructions remain stable; identify each version through its Git tag, release title, source, and changelog. This naming convention applies to future releases and does not rename the existing rc.3 asset. Mark a release candidate as a **pre-release**. Use a stable release label only after the supported environments and remaining items in `QUALITY.md` have been reviewed.
+
+Link users to the [GitHub Releases page](https://github.com/Gabibou455/GabibouUI/releases) to choose and download a release. Keep this link version-neutral; do not use a `latest/download` URL, since pre-releases and GitHub's latest-release selection can change which asset it resolves to.
 
 After the release is available, verify the repository page and the pinned raw module URL from an external client before describing remote loading as confirmed. The tagged raw module URL for this candidate is:
 
