@@ -1,30 +1,39 @@
 ---
 title: Installation
-description: Load Gabibou UI in a supported client or Roblox Studio.
+description: Choose a supported client loader or set up Gabibou UI in Roblox Studio.
 ---
 
-## Recommended: one-line client loader
+A **client** is the part of a Roblox game that runs for one player. The interface must be created on the client so that player can see and use it. Choose one of the methods below.
 
-In a client environment that supports `loadstring` and `game:HttpGet`, paste this line:
+## Supported client environment: remote loader
+
+Use this method only in a client environment that supports both `loadstring` and `game:HttpGet`. Open that environment's client code editor, paste this line, and run it. The library file is [gabibou_ui.luau on GitHub](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui.luau):
 
 ```lua
 local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
 ```
 
-This follows updates on `main`. To keep a fixed version, replace `main` with a published release tag from [GitHub Releases](https://github.com/Gabibou455/GabibouUI/releases).
+This line downloads the current file from the repository's `main` branch and stores the library in `UI`. Put the window and control code from the [Quickstart](/getting-started/quickstart) on the next lines in the same script. When it runs, the window appears in that player's game.
 
-This loader needs both `loadstring` and `game:HttpGet`. Standard Roblox Studio does not provide this loading route.
+The `main` link follows repository changes. To pin a version, replace `main` in the URL with a published tag from [GitHub Releases](https://github.com/Gabibou455/GabibouUI/releases).
 
-## Roblox Studio: ModuleScript
+Standard Roblox Studio does not provide this loading route. Use the ModuleScript steps below in Studio.
 
-For a standard Studio project:
+## Roblox Studio: ModuleScript and LocalScript
 
-1. Add a `ModuleScript` named `GabibouUI` under `ReplicatedStorage` and paste in the standalone source file `gabibou_ui.luau`.
-2. Require it from a client `LocalScript`:
+A **ModuleScript** stores reusable code that another script can load with `require`. A **LocalScript** runs on one player's client. Set them up in Studio's Explorer panel:
+
+1. Find `ReplicatedStorage`. If it is not shown, open the **View** tab in Studio and turn on **Explorer**.
+2. Right-click `ReplicatedStorage`, choose **Insert Object**, then choose **ModuleScript**. Rename it `GabibouUI`.
+3. Open the standalone [`gabibou_ui.luau` source on GitHub](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui.luau), copy all of its contents, and paste them into the `GabibouUI` ModuleScript, replacing the starter code. Save the place.
+4. In Explorer, open `StarterPlayer`, then `StarterPlayerScripts`. Right-click `StarterPlayerScripts`, choose **Insert Object**, then choose **LocalScript**. This is where your interface code goes.
+5. Paste this loader at the top of that `LocalScript`:
 
 ```lua
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local UI = require(ReplicatedStorage:WaitForChild('GabibouUI'))
 ```
 
-Continue with the [quickstart](/getting-started/quickstart) to create your first window. Keep private credentials and key lists on the server; see [server validation](/examples/server-validation) for an example.
+6. Paste the window and control lines from the [Quickstart](/getting-started/quickstart) immediately below those two lines. Press **Play** in Studio to test. The window should appear in the game view; check **View > Output** to see printed callback messages when you use a control.
+
+Keep private credentials and key lists on the server, not in a LocalScript. See [server validation](/examples/server-validation) for a server-side example.

@@ -1,36 +1,27 @@
 ---
 title: Gabibou UI
-description: Build Roblox interfaces in Luau with a short, readable API.
+description: A beginner-friendly guide to building your first Roblox interface with Luau.
 ---
 
-Build a Roblox client interface with a window, tabs, and controls. Start with this short example:
+Gabibou UI helps you build menus for a Roblox game. A **window** is the main menu panel. A **tab** is a page inside that window. A **control** is something the player can use, such as a button or a toggle.
 
-```lua
-local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
-local window = UI:CreateWindow('My project')
-local tab = window:Tab('Home', 'home')
-tab:Toggle('Effects', function(enabled) print('Effects:', enabled) end)
-```
-
-<Frame caption="Real Roblox capture from v1.5.0-rc.5: the Graphite window, grouped navigation, and Overview page.">
-  ![Gabibou UI window showing the Graphite theme, navigation categories, and Overview page](images/ui-overview.png)
-</Frame>
-
-This loader needs a client environment that supports `loadstring` and `game:HttpGet`. For Roblox Studio, use a `ModuleScript`; see [Installation](/getting-started/installation). The `main` URL follows repository updates. Use a published release tag to pin a version.
+You will first load the library, then create a window and a tab, then add a control. The [Quickstart](/getting-started/quickstart) explains each line and shows what to expect.
 
 <CardGroup cols={2}>
-  <Card title="Build your first window" icon="rocket" href="/getting-started/quickstart">
-    Follow the short setup and learn how control values and callbacks work.
+  <Card title="Start with the Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Copy a complete example, run it, and learn what the callback does.
   </Card>
-  <Card title="Install the library" icon="download" href="/getting-started/installation">
-    Choose the remote loader or a Roblox Studio ModuleScript.
+  <Card title="Choose how to install" icon="download" href="/getting-started/installation">
+    Follow the steps for a supported client or for Roblox Studio.
   </Card>
-  <Card title="Add controls" icon="sliders" href="/customization/controls">
-    Check each control's options and callback value.
+  <Card title="Learn each control" icon="sliders" href="/customization/controls">
+    Add buttons, toggles, sliders, dropdowns, and other controls.
   </Card>
-  <Card title="Customize the interface" icon="palette" href="/customization/appearance-and-layout">
-    Change themes, layout, navigation, and icons.
+  <Card title="Change the look" icon="palette" href="/customization/appearance-and-layout">
+    Explore themes, window layout, tabs, and icons after the first example works.
   </Card>
 </CardGroup>
 
-Use [examples](/examples/quickstart) for a complete ModuleScript setup. For key checks, validate access and protected actions on your server; a client UI is not server authentication.
+Choose the installation guide before running code. The remote loader requires a client environment that supports `loadstring` and `game:HttpGet`. In standard Roblox Studio, put the library in a `ModuleScript` and load it from a `LocalScript`.
+
+For more complete projects, browse [examples](/examples/quickstart). If your interface protects an action or account, check that action on the server; a client interface alone cannot enforce access.
