@@ -1,10 +1,25 @@
 ---
-title: Key systems and Discord
-description: Add a client key-entry screen backed by server validation.
+title: Key systems and providers
+description: Connect a key gate to Luarmor, Vampauth, KeyAuth, a custom provider, or a server validator.
 ---
 
 <Warning>
 A key gate is client-side UI, not authentication. A client can be modified or bypassed. Keep keys and validation rules on the server, and check authorization for every protected server action.
+
+## Choose a provider
+
+`UI:KeyProvider(name, options)` adapts a provider SDK into the `Validate(key)` callback used by the gate. It does not fetch or initialize provider code for you: load the SDK explicitly in your environment, then pass the returned SDK object or callbacks. The [provider examples](/examples/key-providers) show complete setups for Luarmor, Vampauth, KeyAuth, and a custom validator.
+
+| Use this when… | Provider | Note |
+|---|---|---|
+| You use Luarmor's public key-check SDK | `Luarmor` | Only `KEY_VALID` accepts; use one SDK table per `ScriptId`. The adapter does not call `load_script()` or set `script_key`. |
+| You use the Vampauth client SDK | `Vampauth` | `AuthSecret` is present in the client script and can be inspected; obfuscation does not make it private. |
+| You already use a KeyAuth-compatible Lua SDK | `KeyAuth` | Supply your own init/license bridge. The current KeyAuth docs say their Lua example uses an older API version; see their [initialization](https://docs.keyauth.cc/api/getting-started/initialization), [license login](https://docs.keyauth.cc/api/getting-started/license/license-login), and [SDK examples](https://docs.keyauth.cc/overview/examples). |
+| You have another provider or endpoint | `Custom` | Write a `Validate(key)` callback that maps its success and rejection to Gabibou UI's boolean result. |
+
+The `GetKey` button is separate from validation. Set it to your provider's purchase, redeem, or key-request URL; Gabibou UI only offers the link for copying and does not open it or check that it works. For a Roblox experience, [the external server example](/examples/key-external-server) shows a generic HTTP bridge that keeps provider credentials on the server. The [server validation example](/examples/server-validation) shows an in-game key list instead.
+
+Provider SDKs in executor/client environments can be inspected or changed by the client. Do not treat an accepted gate as proof that a player may perform a protected server action. Never put a provider's admin API key or server-only credential in a distributed client script.
 </Warning>
 
 ## Key validator contract

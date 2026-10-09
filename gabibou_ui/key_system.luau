@@ -6,6 +6,135 @@ local KeyGate = {}
 KeyGate.__index = KeyGate
 local keyGateSerial = 0
 
+local function validate_provider_options(options, allowed, provider)
+	assert(type(options) == "table", provider .. " options must be a table")
+	for key in pairs(options) do
+		assert(allowed[key], provider .. " does not support option " .. tostring(key))
+	end
+end
+
+local function provider_message(value, fallback)
+	if type(value) == "string" and value ~= "" then return value end
+	if type(value) == "table" and type(value.message) == "string" and value.message ~= "" then
+		return value.message
+	end
+	return fallback
+end
+
+local luarmorScriptIds = setmetatable({}, {__mode = "k"})
+
+local function make_luarmor_provider(options)
+	validate_provider_options(options, {SDK = true, ScriptId = true}, "Luarmor")
+	local sdk, scriptId = options.SDK, options.ScriptId
+	assert(type(sdk) == "table", "Luarmor.SDK must be the explicitly loaded SDK table")
+	assert(type(sdk.check_key) == "function", "Luarmor.SDK.check_key must be a function")
+	assert(type(scriptId) == "string" and scriptId:match("^%x+$") ~= nil, "Luarmor.ScriptId must be the script ID from Luarmor")
+	local registeredScriptId = luarmorScriptIds[sdk]
+	assert(registeredScriptId == nil or registeredScriptId == scriptId,
+		"Use a separate Luarmor SDK instance for each ScriptId")
+	luarmorScriptIds[sdk] = scriptId
+	sdk.script_id = scriptId
+	return function(key)
+		if sdk.script_id ~= scriptId then
+			return false, "Luarmor SDK script ID changed. Try again."
+		end
+		local ok, result = pcall(sdk.check_key, key)
+		if not ok or type(result) ~= "table" or type(result.code) ~= "string" then
+			return false, "Luarmor validation failed. Try again."
+		end
+		if result.code == "KEY_VALID" then return true, result end
+		return false, provider_message(result, "Key not accepted")
+	end
+end
+
+local function make_vampauth_provider(options)
+	validate_provider_options(options, {SDK = true, ProjectId = true, AuthSecret = true, HWID = true}, "Vampauth")
+	local sdk = options.SDK
+	assert(type(sdk) == "table" and type(sdk.new) == "function", "Vampauth.SDK must be the explicitly loaded SDK module")
+	assert(type(options.ProjectId) == "string" and options.ProjectId ~= "", "Vampauth.ProjectId is required")
+	assert(type(options.AuthSecret) == "string" and options.AuthSecret ~= "", "Vampauth.AuthSecret is required")
+	assert(options.HWID == nil or type(options.HWID) == "string", "Vampauth.HWID must be a string")
+	local config = {projectId = options.ProjectId, authSecret = options.AuthSecret}
+	if options.HWID ~= nil then config.hwid = options.HWID end
+	local constructed, client = pcall(sdk.new, config)
+	assert(constructed and type(client) == "table" and type(client.Check) == "function",
+		"Vampauth SDK construction failed or did not return a Check client")
+	return function(key)
+		local ok, accepted, result = pcall(client.Check, client, key)
+		if not ok or type(accepted) ~= "boolean" then
+			return false, "Vampauth validation failed. Try again."
+		end
+		if accepted then return true, result end
+		return false, provider_message(result, "Key not accepted")
+	end
+end
+
+local function make_keyauth_provider(options)
+	validate_provider_options(options, {Initialize = true, License = true}, "KeyAuth")
+	assert(type(options.Initialize) == "function", "KeyAuth.Initialize must be a function")
+	assert(type(options.License) == "function", "KeyAuth.License must be a function")
+	local state = {Status = "new", Context = nil}
+
+	local function ensure_initialized()
+		if state.Status == "ready" then return true, state.Context end
+		if state.Status ~= "pending" then
+			state.Status = "pending"
+			task.spawn(function()
+				local called, initialized, context = pcall(options.Initialize)
+				if not called then
+					state.Status = "failed"
+					state.Context = nil
+					return
+				end
+				if initialized == true then
+					state.Context = context
+				elseif type(initialized) == "table" and initialized.success == true then
+					state.Context = initialized.context
+				else
+					state.Context = nil
+					state.Status = "failed"
+					return
+				end
+				state.Status = "ready"
+			end)
+		end
+		while state.Status == "pending" do task.wait(0.05) end
+		if state.Status ~= "ready" then return false, nil end
+		return true, state.Context
+	end
+
+	return function(key)
+		local initialized, context = ensure_initialized()
+		if not initialized then return false, "KeyAuth initialization failed. Try again." end
+		local called, result, detail = pcall(options.License, key, context)
+		if not called then return false, "KeyAuth validation failed. Try again." end
+		if result == true then return true, detail end
+		if result == false then return false, provider_message(detail, "Key not accepted") end
+		if type(result) == "table" and type(result.success) == "boolean" then
+			if result.success then return true, result.result or result end
+			return false, provider_message(result, "Key not accepted")
+		end
+		return false, "KeyAuth SDK returned an invalid response."
+	end
+end
+
+function Library:KeyProvider(name, options)
+	assert(type(name) == "string", "KeyProvider name must be a string")
+	local provider = string.lower(name)
+	if provider == "custom" then
+		validate_provider_options(options, {Validate = true}, "Custom key provider")
+		assert(type(options.Validate) == "function", "Custom.Validate must be a function")
+		return options.Validate
+	elseif provider == "luarmor" then
+		return make_luarmor_provider(options)
+	elseif provider == "vampauth" then
+		return make_vampauth_provider(options)
+	elseif provider == "keyauth" then
+		return make_keyauth_provider(options)
+	end
+	error("Unknown key provider: " .. name .. ". Choose Luarmor, Vampauth, KeyAuth, or Custom.")
+end
+
 local function key_text(value, fallback, limit, label)
     assert(value == nil or type(value) == "string", label .. " must be a string")
     local valid = Logic.text(value or fallback, limit)

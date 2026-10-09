@@ -16,6 +16,7 @@ For the short API, use `UI:CreateWindow("My project")`, `window:Tab("Home", "hom
 | `UI:Launch(spec)` | Coordinate optional key gate, loading, startup steps, and window creation. |
 | `UI:CreateLoader(options)` | Create a standalone loading screen. |
 | `UI:CreateKeySystem(options)` | Create a standalone key-entry gate. |
+| `UI:KeyProvider(name, options)` | Adapt a supported provider SDK or custom validator to the key gate's `Validate(key)` callback. |
 | `UI:DestroyAll()` | Destroy all windows, key gates, loaders, and launch sessions owned by this library instance. |
 | `UI:SetLayout(options)` | Set defaults for future windows. |
 | `UI:SetStyle(options)` / `UI:SetMotion(options)` | Set style and animation defaults for future windows. |
@@ -72,6 +73,17 @@ Create built-in controls with `Toggle`, `Slider`, `Dropdown`, `Input`, `Keybind`
 Controls expose `Get`, `Set(value, fireCallback)`, `SetTitle`, `SetDescription`, `SetVisible`, `SetEnabled`, `SetLayout`, `SetOrder`, `GetParts`, `Animate`, `On`, `Connect`, `Own`, and `Destroy`. Custom controls additionally expose `SetHeight`. `ColorPicker` exposes `GetColor()`.
 
 ## Key gate
+
+`UI:KeyProvider(name, options)` returns a `Validate(key)` callback for `CreateKeySystem` or `Launch`. Provider names are case-insensitive: `Luarmor`, `Vampauth`, `KeyAuth`, and `Custom`. SDK objects and callbacks are supplied explicitly; this method does not load third-party code. See [provider examples](/examples/key-providers) for exact option shapes.
+
+| Provider | Options | Acceptance |
+|---|---|---|
+| `Luarmor` | `{SDK = api, ScriptId = "..."}` | `api.check_key(key)` returns a table whose `code` is exactly `KEY_VALID`. |
+| `Vampauth` | `{SDK = Vampauth, ProjectId = "...", AuthSecret = "...", HWID? = "..."}` | `Vampauth.new({projectId, authSecret, hwid?})` creates a client; `client:Check(key)` returns `true, result` or `false, reason`. |
+| `KeyAuth` | `{Initialize = function() ..., License = function(key, context) ... end}` | Initialization returns `true, context` or `{success = true, context = ...}`; license validation returns a boolean plus result/message or a table with boolean `success`. |
+| `Custom` | `{Validate = function(key) ... end}` | Uses the supplied validator directly. |
+
+The Luarmor adapter reserves each SDK table for one `ScriptId`: the same table may be reused for that same ID, but a different ID needs a different SDK instance. It also fails closed if `sdk.script_id` changes after the provider is created. Provider errors fail closed and are converted to retryable status messages. KeyAuth initialization is lazy, shared across concurrent checks made through that provider callback, and retried after a failed initialization. Keep the `Validate` function's result contract: `true, result` accepts; `false, message` rejects. A client-side gate is not an authorization boundary; check protected actions on a trusted server.
 
 `UI:CreateKeySystem(options)` requires `Validate(key)` and optionally accepts `OnSuccess(gate, result)`, `OnCancel(gate)`, and `GetKey`. `GetKey` can be an HTTPS URL/string, `{Url, Text, Copy}`, a custom `function(gate)`, or `false` to disable. `gate:GetKey()` runs a single-flight key-link/custom action and returns a success boolean plus optional reason. It exposes `Submit(key)`, `Cancel()`, `Destroy()`, `Update(options)`, `GetParts()`, `CopyDiscordLink()`, and `GetKey()`. `GetParts()` includes `GetKeyButton`, `KeyLink`, and `KeyLinkStatus`.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0-rc.7
+
+- Add `UI:KeyProvider` adapters for explicitly supplied Luarmor and VampAuth SDKs, a KeyAuth SDK bridge, and custom validators while keeping `Validate` callbacks compatible.
+- Require a separate Luarmor SDK instance per `ScriptId` and fail closed if its ID changes after provider setup.
+- Share KeyAuth initialization between simultaneous checks, retry failed initialization, and reject ambiguous responses.
+- Add an optional server-side HTTP validation example that keeps provider credentials in Roblox Secrets and documents its provider-specific contract.
+- Document external provider setup and client-side credential limitations; no provider service is called by the library automatically.
+
 ## 1.5.0-rc.6
 
 - Add `ShowWatermark` and `SetWatermark` so developers can hide the library name/version while keeping the desktop hide-key hint and existing branding.

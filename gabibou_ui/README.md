@@ -1,8 +1,8 @@
-# Gabibou UI 1.5.0-rc.6
+# Gabibou UI 1.5.0-rc.7
 
 A Roblox interface library written in Luau. Load it in one line, create a window, and add controls using short constructors. The full options-table API remains available for layouts, animations, loading screens, key screens and other customization. Graphite is the default black, gray and white theme; the library includes 96 original icons in three variants.
 
-> This guide describes release candidate 1.5.0-rc.6. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart) and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
+> This guide describes release candidate 1.5.0-rc.7. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart), [external key-provider examples](https://gabibou-ui.mintlify.app/examples/key-providers), and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
 
 Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a complete feature map. Use [CUSTOMIZATION.md](CUSTOMIZATION.md) for advanced styling, custom controls, events, and animations.
 

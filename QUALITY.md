@@ -4,8 +4,9 @@ This release candidate was validated on 2026-10-09. Passing checks describe the 
 
 ## Verified
 
-- 1250 assertions across 19 runtime suites in the connected Windows Roblox client.
-- 42 isolated logic checks and 4 quick-start checks (1296 assertions total).
+- A full run passed 1258 assertions across 19 runtime suites in the connected Windows Roblox client; this run preceded the final Luarmor SDK ownership guard.
+- After that guard, 4 focused Luarmor SDK checks passed against the final rc.7 demo (same-ID reuse, validation, cross-ID rejection and changed-ID fail-closed behavior).
+- 42 isolated logic checks and 4 quick-start checks (1308 assertions across these runtime, logic and quick-start checks).
 - Standalone module and managed demo static analysis: zero errors and zero warnings. Official Luau compilation passed for the module and supplied examples.
 - Deterministic standalone rebuild; source hash: `888a5f4309cd90c8e50341db9181c81f931b66382892b92b9dd3efffccae1ddf`.
 - 96 original icon names and IDs; IDs 1-71 preserved. All three variants render natively.
@@ -18,7 +19,8 @@ This release candidate was validated on 2026-10-09. Passing checks describe the 
 - Short constructors for windows, tabs, sections and controls passed callback, value, input-validation and options-ownership checks. The original options-table API passed the same runtime suites.
 - Yielding Button, Changed and Connect callbacks stop when their owner is destroyed. Hide/Show preserves callbacks, and a callback that destroys its own control can finish its current invocation. Loader error handlers and restarted sequences stop on destruction. Launch does not reach Ready after its window is destroyed during construction, and cancellation after key acceptance does not call the key gate's OnCancel.
 - Get key URL/callback actions, manual-copy fallback, single-flight behavior, stale results and native clicks passed. The key layout has a 420 px default width and automatic heights of 332/394/404/462 px.
-- Mintlify configuration passed the provider's schema validator; all 21 MDX pages compiled with GFM support and valid frontmatter. Navigation and internal links passed local checks. All 48 Luau documentation blocks compiled, and the 12 blocks in the controls walkthrough ran together in the connected client. Hosted availability is checked separately after publication.
+- Luarmor and VampAuth adapters passed fake-SDK success, rejection and exception checks. The KeyAuth bridge passed fake initialization, shared initialization, retry and strict response-shape checks. These tests do not connect to provider services or validate live credentials.
+- Mintlify configuration passed local validation for 23 MDX routes with no broken links. The previous 48 Luau documentation blocks compiled; the 6 new provider/server-example blocks passed parse-only checks. The 12 blocks in the controls walkthrough ran together in the connected client. Hosted availability is checked separately after publication.
 - Remote example compiled the actual standalone source through `loadstring`, created working controls, cleaned up, and handled HTTP/compile/invalid-response errors. HTTP was supplied by a local test shim.
 
 | Runtime suite | Assertions | Result |
@@ -35,7 +37,8 @@ This release candidate was validated on 2026-10-09. Passing checks describe the 
 | icons | 727 | Passed |
 | layout | 30 | Passed |
 | notifications | 21 | Passed |
-| key_system | 66 | Passed |
+| key_system | 74 | Passed |
+| key_provider_guard | 4 | Passed on final rc.7 build |
 | launch | 34 | Passed |
 | native_access | 4 | Passed |
 | visual | 45 | Passed |

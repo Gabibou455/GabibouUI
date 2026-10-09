@@ -27,6 +27,8 @@
           "examples/quickstart",
           "examples/loading",
           "examples/key-discord",
+          "examples/key-providers",
+          "examples/key-external-server",
           "examples/server-validation",
           "examples/remote-loading"
         ]

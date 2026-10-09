@@ -1,0 +1,124 @@
+---
+title: Key provider examples
+description: Connect key gates to Luarmor, Vampauth, KeyAuth, or your own validator.
+---
+
+Each adapter returns the `Validate(key)` callback required by `UI:CreateKeySystem` and `UI:Launch`. The gate invokes it asynchronously. Return `true, result` to accept a key or `false, message` to reject it. `GetKey` is an optional, separate link for users who need to obtain a key.
+
+The examples assume the Gabibou UI module is already available in `ReplicatedStorage`. Provider SDK imports are shown explicitly where the provider documents a client SDK; the library never loads a provider automatically.
+
+## Luarmor
+
+The Luarmor adapter accepts the public key-check SDK's result only when `status.code == "KEY_VALID"`. It does not run the protected script or change `script_key`. Use a separate SDK table for each `ScriptId`; reusing one table for the same ID is allowed, but sharing it across different IDs is rejected. Do not change `api.script_id` after creating the provider; if another script changes it, validation fails closed.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+local Luarmor = loadstring(game:HttpGet("https://sdkapi-public.luarmor.net/library.lua"))()
+
+local validate = UI:KeyProvider("Luarmor", {
+    SDK = Luarmor,
+    ScriptId = "YOUR_LUARMOR_SCRIPT_ID",
+})
+
+local gate = UI:CreateKeySystem({
+    Title = "Enter your Luarmor key",
+    GetKey = {Url = "https://your-key-page.example", Text = "Get key"},
+    Validate = validate,
+    OnSuccess = function(_, status)
+        print("Key accepted", status.code)
+    end,
+})
+```
+
+Replace the script ID and key URL with your own. The SDK call can return provider status messages for rejected keys; SDK exceptions become a generic retry message. See the [Luarmor key-check documentation](https://docs.luarmor.net/luarmor-user-manual-and-f.a.q#-key-check-library) for the official SDK and status codes.
+
+## Vampauth
+
+Pass the documented Vampauth client SDK module, project ID, and authentication secret. The optional `HWID` value is omitted below.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+local Vampauth = loadstring(game:HttpGet("https://vampauth.com/client/vampauth.lua"))()
+
+local validate = UI:KeyProvider("Vampauth", {
+    SDK = Vampauth,
+    ProjectId = "YOUR_PROJECT_ID",
+    AuthSecret = "YOUR_CLIENT_AUTH_SECRET",
+})
+
+local gate = UI:CreateKeySystem({
+    Title = "Enter your Vampauth key",
+    GetKey = {Url = "https://your-key-page.example", Text = "Get key"},
+    Validate = validate,
+    OnSuccess = function(_, result)
+        print("Key accepted", result)
+    end,
+})
+```
+
+`AuthSecret` is embedded in the client script and can be inspected. Obfuscation does not make it a server-side secret. For a secret that must remain private, validate through a backend you control instead. See [Vampauth's client SDK](https://vampauth.com/client/vampauth.lua) and [documentation](https://docs.vampauth.com/llms.txt).
+
+## KeyAuth
+
+KeyAuth has no current official Lua SDK example verified by this guide. Its official SDK page notes that only C++, C#, and Python examples use API v1.3; listed Lua examples use older API versions. Use a Lua-compatible SDK you have reviewed, then map its initialization and license functions to this bridge. The bridge contract is real; `keyAuthAdapter` below represents your SDK wrapper and must be supplied by you.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+
+local validate = UI:KeyProvider("KeyAuth", {
+    Initialize = function()
+        -- Your SDK wrapper returns true, sessionContext on success.
+        -- Return false, message on failure; do not return a truthy error object.
+        return keyAuthAdapter.Initialize()
+    end,
+    License = function(key, sessionContext)
+        -- Map the SDK's license check to true, result or false, message.
+        return keyAuthAdapter.License(key, sessionContext)
+    end,
+})
+
+local gate = UI:CreateKeySystem({
+    Title = "Enter your KeyAuth license",
+    GetKey = {Url = "https://your-key-page.example", Text = "Get key"},
+    Validate = validate,
+})
+```
+
+Initialization runs lazily once for the provider callback and shares its context across checks. If it fails, the next submission can retry. License callbacks can return `true, result`, `false, message`, or `{success = true, result = ...}` / `{success = false, message = ...}`. A table without a boolean `success` field is rejected. Do not put a KeyAuth Seller API credential or other owner-only secret in a client script. See KeyAuth's [initialization](https://docs.keyauth.cc/api/getting-started/initialization), [license login](https://docs.keyauth.cc/api/getting-started/license/license-login), and [SDK examples](https://docs.keyauth.cc/overview/examples).
+
+## Custom validator
+
+Use `Custom` when your existing provider or service has a different API. This local example demonstrates the callback shape only; a hard-coded list in a client script is easy to inspect and bypass, so use it for previews rather than protecting a real service.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+local previewKeys = { ["demo-only"] = true }
+
+local validate = UI:KeyProvider("Custom", {
+    Validate = function(key)
+        if previewKeys[key] then
+            return true, {source = "preview"}
+        end
+        return false, "Key not accepted"
+    end,
+})
+
+local gate = UI:CreateKeySystem({
+    Title = "Preview key gate",
+    GetKey = false,
+    Validate = validate,
+    OnSuccess = function(_, result)
+        print("Accepted from", result.source)
+    end,
+})
+```
+
+For a Roblox experience that protects server actions, route validation to a server-side script and check authorization on each protected action. The [server validation example](/examples/server-validation) shows a `RemoteFunction` bridge; `HttpService` requests and provider credentials belong in a server script, not a `LocalScript`. The provider's request and response formats are specific to that service, so there is no universal HTTP key-check endpoint.
+
+## Failure behavior
+
+Provider callbacks fail closed: thrown SDK errors and invalid SDK responses reject the current key with a generic retry message. A slow or yielding check keeps the gate single-flight; use `gate:Cancel()` to cancel that attempt, or destroy the gate when the owning UI is removed. See [Key systems](/customization/key-systems) for the gate lifecycle, Discord options, and sizing.
