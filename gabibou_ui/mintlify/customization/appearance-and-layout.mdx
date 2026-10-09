@@ -47,6 +47,33 @@ Set defaults for new windows with `UI:SetLayout(options)`, or update one window 
 
 Tabs and controls accept a local `Layout` table. Tab keys include `Order`, `Width`, `Height`, and `IconSize`. Control keys include `Order`, `Width`, `Height`, and `Position` (`Left`, `Right`, `Below`). See [API reference](/reference/api) for the complete defaults and ranges.
 
+## Tab categories
+
+Categories group related tabs under a shared heading. Create a category from the window, then add tabs to it. A tab can still use the same controls and sections as any other tab.
+
+```lua
+local general = window:Category("General")
+local home = general:Tab("Home", "home")
+home:Toggle("Show tips", {Value = true})
+
+local farming = window:Category("Farming")
+local farm = farming:Tab("Farm", "farm")
+farm:Button("Start farming", function()
+    print("Farming started")
+end)
+```
+
+You can also write `window:Category({Title = "General"})`. Calling `window:Category` again with the same title returns the existing category, so tabs added through either call stay grouped together. Change a heading with `category:SetTitle("Basics")`; `category:Destroy()` removes that category and its tabs. A category heading is hidden when it has no tabs, including when filtering hides all of its tabs.
+
+For a single tab, pass its category in the options table. This creates the category automatically when needed and reuses a category with the same title:
+
+```lua
+local farm = window:Tab({Title = "Farm", Category = "Farming", Icon = "farm"})
+farm:Slider("Plot size", {Min = 1, Max = 10, Value = 3})
+```
+
+Category headings follow the navigation layout: they appear inline in the tab rail when tabs run across the top or bottom, and vertically to the left or right when tabs run down the side. On mobile, their placement follows `MobileTabPosition` (`Top` or `Bottom`).
+
 ## Window parts
 
 `window:GetParts()` exposes `Panel`, `Header`, `Tabs`, `Search`, `PageTitle`, `Pages`, `Footer`, `Reopen`, `Notifications`, `Minimize`, `Close`, and `Resize`.

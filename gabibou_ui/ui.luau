@@ -4,10 +4,10 @@ local TweenService=game:GetService("TweenService")
 local HttpService=game:GetService("HttpService")
 local GuiService=game:GetService("GuiService")
 local TextService=game:GetService("TextService")
-local Library={Version="1.5.0-rc.4",Windows={}}
+local Library={Version="1.5.0-rc.5",Windows={}}
 local style_for,motion_for,branding_for,layout_for,control_layout_for,tab_layout_for,notification_for,navigation_for
 Library.Themes={
-    Graphite={Background=Color3.fromRGB(15,15,17),Surface=Color3.fromRGB(26,26,30),Raised=Color3.fromRGB(38,38,43),Hover=Color3.fromRGB(50,50,56),Border=Color3.fromRGB(67,67,74),Text=Color3.fromRGB(245,245,248),Muted=Color3.fromRGB(158,158,169),Accent=Color3.fromRGB(242,242,247),AccentText=Color3.fromRGB(20,20,23),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
+    Graphite={Background=Color3.fromRGB(14,15,18),Surface=Color3.fromRGB(23,25,30),Raised=Color3.fromRGB(33,36,42),Hover=Color3.fromRGB(44,48,55),Border=Color3.fromRGB(54,59,67),Text=Color3.fromRGB(243,245,247),Muted=Color3.fromRGB(163,169,178),Accent=Color3.fromRGB(231,234,239),AccentText=Color3.fromRGB(21,23,27),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
     Aurora={Background=Color3.fromRGB(13,14,23),Surface=Color3.fromRGB(22,24,38),Raised=Color3.fromRGB(32,35,53),Hover=Color3.fromRGB(43,47,69),Border=Color3.fromRGB(62,67,91),Text=Color3.fromRGB(243,244,255),Muted=Color3.fromRGB(158,163,190),Accent=Color3.fromRGB(161,143,255),AccentText=Color3.fromRGB(18,15,30),Success=Color3.fromRGB(119,221,181),Danger=Color3.fromRGB(247,142,164)},
     Ember={Background=Color3.fromRGB(21,15,15),Surface=Color3.fromRGB(32,24,24),Raised=Color3.fromRGB(45,32,30),Hover=Color3.fromRGB(58,40,36),Border=Color3.fromRGB(82,59,52),Text=Color3.fromRGB(255,244,237),Muted=Color3.fromRGB(190,165,155),Accent=Color3.fromRGB(255,166,113),AccentText=Color3.fromRGB(33,20,14),Success=Color3.fromRGB(169,208,158),Danger=Color3.fromRGB(255,128,128)}
 }
@@ -310,7 +310,13 @@ function Window:_EnsureTabVisible(tab)
             local current=horizontal and self.Nav.CanvasPosition.X or self.Nav.CanvasPosition.Y
             local extent=horizontal and tab._button.AbsoluteSize.X or tab._button.AbsoluteSize.Y
             local available=horizontal and self.Nav.AbsoluteSize.X or self.Nav.AbsoluteSize.Y
-            if offset<current then current=offset
+            if horizontal and tab.Category and tab.Category.Root and tab.Category.Root.Parent==self.Nav then
+                local start=tab.Category.Root.AbsolutePosition.X-self.Nav.AbsolutePosition.X+self.Nav.CanvasPosition.X
+                local finish=offset+extent
+                if finish-start<=available then current=start
+                elseif offset<current then current=offset
+                elseif finish>current+available then current=finish-available end
+            elseif offset<current then current=offset
             elseif offset+extent>current+available then current=offset+extent-available end
             local total=horizontal and self.Nav.AbsoluteCanvasSize.X or self.Nav.AbsoluteCanvasSize.Y
             current=math.clamp(current,0,math.max(0,total-available))
@@ -341,7 +347,7 @@ function Window:SearchFor(query)
         local count=0
         for _,control in ipairs(tab._controls) do
             if not control.Destroyed then
-                local match=tab._visible and control._visible and control.Container._visible and Logic.matches(control._search.." "..tab.Title,query)
+                local match=tab._visible and control._visible and control.Container._visible and Logic.matches(control._search.." "..tab.Title.." "..(tab.Category and tab.Category.Title or ""),query)
                 if not match then self:_CancelInteraction(control.Root)end
                 control.Root.Visible=match
                 if match then count+=1 end
@@ -365,6 +371,7 @@ function Window:SearchFor(query)
         tab._button.Visible=tab._visible and (query=="" or count>0)
         if tab._button.Visible and not first then first=tab end
     end
+    self:_LayoutCategories()
     if self.CurrentTab and not self.CurrentTab._button.Visible and first then self:SelectTab(first) end
     if self.CurrentTab and not self.CurrentTab._visible then self.CurrentTab.Page.Visible=false;self.CurrentTab=nil end
     if not self.CurrentTab and first then self:SelectTab(first)end
@@ -434,6 +441,9 @@ function Window:Destroy()
     if self._cameraConnection then self._cameraConnection:Disconnect();self._cameraConnection=nil end
     for _,control in pairs(self.Controls) do control.Destroyed=true;disconnect(control._connections,control);self:_DisconnectEvents(control) end
     for _,tab in ipairs(self.Tabs) do tab.Destroyed=true;disconnect(tab._connections,tab);for _,section in ipairs(tab._sections) do section.Destroyed=true end end
+    for _,category in ipairs(self.Categories or {})do category.Destroyed=true;table.clear(category.Tabs)end
+    if self.Categories then table.clear(self.Categories)end
+    if self._categoryEntries then table.clear(self._categoryEntries)end
     for instance in pairs(table.clone(self._tweens)) do self:_CancelAnimation(instance) end
     for _,connection in pairs(self._bindingConnections)do connection:Disconnect()end
     table.clear(self._bindingConnections)
@@ -592,16 +602,25 @@ function Window:Tab(options)
     assert(options.Icon==nil or Library:GetIconName(options.Icon)~=nil,"Unknown tab icon: "..tostring(options.Icon))
     assert(options.IconVariant==nil or options.IconVariant=="Outline"or options.IconVariant=="Soft"or options.IconVariant=="Duotone","Invalid tab IconVariant")
     local tabLayout=tab_layout_for(options.Layout)
+    local category
+    if type(options.Category)=="string"then Library:_CategoryTitle(options.Category)
+    else category=self:_ResolveTabCategory(options.Category)end
     local tab=setmetatable({Window=self,Title=tostring(options.Title or "Tab"),_controls={},_sections={},_children={},_connections={},_visible=true,Destroyed=false},Container)
     tab.Tab=tab
     tab.Layout=tabLayout
     tab._button=self:_MakeTabButton(tab,options)
+    if self.Destroyed or category and category.Destroyed then
+        self:_ForgetTree(tab._button);tab._button:Destroy()
+        error("Window or category was destroyed while creating the tab")
+    end
+    if type(options.Category)=="string"then category=self:Category(options.Category)end
     tab._button.LayoutOrder=tabLayout.Order or #self.Tabs+1
     tab.Page=create("ScrollingFrame",{Name=tab.Title,Size=UDim2.fromScale(1,1),BackgroundTransparency=1,BorderSizePixel=0,CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,ScrollBarThickness=3,Visible=false},self.PageHost)
     padding(tab.Page,2);self:_Color(tab.Page,"ScrollBarImageColor3","Border");list(tab.Page,10,false)
     tab.Body=tab.Page
     tab._empty=self:_Label(tab.Page,"No matching controls.",13,"Muted");tab._empty.Visible=false;tab._empty.LayoutOrder=100000
     self.Tabs[#self.Tabs+1]=tab
+    self:_RegisterCategoryTab(tab,category)
     self:_Connect(tab._button.Activated,function()self:SelectTab(tab)end,tab)
     if not self.CurrentTab then self:SelectTab(tab) end
     self:_Layout();return tab
@@ -639,6 +658,7 @@ function Container:Destroy()
         for _,section in ipairs(table.clone(self._sections)) do section:Destroy() end
         disconnect(self._connections,self)
         for i,tab in ipairs(self.Window.Tabs) do if tab==self then table.remove(self.Window.Tabs,i);break end end
+        self.Window:_RemoveCategoryTab(self)
         self.Page:Destroy();self._button:Destroy()
         if self.Window.CurrentTab==self then self.Window.CurrentTab=nil;if self.Window.Tabs[1] then self.Window:SelectTab(1) end end
     else

@@ -1,37 +1,30 @@
 ---
 title: Installation
-description: Load Gabibou UI from GitHub or use it as a Roblox Studio module.
+description: Load Gabibou UI in a supported client or Roblox Studio.
 ---
 
-## Load from GitHub
+## Recommended: one-line client loader
 
-In a client environment that supports `loadstring` and `game:HttpGet`, use this one-line loader:
+In a client environment that supports `loadstring` and `game:HttpGet`, paste this line:
 
 ```lua
 local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
 ```
 
-The `main` URL follows repository updates. To pin your project to a release, replace `main` with that release's tag. See [GitHub Releases](https://github.com/Gabibou455/GabibouUI/releases) for published tags.
+This follows updates on `main`. To keep a fixed version, replace `main` with a published release tag from [GitHub Releases](https://github.com/Gabibou455/GabibouUI/releases).
 
-This loader requires an environment that provides both `loadstring` and `game:HttpGet`. It is not a Roblox Studio loading method.
+This loader needs both `loadstring` and `game:HttpGet`. Standard Roblox Studio does not provide this loading route.
 
-## Roblox Studio
+## Roblox Studio: ModuleScript
 
-For a standard Studio client script, install the standalone source as a `ModuleScript`:
+For a standard Studio project:
 
-1. Create a `ModuleScript` named `GabibouUI` under `ReplicatedStorage`.
-2. Copy the standalone library source into it.
-3. Require it from a client `LocalScript`:
+1. Add a `ModuleScript` named `GabibouUI` under `ReplicatedStorage` and paste in the standalone source file `gabibou_ui.luau`.
+2. Require it from a client `LocalScript`:
 
 ```lua
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local UI = require(ReplicatedStorage:WaitForChild('GabibouUI'))
 ```
 
-Do not put private credentials or key lists in a client module. The optional key validation example uses a `RemoteFunction` whose validation policy stays in `ServerScriptService`.
-
-## Documentation site
-
-Browse the [live Gabibou UI documentation](https://gabibou-ui.mintlify.app) for the [quickstart](/getting-started/quickstart), [controls](/customization/controls), [appearance and layout](/customization/appearance-and-layout), and [advanced features](/customization/loading-screens).
-
-The docs source lives in the `gabibou_ui/mintlify` directory. To preview it locally, install the Mintlify CLI using its [quickstart](https://mintlify.com/docs/quickstart), then run `mint dev` from that directory. For deployment, follow the [monorepo setup instructions](https://raw.githubusercontent.com/mintlify/docs/main/deploy/monorepo.mdx) and select `/gabibou_ui/mintlify` as the docs subdirectory in Mintlify Git Settings.
+Continue with the [quickstart](/getting-started/quickstart) to create your first window. Keep private credentials and key lists on the server; see [server validation](/examples/server-validation) for an example.

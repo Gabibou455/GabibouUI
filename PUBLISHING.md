@@ -24,20 +24,20 @@ Keep unrelated development workspace files out of the repository. The published 
 
 ## Create a versioned release
 
-On GitHub, open **Releases** and choose **Draft a new release**. Create a new immutable tag (for example, `v1.5.0-rc.4`) from the reviewed commit, add release notes, and attach the matching ZIP archive named `GabibouUI.zip`. Use this same asset filename for every future release so download instructions remain stable; identify each version through its Git tag, release title, source, and changelog. Mark a release candidate as a **pre-release**. Use a stable release label only after the supported environments and remaining items in `QUALITY.md` have been reviewed.
+On GitHub, open **Releases** and choose **Draft a new release**. Create a new immutable tag (for example, `v1.5.0-rc.5`) from the reviewed commit, add release notes, and attach the matching ZIP archive named `GabibouUI.zip`. Use this same asset filename for every future release so download instructions remain stable; identify each version through its Git tag, release title, source, and changelog. Mark a release candidate as a **pre-release**. Use a stable release label only after the supported environments and remaining items in `QUALITY.md` have been reviewed.
 
 Link users to the [GitHub Releases page](https://github.com/Gabibou455/GabibouUI/releases) to choose and download a release. Keep this link version-neutral; do not use a `latest/download` URL, since pre-releases and GitHub's latest-release selection can change which asset it resolves to.
 
 After the release is available, verify the repository page and the pinned raw module URL from an external client before describing remote loading as confirmed. The tagged raw module URL for this candidate is:
 
 ```text
-https://raw.githubusercontent.com/Gabibou455/GabibouUI/v1.5.0-rc.4/gabibou_ui.luau
+https://raw.githubusercontent.com/Gabibou455/GabibouUI/v1.5.0-rc.5/gabibou_ui.luau
 ```
 
 The one-line load is:
 
 ```lua
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/v1.5.0-rc.4/gabibou_ui.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/v1.5.0-rc.5/gabibou_ui.luau"))()
 ```
 
 This requires a client environment exposing those functions. For Studio, use the `ModuleScript` instructions in the API guide. Keep examples and release notes explicit about which checks have actually been run.

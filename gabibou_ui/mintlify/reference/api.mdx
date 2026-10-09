@@ -33,13 +33,14 @@ For the short API, use `UI:CreateWindow("My project")`, `window:Tab("Home", "hom
 
 Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (clamped to 320–1400), `Height = 590` (clamped to 300–1000), `ToggleKey = Enum.KeyCode.RightControl`, and `DisplayOrder = 90`. The default GUI parent is the local player's `PlayerGui`. `Responsive` defaults are `Breakpoint = 620`, `TouchTarget = 44`, and `Margin = 12`.
 
-`Tabs` is a dense, nonempty array. Each tab needs a nonempty `Title` and accepts `Icon`, `IconVariant`, `Layout`, `Controls`, and `Sections`. Each section has a `Title` and optional `Controls`. Each declarative control requires a unique, nonempty `Id` (maximum 96 characters, without control characters).
+`Tabs` is a dense, nonempty array. Each tab needs a nonempty `Title` and accepts `Category` (a category title string), `Icon`, `IconVariant`, `Layout`, `Controls`, and `Sections`. Tabs with the same `Category` title share a heading. Each section has a `Title` and optional `Controls`. Each declarative control requires a unique, nonempty `Id` (maximum 96 characters, without control characters).
 
 ## Window methods
 
 | Method | Purpose |
 |---|---|
 | `Tab(title, iconOrOptions?)` / `Tab(options)`, `SelectTab(tab)` | Add or select a tab. |
+| `Category(titleOrOptions)` | Get or create a named tab category. A category options table accepts `Title`; repeated calls for the same title return the same category. |
 | `SearchFor(query)` | Apply a search query to controls. |
 | `Get(id)`, `GetValues()`, `SetValues(values, fireCallbacks)` | Read controls and persistent values. |
 | `Hide()`, `Show()`, `Toggle()` | Change window visibility. |
@@ -52,6 +53,16 @@ Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (cl
 | `Animate(instance, properties, options)`, `BindColor(instance, property, token)` | Manage animations and theme-bound colors. |
 | `On(name, callback)`, `Connect(signal, callback)`, `Own(resource)`, `OnDestroy(callback)` | Subscribe and register owner-scoped cleanup. |
 | `Destroy()` | Release the window and its owned UI resources. |
+
+## Category methods
+
+`window:Category("General")` and `window:Category({Title = "General"})` get or create a category. `category:Tab(title, iconOrOptions?)` adds a tab to it. A tab can also declare `Category = "General"` in `window:Tab({Title = "Home", Category = "General"})` or in a declarative `Create` tab spec; a matching category is reused or created automatically.
+
+| Method | Purpose |
+|---|---|
+| `Tab(title, iconOrOptions?)` / `Tab(options)` | Add a tab to this category. |
+| `SetTitle(title)` | Rename the category heading. |
+| `Destroy()` | Destroy this category and all of its tabs. |
 
 ## Control and section methods
 

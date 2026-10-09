@@ -1,8 +1,8 @@
-# Gabibou UI 1.5.0-rc.4
+# Gabibou UI 1.5.0-rc.5
 
 A Roblox interface library written in Luau. Load it in one line, create a window, and add controls using short constructors. The full options-table API remains available for layouts, animations, loading screens, key screens and other customization. Graphite is the default black, gray and white theme; the library includes 96 original icons in three variants.
 
-> This guide describes release candidate 1.5.0-rc.4. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart) and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
+> This guide describes release candidate 1.5.0-rc.5. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart) and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
 
 Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a complete feature map. Use [CUSTOMIZATION.md](CUSTOMIZATION.md) for advanced styling, custom controls, events, and animations.
 
@@ -232,3 +232,16 @@ From the parent `script` directory, rebuild the module with:
 ```powershell
 node gabibou_ui/build.cjs
 ```
+
+## Tab categories
+
+Create a category, then add tabs through it. Categories share the same navigation rail and work with left, right, top and bottom navigation.
+
+```lua
+local workspace = window:Category("Workspace")
+local home = workspace:Tab("Home", "home")
+local tools = window:Category("Tools")
+local settings = tools:Tab("Settings", "settings")
+```
+
+Read the [explained category guide](https://gabibou-ui.mintlify.app/customization/appearance-and-layout#tab-categories) for search, renaming, removal and declarative examples.

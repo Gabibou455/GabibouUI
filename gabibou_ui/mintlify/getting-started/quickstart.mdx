@@ -1,28 +1,35 @@
 ---
 title: Quickstart
-description: Load Gabibou UI and build a window with a few calls.
+description: Load Gabibou UI, create a window, and add working controls.
 ---
 
-## Load the library
+## Build a window
 
-In a client environment that supports `loadstring` and `game:HttpGet`, load the current source with one line:
+This complete example uses the short API. The loader requires a client environment with `loadstring` and `game:HttpGet`.
 
 ```lua
 local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
-```
 
-The `main` URL follows repository updates. Use a published release tag in the URL when a project needs a fixed version. See [Installation](/getting-started/installation) for other setup options.
-
-## Create a window
-
-```lua
 local window = UI:CreateWindow('My project')
 local tab = window:Tab('Home', 'home')
-tab:Button('Hello', function()
+
+tab:Button('Say hello', function()
     print('Hello!')
+end)
+
+tab:Toggle('Effects', { Value = true }, function(enabled)
+    print('Effects enabled:', enabled)
 end)
 ```
 
-The same title-first style works for common controls:
+<Frame caption="The complete library window running in Roblox. The active Overview tab, grouped navigation, search field, and footer are visible.">
+  ![Complete Gabibou UI window in Roblox, with Overview selected and navigation grouped by category](../images/ui-overview.png)
+</Frame>
 
-`tab:Toggle('Effects', function(enabled) print('Effects:', enabled) end)` adds a toggle that starts off by default. Use `tab:Section('Settings')` to add a section. The window and tab can also take options tables. Buttons and toggles accept a callback or options table after the title; sliders, inputs, dropdowns, keybinds and color pickers accept an options table and optional callback. Paragraphs display text and do not take callbacks. Existing table-based calls remain supported. Browse [Controls](/customization/controls) and [Appearance and layout](/customization/appearance-and-layout) for optional configuration.
+`Value` sets a control's starting value. The toggle starts off when `Value` is omitted; its callback receives the new boolean when the player changes it. The callback does not run just because the control was created. A button callback runs when clicked and receives no value.
+
+The same controls accept an options table, for example `tab:Toggle({Title = 'Effects', Value = true, Callback = function(enabled) print(enabled) end})`. Use `tab:Section('Settings')` to group controls.
+
+For Roblox Studio, add the library as a `ModuleScript` in `ReplicatedStorage` and load it with `require`; see [Installation](/getting-started/installation). The `main` loader URL follows repository updates; use a published release tag to pin a version.
+
+Next: [Controls](/customization/controls) for control options, or [Appearance and layout](/customization/appearance-and-layout) to customize the window.

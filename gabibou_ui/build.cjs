@@ -5,7 +5,7 @@ const logic=fs.readFileSync(path.join(__dirname,'logic.luau'),'utf8');
 const ui=fs.readFileSync(path.join(__dirname,'ui.luau'),'utf8');
 const version=ui.match(/Version="([0-9]+\.[0-9]+\.[0-9]+(?:-[a-z0-9.]+)?)"/)?.[1];
 if(!version)throw Error('Library version missing or invalid');
-const extensions=['extensions.luau','icons.luau','navigation.luau','branding.luau','layout.luau','loading.luau','key_system.luau','convenience.luau','launch.luau','notifications.luau','easy.luau'].map(file=>fs.readFileSync(path.join(__dirname,file),'utf8')).join('\n');
+const extensions=['extensions.luau','icons.luau','navigation.luau','branding.luau','layout.luau','loading.luau','key_system.luau','convenience.luau','launch.luau','notifications.luau','easy.luau','categories.luau'].map(file=>fs.readFileSync(path.join(__dirname,file),'utf8')).join('\n');
 if(!/\nreturn Library\s*$/.test(ui))throw Error('UI export marker missing');
 const combined=ui.replace(/\nreturn Library\s*$/, '\n'+extensions+'\nreturn Library\n');
 const source='-- Gabibou UI v'+version+' | Original Roblox client GUI library\n-- No external UI or telemetry. Optional Roblox assets and avatar thumbnails.\nlocal Logic=(function()\n'+logic+'\nend)()\n'+combined;

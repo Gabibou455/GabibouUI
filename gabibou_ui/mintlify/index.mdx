@@ -3,46 +3,34 @@ title: Gabibou UI
 description: Build Roblox interfaces in Luau with a short, readable API.
 ---
 
-Gabibou UI is a Luau library for building Roblox client interfaces. Load it with one line in a client environment that supports `loadstring` and `game:HttpGet`, then create a window and add controls with a few calls.
+Build a Roblox client interface with a window, tabs, and controls. Start with this short example:
 
 ```lua
 local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
 local window = UI:CreateWindow('My project')
 local tab = window:Tab('Home', 'home')
-tab:Button('Hello', function() print('Hello!') end)
+tab:Button('Say hello', function() print('Hello!') end)
 ```
 
-The `main` URL follows repository updates. Use a published release tag to keep a project on a fixed version. Standard Roblox Studio client scripts use a `ModuleScript` and `require`; see [Installation](/getting-started/installation).
+<Frame caption="Gabibou UI running in Roblox, with grouped navigation and the Overview page open.">
+  ![Gabibou UI window showing the Graphite theme, navigation categories, and Overview page](images/ui-overview.png)
+</Frame>
+
+This loader needs a client environment that supports `loadstring` and `game:HttpGet`. For Roblox Studio, use a `ModuleScript`; see [Installation](/getting-started/installation). The `main` URL follows repository updates. Use a published release tag to pin a version.
 
 <CardGroup cols={2}>
   <Card title="Build your first window" icon="rocket" href="/getting-started/quickstart">
-    Load the library, create a window, and add controls.
+    Follow the short setup and learn how control values and callbacks work.
   </Card>
-  <Card title="Install the module" icon="download" href="/getting-started/installation">
-    Set up the remote loader or a Roblox Studio ModuleScript.
+  <Card title="Install the library" icon="download" href="/getting-started/installation">
+    Choose the remote loader or a Roblox Studio ModuleScript.
   </Card>
-  <Card title="Customize the interface" icon="sliders" href="/customization/appearance-and-layout">
-    Explore themes, layout, navigation, and responsive behavior.
+  <Card title="Add controls" icon="sliders" href="/customization/controls">
+    Check each control's options and callback value.
   </Card>
-  <Card title="Explore examples" icon="code" href="/examples/quickstart">
-    Browse examples for common startup flows.
+  <Card title="Customize the interface" icon="palette" href="/customization/appearance-and-layout">
+    Change themes, layout, navigation, and icons.
   </Card>
 </CardGroup>
 
-## What the library provides
-
-- Buttons, toggles, sliders, dropdowns, inputs, keybinds, color pickers, paragraphs, and custom controls.
-- Optional values, configuration snapshots, and caller-provided storage adapters.
-- Responsive layouts, navigation styles, and a catalogue of vector icons.
-- Custom themes, animations, event subscriptions, and cleanup ownership.
-- Loading screens, optional key validation UI, Discord invite controls, and startup orchestration.
-
-The key gate is client UI. Validate access and every protected action on your server. The library does not store secrets or provide server authentication.
-
-## Next steps
-
-- [Quickstart](/getting-started/quickstart)
-- [Controls](/customization/controls)
-- [Appearance and layout](/customization/appearance-and-layout)
-- [Loading screens](/customization/loading-screens)
-- [Key systems and Discord](/customization/key-systems)
+Use [examples](/examples/quickstart) for a complete ModuleScript setup. For key checks, validate access and protected actions on your server; a client UI is not server authentication.

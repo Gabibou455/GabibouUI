@@ -14,7 +14,7 @@
   "navigation": {
     "groups": [
       {
-        "group": "Getting started",
+        "group": "Start here",
         "pages": [
           "index",
           "getting-started/quickstart",
@@ -22,7 +22,17 @@
         ]
       },
       {
-        "group": "Customization",
+        "group": "Examples",
+        "pages": [
+          "examples/quickstart",
+          "examples/loading",
+          "examples/key-discord",
+          "examples/server-validation",
+          "examples/remote-loading"
+        ]
+      },
+      {
+        "group": "Customize",
         "pages": [
           "customization/controls",
           "customization/values-and-config",
@@ -36,22 +46,12 @@
         ]
       },
       {
-        "group": "Reference",
+        "group": "API reference",
         "pages": [
           "reference/api",
           "reference/customization",
           "reference/icon-catalogue",
           "reference/quality"
-        ]
-      },
-      {
-        "group": "Examples",
-        "pages": [
-          "examples/quickstart",
-          "examples/loading",
-          "examples/key-discord",
-          "examples/server-validation",
-          "examples/remote-loading"
         ]
       }
     ]

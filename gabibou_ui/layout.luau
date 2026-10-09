@@ -1,5 +1,5 @@
 -- Layout presets are ordinary tables. Advanced part overrides persist across reflow.
-Library.Layout={TabPosition="Left",MobileTabPosition="Top",SidebarWidth=176,TabWidth=128,TabHeight=44,TabGap=9,TabIconSize=20,ContentPadding=20,ContentGap=20,HeaderHeight=76,FooterHeight=42,SearchHeight=44,SearchGap=12,PageTitleHeight=40,ButtonWidth=112,ButtonHeight=44,RowGap=12,SectionGap=12,ControlsPosition="Right",Draggable=true,Resizable=true,ShowSearch=true,ShowFooter=true,ShowHeader=true,ShowPageTitle=true}
+Library.Layout={TabPosition="Left",MobileTabPosition="Top",SidebarWidth=176,TabWidth=96,TabHeight=44,TabGap=8,TabIconSize=20,ContentPadding=16,ContentGap=20,HeaderHeight=76,FooterHeight=42,SearchHeight=44,SearchGap=12,PageTitleHeight=40,ButtonWidth=112,ButtonHeight=44,RowGap=8,SectionGap=16,ControlsPosition="Right",Draggable=true,Resizable=true,ShowSearch=true,ShowFooter=true,ShowHeader=true,ShowPageTitle=true}
 local layoutRanges={SidebarWidth={96,360},TabWidth={64,400},TabHeight={44,96},TabGap={0,32},TabIconSize={12,40},ContentPadding={4,40},ContentGap={0,48},HeaderHeight={64,160},FooterHeight={32,96},SearchHeight={44,96},SearchGap={0,40},PageTitleHeight={28,80},ButtonWidth={58,400},ButtonHeight={44,120},RowGap={0,40},SectionGap={0,48}}
 local function finiteUDim2(value)
     return typeof(value)=="UDim2" and Logic.finite(value.X.Scale) and Logic.finite(value.Y.Scale) and Logic.finite(value.X.Offset) and Logic.finite(value.Y.Offset)
@@ -151,5 +151,6 @@ function Container:SetOrder(order)
     tab_layout_for({Order=order})
     if self.Tab==self then self.Layout.Order=order;self._button.LayoutOrder=order
     else self.Root.LayoutOrder=order*2 end
+    if self.Tab==self then self.Window:_LayoutCategories();self.Window:_EnsureTabVisible(self.Window.CurrentTab)end
     return self
 end

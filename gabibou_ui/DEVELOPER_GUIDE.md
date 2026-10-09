@@ -1,8 +1,8 @@
 # Gabibou UI Developer Guide
 
-Version: `1.5.0-rc.4` (release candidate)  
-Language: Luau  
-Runtime: Roblox client
+- Version: `1.5.0-rc.5` (release candidate)
+- Language: Luau
+- Runtime: Roblox client
 
 Load the library once, create a window, then add the controls you need. You do not need to paste the library's source into your script when using the remote loader. Your callbacks connect each control to your project logic.
 

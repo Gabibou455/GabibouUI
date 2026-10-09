@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0-rc.5
+
+- Group navigation tabs with `window:Category("Workspace")` and `category:Tab("Home", "home")`.
+- Category headings follow all four navigation positions, hide when empty or filtered, and participate in search.
+- Rename or destroy categories, or assign a named category through table and declarative tab options.
+- Add explained category examples and API references.
+
 ## 1.5.0-rc.4
 
 - Added short constructors for windows, tabs, sections and controls, while preserving the full options-table API.

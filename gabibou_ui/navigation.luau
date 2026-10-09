@@ -227,6 +227,7 @@ function Window:_LayoutNavigation(mobile)
     if self.Destroyed or not self.Nav then return end
     mobile = mobile == true
     local touchHeight = math.max(self.Responsive.TouchTarget,self.Layout.TabHeight)
+    self:_LayoutCategories()
 
     for _, tab in ipairs(self.Tabs) do
         local button, label, icon, indicator = tab._button, tab._label, tab._icon, tab._indicator

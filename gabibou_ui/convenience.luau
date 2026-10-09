@@ -106,6 +106,9 @@ local function validate_create_spec(spec)
         local tabPath = "spec.Tabs[" .. tabIndex .. "]"
         convenience_assert(type(tab) == "table", tabPath, "expected a tab table")
         convenience_assert(type(tab.Title) == "string" and tab.Title ~= "", tabPath .. ".Title", "expected a nonempty title")
+        if tab.Category~=nil then
+            validate_at(tabPath..".Category",function()Library:_CategoryTitle(tab.Category)end)
+        end
         convenience_assert(tab.Icon == nil or Library:GetIconName(tab.Icon)~=nil,tabPath..".Icon","unknown icon name or ID")
         convenience_assert(tab.IconVariant == nil or tab.IconVariant=="Outline"or tab.IconVariant=="Soft"or tab.IconVariant=="Duotone",tabPath..".IconVariant","invalid icon variant")
         validate_at(tabPath..".Layout",function()return tab_layout_for(tab.Layout)end)
@@ -188,7 +191,7 @@ local function create_interface(self,spec,onWindow)
         if loader then window:OnDestroy(function()destroy_loader(loader)end)end
         local created = 0
         for tabIndex, tabSpec in ipairs(spec.Tabs) do
-            local tab = window:Tab({Title = tabSpec.Title, Icon = tabSpec.Icon,IconVariant=tabSpec.IconVariant,Layout=tabSpec.Layout})
+            local tab = window:Tab({Title = tabSpec.Title, Icon = tabSpec.Icon,IconVariant=tabSpec.IconVariant,Layout=tabSpec.Layout,Category=tabSpec.Category})
             for index, controlSpec in ipairs(tabSpec.Controls or {}) do
                 local path = string.format("Tabs[%d].Controls[%d]", tabIndex, index)
                 build_control(tab, controlSpec, path)

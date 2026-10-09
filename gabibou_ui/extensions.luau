@@ -9,7 +9,7 @@ Library.Style = {
     WindowRadius = 16,
     SectionRadius = 12,
     ControlRadius = 8,
-    RowPadding = 14,
+    RowPadding = 12,
 }
 Library.Motion = {
     Duration = 0.16,
