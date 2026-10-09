@@ -4,7 +4,7 @@ local TweenService=game:GetService("TweenService")
 local HttpService=game:GetService("HttpService")
 local GuiService=game:GetService("GuiService")
 local TextService=game:GetService("TextService")
-local Library={Version="1.5.0-rc.3",Windows={}}
+local Library={Version="1.5.0-rc.4",Windows={}}
 local style_for,motion_for,branding_for,layout_for,control_layout_for,tab_layout_for,notification_for,navigation_for
 Library.Themes={
     Graphite={Background=Color3.fromRGB(15,15,17),Surface=Color3.fromRGB(26,26,30),Raised=Color3.fromRGB(38,38,43),Hover=Color3.fromRGB(50,50,56),Border=Color3.fromRGB(67,67,74),Text=Color3.fromRGB(245,245,248),Muted=Color3.fromRGB(158,158,169),Accent=Color3.fromRGB(242,242,247),AccentText=Color3.fromRGB(20,20,23),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
@@ -30,7 +30,35 @@ end
 local function list(instance,gap,horizontal)
     return create("UIListLayout",{Padding=UDim.new(0,gap or 10),SortOrder=Enum.SortOrder.LayoutOrder,FillDirection=horizontal and Enum.FillDirection.Horizontal or Enum.FillDirection.Vertical},instance)
 end
+local function spawn_owned(owner,callback)
+    if owner.Destroyed then return nil end
+    local tasks=owner._callbackTasks
+    if not tasks then tasks={};owner._callbackTasks=tasks end
+    local record={}
+    tasks[record]=true
+    return task.spawn(function()
+        record.Thread=coroutine.running()
+        local ok,problem=pcall(callback)
+        tasks[record]=nil
+        if not ok then error(problem,0)end
+    end)
+end
+local function cancel_callbacks(owner)
+    if not owner then return end
+    local tasks=owner._callbackTasks
+    if tasks then
+        for record in pairs(tasks)do
+            local thread=record.Thread
+            if thread and thread~=coroutine.running() and coroutine.status(thread)~="dead"then
+                pcall(task.cancel,thread)
+            end
+        end
+        table.clear(tasks)
+    end
+    owner._busy=false
+end
 local function disconnect(connections,owner)
+    cancel_callbacks(owner)
     for _,connection in ipairs(connections) do
         local ok,problem=pcall(function()connection:Disconnect()end)
         if not ok then
@@ -130,11 +158,11 @@ function Window:_Callback(control,...)
     if self.Destroyed or control.Destroyed or not control.Enabled or control._busy or type(control.Callback)~="function" then return end
     if control.Kind=="Button" then control._busy=true end
     local arguments=table.pack(...)
-    task.spawn(function()
+    spawn_owned(control,function()
         if self.Destroyed or control.Destroyed or not control.Enabled then control._busy=false;return end
         local ok,err=pcall(control.Callback,table.unpack(arguments,1,arguments.n))
         control._busy=false
-        if not ok and not self.Destroyed then
+        if not ok and not self.Destroyed and not control.Destroyed then
             self.LastError=tostring(err)
             warn("[Gabibou UI] "..control.Id..": "..tostring(err))
             self:Notify({Title="Callback failed",Content=tostring(err),Kind="error",Duration=6})

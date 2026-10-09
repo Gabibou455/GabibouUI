@@ -187,10 +187,10 @@ end
 
 function Window:_RunUser(owner, callback, ...)
     local arguments = table.pack(...)
-    task.spawn(function()
+    spawn_owned(owner, function()
         if self.Destroyed or owner.Destroyed or owner.Enabled == false then return end
         local ok, problem = pcall(callback, table.unpack(arguments, 1, arguments.n))
-        if not ok and not self.Destroyed then
+        if not ok and not self.Destroyed and not owner.Destroyed then
             self.LastError = tostring(problem)
             warn("[Gabibou UI] extension: " .. tostring(problem))
             self:Notify({Title = "Extension error", Content = tostring(problem), Kind = "error"})

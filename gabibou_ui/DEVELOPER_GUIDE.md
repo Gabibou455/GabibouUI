@@ -1,10 +1,10 @@
 # Gabibou UI Developer Guide
 
-Version: `1.5.0-rc.3`  
+Version: `1.5.0-rc.4` (local, unreleased candidate)  
 Language: Luau  
 Runtime: Roblox client
 
-This guide starts with a working window, then links each feature to its exact API. The library builds interface objects; your callbacks connect those controls to your own game or application logic.
+This guide describes the local 1.5.0-rc.4 candidate and its lifecycle corrections. The remote-loading example below remains pinned to the public `v1.5.0-rc.3` tag; that published example does not include local rc.4 changes. The library builds interface objects; your callbacks connect those controls to your own game or application logic.
 
 ## Contents
 
@@ -41,7 +41,7 @@ local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
 
 ### GitHub loadstring environments
 
-Some client environments provide both `loadstring` and `game:HttpGet`. In those environments, the pinned `1.5.0-rc.3` source can be loaded like this:
+Some client environments provide both `loadstring` and `game:HttpGet`. In those environments, the public `1.5.0-rc.3` source can be loaded like this:
 
 ```lua
 local source = game:HttpGet(
@@ -145,6 +145,8 @@ print(amount:Get())
 
 `control:Set(value, fireCallback)` validates the value. The callback runs only when `fireCallback == true` and the value changed. User interaction invokes the callback for value changes. `SetTitle`, `SetDescription`, `SetVisible`, `SetEnabled`, `SetLayout`, `SetOrder`, `GetParts`, and `Destroy` are also available while the control is alive.
 
+Library-managed callbacks belong to their control or window. Destroying that owner cancels its callback tasks and disconnects subscriptions registered with `On` or `Connect`. `Hide()` and `Show()` preserve callbacks and subscriptions. A callback that destroys its own owner is allowed to finish its current call. Tasks started directly by your code with `task.spawn` are outside the library's lifecycle; cancel them in your own cleanup path.
+
 For `Keybind`, clicking the control captures a new key. Assignment emits `Changed`, but does not run the action callback. Pressing the assigned key outside capture mode runs the callback.
 
 ## Read, set, and save values
@@ -239,7 +241,7 @@ Loader layout variants are `Compact` (default, height 216), `Centered` (height 3
 
 `Update` preserves the current `Height` when you change only `Variant`. To switch a default compact loader to the centered preset, set both fields: `loader:Update({Variant = "Centered", Height = 300})`.
 
-`loader:Run(steps)` runs a dense list of `{Title, Run}` entries asynchronously and advances only after each successful step. A failed step keeps the loader visible, stores a generic `LastError`, and calls `OnError(loader, title, index)` if supplied. `MinimumDuration` controls the minimum visible time; `ExitDuration` controls the closing fade; `OnComplete(loader)` runs after completion and destruction.
+`loader:Run(steps)` runs a dense list of `{Title, Run}` entries asynchronously and advances only after each successful step. A failed step keeps the loader visible, stores a generic `LastError`, and calls `OnError(loader, title, index)` if supplied. A yielding `OnError` callback belongs to the loader and `Destroy()` cancels it, including if it starts another `Run()` attempt. `MinimumDuration` controls the minimum visible time; `ExitDuration` controls the closing fade; `OnComplete(loader)` runs after completion and destruction.
 
 ```lua
 local loader = UI:CreateLoader({
@@ -364,13 +366,13 @@ local session = UI:Launch({
 -- Later: session:Cancel() or session:Destroy()
 ```
 
-The session exposes `Status`, `LastError`, `Gate`, `Loader`, `Window`, `Cancel()`, and `Destroy()`. Status moves through `WaitingForKey`, `Loading`, `Ready`, `Failed`, and `Destroyed`. `Cancel()` calls `OnCancel` once; `Destroy()` cleans up without the cancellation callback.
+The session exposes `Status`, `LastError`, `Gate`, `Loader`, `Window`, `Cancel()`, and `Destroy()`. Status moves through `WaitingForKey`, `Loading`, `Ready`, `Failed`, and `Destroyed`. The session's `OnCancel(session)` runs once when `Cancel()` is called or the gate is cancelled; `Destroy()` cleans up without that callback. The gate's `KeySystem.OnCancel(gate)` only runs when cancellation occurs before authentication succeeds. Cancelling after authentication still calls the session's `OnCancel(session)`, but not the gate callback. If the window is destroyed while a custom control builder is running, the session becomes `Destroyed`, cleans up its owned resources, and does not report `Ready` or call `OnReady`.
 
 ## Events and cleanup
 
 `window:On(name, callback)` subscribes to window events such as `TabChanged`, `VisibilityChanged`, `ThemeChanged`, `StyleChanged`, `MotionChanged`, `ReducedMotionChanged`, and `NavigationChanged`. `control:On(name, callback)` supports `Changed`, hover, activation, and focus events when the control exposes them. Both return a subscription with `Disconnect()`.
 
-`window:Connect(signal, callback)` and `control:Connect(signal, callback)` connect a Roblox signal in the owner's lifetime. `window:Own(resource)` and `control:Own(resource)` register an `RBXScriptConnection` or an object with `Disconnect()`. `window:OnDestroy(callback)` runs cleanup for external resources. The library cleans up owned connections, subscriptions, managed tweens, controls, and notifications when their owner is destroyed.
+`window:Connect(signal, callback)` and `control:Connect(signal, callback)` connect a Roblox signal in the owner's lifetime. `window:Own(resource)` and `control:Own(resource)` register an `RBXScriptConnection` or an object with `Disconnect()`. `window:OnDestroy(callback)` runs cleanup for external resources. The library cleans up owned connections, subscriptions, callback tasks, managed tweens, controls, and notifications when their owner is destroyed. `Hide()` and `Show()` only change visibility; they do not cancel callbacks. If one of a callback's own actions destroys its owner, the callback is allowed to return normally. Work started with your own `task.spawn` remains yours to cancel.
 
 ```lua
 local subscription = toggle:On("Changed", function(value, previous)
@@ -399,7 +401,7 @@ For reusable controls, `UI:RegisterComponent(name, builder)` registers a builder
 
 Start with the returned object and its public state: check `window:Get(id)`, `control:Get()`, the launch session's `Status` and `LastError`, or the loader's `Progress`, `Status`, and `LastError`. A failed declarative schema reports the failing path, such as `Tabs[1].Sections[2].Controls[1].Value`, before the window is created.
 
-User callbacks and custom cleanup run in protected calls so one failure does not stop the rest of the UI lifecycle. Window-owned callback and cleanup errors are recorded in `window.LastError` and reported with `warn`. Key validation and Launch expose generic error messages; they do not forward a submitted key or raw validation exception. A separate debug console or logging mode is not part of the public API.
+User callbacks and custom cleanup run in protected calls so one failure does not stop the rest of the UI lifecycle. While an owner is alive, window-owned callback and cleanup errors are recorded in `window.LastError` and reported with `warn`. Destroying an owner cancels its library-managed callback tasks; a callback that destroys its own owner may finish its active call, while callbacks that finish after destruction do not create stale notifications or update `LastError`. Key validation and Launch expose generic error messages; they do not forward a submitted key or raw validation exception. A separate debug console or logging mode is not part of the public API.
 
 Use the focused examples and the release's quality report when diagnosing library behavior. Do not treat a Studio preview as evidence that executor-only services such as `setclipboard`, `loadstring`, or filesystem functions exist in a standard client.
 

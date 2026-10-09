@@ -1,8 +1,8 @@
-# Gabibou UI 1.5.0-rc.3
+# Gabibou UI 1.5.0-rc.4
 
-A Roblox interface library written in Luau. Version 1.5.0-rc.3 includes 96 original vector icons in three styles, continuous rounded strokes, and an expanded mobile-friendly gallery. Navigation offers three variants, and buttons can display icons. The demo includes an interactive gallery and a visual Farm template. The library retains configurable layouts, notifications, the key screen, and `Launch` orchestration. Graphite remains the default black, gray, and white theme.
+A Roblox interface library written in Luau. The local, unreleased 1.5.0-rc.4 candidate includes lifecycle corrections for callbacks, loaders, launch sessions, and key cancellation. It also includes 96 original vector icons in three styles, continuous rounded strokes, and an expanded mobile-friendly gallery. Navigation offers three variants, and buttons can display icons. The demo includes an interactive gallery and a visual Farm template. The library retains configurable layouts, notifications, the key screen, and `Launch` orchestration. Graphite remains the default black, gray, and white theme.
 
-> The library is under active development, so its API may change. This guide describes implementation 1.5.0-rc.3.
+> The public `v1.5.0-rc.3` tag remains the version pinned by the loadstring example below. The local rc.4 lifecycle corrections described here are not present in that published source. The library is under active development, so its API may change.
 
 Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a complete feature map. Use [CUSTOMIZATION.md](CUSTOMIZATION.md) for advanced styling, custom controls, events, and animations.
 
@@ -80,7 +80,7 @@ local appliedCount = window:SetValues({effects = false, volume = 30}, false)
 
 With `fireCallbacks = true`, callbacks are dispatched in sorted ID order. They run in protected tasks, so their actual execution order is not guaranteed. Without this option, the update is silent. `ExportConfig`, `ImportConfig`, `SaveConfig`, and `LoadConfig` remain available for JSON profiles. The library does not access disk implicitly; provide a `Storage` adapter for persistence.
 
-Capturing a new key with `Keybind` updates its value and emits `Changed(newKey, oldKey)` without running the action `Callback`. The action runs when the assigned key is pressed outside of capture mode. Control callbacks are protected; an error is reported by notification and stored in `window.LastError`.
+Capturing a new key with `Keybind` updates its value and emits `Changed(newKey, oldKey)` without running the action `Callback`. The action runs when the assigned key is pressed outside of capture mode. Control callbacks are protected; an error is reported by notification and stored in `window.LastError` while its owner is alive. Destroying the control or window cancels its library-managed callback tasks. If a callback destroys its own owner, that active call may finish; callbacks that finish after the owner was destroyed do not create stale notifications or update `LastError`. `Hide()` and `Show()` preserve callbacks and subscriptions. Tasks started directly by your code with `task.spawn` remain your responsibility to cancel.
 
 ## Windows and profiles
 
@@ -96,7 +96,7 @@ The integrated loader inherits `Theme`, `Style`, `ReducedMotion`, and `Parent` f
 
 For a network task or game-specific preparation, create a separate loader with `UI:CreateLoader(options)`, call `SetProgress(ratio, status)` or `SetStatus(text)` according to actual progress, then call `Complete(status)` when the task is truly finished. `Destroy()` closes the loader manually without calling `OnComplete`.
 
-`MinimumDuration` sets the minimum time to show the loader before it closes after `Complete`. It does not guarantee that a download or network operation has finished. A percentage does not represent game loading unless your code connects it to a real measurement. The loader also exposes `Update(options)` for applying validated partial options and `Run(steps)` for running dense, sequential steps. `Run` updates progress after each successful step; an error stops the sequence and calls `OnError(loader, title, index)` without completing the loader.
+`MinimumDuration` sets the minimum time to show the loader before it closes after `Complete`. It does not guarantee that a download or network operation has finished. A percentage does not represent game loading unless your code connects it to a real measurement. The loader also exposes `Update(options)` for applying validated partial options and `Run(steps)` for running dense, sequential steps. `Run` updates progress after each successful step; an error stops the sequence and calls `OnError(loader, title, index)` without completing the loader. A yielding `OnError` callback belongs to the loader: `Destroy()` cancels it, including if it starts another `Run()` attempt.
 
 Loader options also include `Variant` (`Compact`, `Centered`, or `Minimal`), `ShowSubtitle`, `ShowPercentage`, `ShowLogo`, `ShowActivity`, `ProgressHeight` (2–12 px), `Height` (160–480 px), `Position`, `AnchorPoint`, `Padding`, `LogoSize`, and `BackgroundTransparency`. `Centered` defaults to 300 px high; other variants default to 216 px. At heights below 260 px, `Centered` uses compact layout. A partial `Update({Variant = "Centered"})` preserves the current height, so pass `Height = 300` too when switching a default compact loader to centered. `GetParts()` exposes the overlay, card, logo, text, progress elements, and a free `Content` frame. `SetPartLayout` and `ResetPartLayout` can reposition supported parts; `Own(resource)` registers cleanup for custom listeners and effects. See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for a complete customization example.
 
@@ -154,7 +154,7 @@ local session = UI:Launch({
 })
 ```
 
-The session status is `WaitingForKey`, `Loading`, `Ready`, `Failed`, or `Destroyed`. The session exposes `Gate`, `Loader`, `Window`, `Cancel()`, and `Destroy()`. Cancellation destroys owned resources; `OnCancel(session)` is called by `Cancel()` or when the gate is cancelled. `OnError(message, session)` receives a generic message on failure. `OnReady(window, session)` is called only after the window is created.
+The session status is `WaitingForKey`, `Loading`, `Ready`, `Failed`, or `Destroyed`. The session exposes `Gate`, `Loader`, `Window`, `Cancel()`, and `Destroy()`. Cancellation destroys owned resources; the launch session's `OnCancel(session)` runs once when `Cancel()` is called or when the gate is cancelled. The key gate's `KeySystem.OnCancel(gate)` applies only to cancellation before authentication succeeds; cancelling after successful authentication does not call the gate callback. If the window is destroyed while a custom control builder is running, the session becomes `Destroyed`, cleans up its owned resources, and does not report `Ready` or call `OnReady`. `OnError(message, session)` receives a generic message on failure. `OnReady(window, session)` is called only after the window is created.
 
 The gate is a **client-side** interface, not a server authentication mechanism. An exploiter can modify or bypass a `LocalScript`. `Validate` should ask the server to check access; keep keys and secret rules on the server, and also validate every protected action on the server. See [Roblox: Securing the client-server boundary](https://create.roblox.com/docs/scripting/security/client-server-boundary).
 

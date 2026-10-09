@@ -2,7 +2,7 @@
 
 A customizable Luau interface library with a black, gray and white default theme. Built for readable controls, flexible layouts and developers who want to make the interface their own.
 
-**Version 1.5.0-rc.3 is a release candidate.** Review [QUALITY.md](QUALITY.md) for its verified checks and known limits; a candidate is not a guarantee that the library is defect-free.
+**Version 1.5.0-rc.4 is a local, unreleased candidate.** This source includes four lifecycle corrections for library-managed callbacks, loader error handling, launch teardown, and key cancellation. The public `v1.5.0-rc.3` tag remains the version used in the loadstring example below; that remote source does not include these local rc.4 changes. Review [QUALITY.md](QUALITY.md) for this local candidate's verified checks and known limits.
 
 ## Load from GitHub
 
@@ -17,7 +17,7 @@ tab:Toggle({Id = "effects", Title = "Effects", Value = true, Callback = function
 end})
 ```
 
-The example pins `v1.5.0-rc.3` so later changes on `main` do not silently change the interface used by your script. This candidate is configured for the GitHub owner `Gabibou455`; check the repository's Releases page for the tag when publication is complete. The [remote example](gabibou_ui/remote_example.luau) includes clearer fetch and compile errors.
+The example pins the published `v1.5.0-rc.3` tag so later changes on `main` do not silently change the interface used by your script. This local guide describes rc.4 candidate fixes that are not in the pinned remote file. The repository is configured for the GitHub owner `Gabibou455`; check Releases for future publication status. The [remote example](gabibou_ui/remote_example.luau) includes clearer fetch and compile errors.
 
 Standard Roblox Studio client scripts use `ModuleScript` and `require`; they do not support this remote `loadstring` pattern. Follow the [Studio installation guide](gabibou_ui/README.md#installation-and-quick-start) for that environment.
 

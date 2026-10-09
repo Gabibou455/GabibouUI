@@ -1,45 +1,46 @@
-# Quality status: 1.5.0-rc.3
+# Quality status: 1.5.0-rc.4
 
 This release candidate was validated on 2026-10-09. Passing checks describe the tested build; they do not establish that every environment or interaction is defect-free.
 
 ## Verified
 
-- 1207 assertions across 19 runtime suites in the connected Windows Roblox client.
-- 42 isolated logic checks and 4 quick-start checks (1253 assertions total).
+- 1230 assertions across 19 runtime suites in the connected Windows Roblox client.
+- 42 isolated logic checks and 4 quick-start checks (1276 assertions total).
 - Standalone module and managed demo static analysis: zero errors and zero warnings. Official Luau compilation passed for the module and supplied examples.
-- Deterministic standalone rebuild; source hash: `ec71db12b826602f04bc06a9bdca8cdcd8d3cf5733c0450b44648746df85a26f`.
+- Deterministic standalone rebuild; source hash: `9c1d4a5ce2bf4c77873eb37d98460b1e86b51d2015a07dbbec138233ce4ace11`.
 - 96 original icon names and IDs; IDs 1-71 preserved. All three variants render natively.
 - 288 PNG/SVG pairs checked for valid files, dimensions, transparency, nonempty artwork and unclipped bounds. Exported geometry matches the current icon source.
 - Desktop and narrow 360 px layout assertions passed in the Roblox client. Resizing preserves the selected tab in the visible navigation area.
-- The enlarged key dialog was visually reviewed at desktop and narrow widths.
+- The key dialog was visually reviewed at desktop and narrow widths.
 - Native clicks exercised the Discord button with an injected copier, typed key entry and successful verification. Tests did not write to the system clipboard.
 - The key screen displays the local player's thumbnail by default and uses "Verify key". Custom images, monograms, avatar updates and pending-task cleanup passed.
 - Loading presets, persistent part overrides, custom animation ownership and external destruction were checked.
+- Yielding Button, Changed and Connect callbacks stop when their owner is destroyed. Hide/Show preserves callbacks, and a callback that destroys its own control can finish its current invocation. Loader error handlers and restarted sequences stop on destruction. Launch does not reach Ready after its window is destroyed during construction, and cancellation after key acceptance does not call the key gate's OnCancel.
 - Get key URL/callback actions, manual-copy fallback, single-flight behavior, stale results and native clicks passed. The key layout has a 420 px default width and automatic heights of 332/394/404/462 px.
 - Mintlify configuration passed the provider's schema validator; all 21 MDX pages compiled with GFM support and valid frontmatter. Navigation, internal links and five complete Luau examples passed local checks. No Mintlify-hosted preview or deployment was run.
 - Remote example compiled the actual standalone source through `loadstring`, created working controls, cleaned up, and handled HTTP/compile/invalid-response errors. HTTP was supplied by a local test shim.
 
 | Runtime suite | Assertions | Result |
 |---|---:|---|
-| key_system | 66 | Passed |
+| extensions | 67 | Passed |
+| launch | 34 | Passed |
 | engine | 51 | Passed |
 | regression | 10 | Passed |
-| extensions | 56 | Passed |
 | robustness | 15 | Passed |
 | input | 13 | Passed |
-| loading | 42 | Passed |
+| native_extensions | 9 | Passed |
 | branding | 18 | Passed |
 | navigation | 29 | Passed |
 | convenience | 30 | Passed |
 | icons | 727 | Passed |
 | layout | 30 | Passed |
-| native_extensions | 9 | Passed |
 | notifications | 21 | Passed |
-| launch | 27 | Passed |
+| key_system | 66 | Passed |
 | native_access | 4 | Passed |
 | visual | 45 | Passed |
 | native_visual | 6 | Passed |
 | remote | 8 | Passed |
+| loading | 47 | Passed |
 
 ## Session observations
 

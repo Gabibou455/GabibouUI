@@ -3,6 +3,8 @@ title: Events and lifecycle
 description: Subscribe to UI events and release resources with their owner.
 ---
 
+This page documents lifecycle behavior in the local, unreleased 1.5.0-rc.4 candidate. Remote-loading examples remain pinned to the public `v1.5.0-rc.3` tag; its source does not include the local rc.4 corrections.
+
 ## Window events
 
 `window:On(name, callback)` subscribes to a window event and returns a disconnectable subscription.
@@ -18,6 +20,8 @@ description: Subscribe to UI events and release resources with their owner.
 | `NavigationChanged` | `navigationTable` |
 
 Table arguments are copies. `MotionChanged` reports changes to tween policy; reduced motion has its own event.
+
+Library-managed callbacks belong to their window or control. Destroying that owner cancels its callback tasks and disconnects its event subscriptions (including `Changed`) and `Connect` handlers. Callbacks that finish after destruction do not create stale notifications or update `LastError`. `window:Hide()` and `window:Show()` only change visibility, so they preserve subscriptions and callbacks. A callback that destroys its own owner is allowed to finish its current call. Tasks started directly by your code with `task.spawn` are not managed by the library; cancel them in your own cleanup path.
 
 ## Control events
 
@@ -50,6 +54,12 @@ window:OnDestroy(function()
 end)
 ```
 
-`window:OnDestroy(callback)` is for external resources. The window cleans up its controls, subscriptions, connections, managed tweens, and notifications. Gameplay tasks started by your callback remain your responsibility; cancel them in an owner cleanup path.
+`window:OnDestroy(callback)` is for external resources. The window cleans up its controls, subscriptions, connections, callback tasks, managed tweens, and notifications. Tasks started directly by your callback remain your responsibility; cancel them in an owner cleanup path.
+
+## Loader and launch cleanup
+
+A yielding loader `OnError(loader, title, index)` callback belongs to its loader. Destroying the loader cancels that callback, including if it starts another `Run()` attempt.
+
+If a launch window is destroyed while a custom control builder is running, the launch session becomes `Destroyed` and cleans up its owned resources. It does not report `Ready` or call `OnReady`. After key authentication succeeds, cancelling the launch still calls the launch session's `OnCancel(session)` but does not call the gate's `KeySystem.OnCancel(gate)`.
 
 Destroy a control with `control:Destroy()` and a window with `window:Destroy()`. `UI:DestroyAll()` closes all windows, gates, loaders, and launch sessions created by that library instance.

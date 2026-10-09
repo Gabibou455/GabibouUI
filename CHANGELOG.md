@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0-rc.4 (Unreleased)
+
+- Cancel library-managed Button, `Changed`, and `Connect` callback tasks when their control or window owner is destroyed; suppress errors and notifications from stale callbacks.
+- Track yielding loader `OnError` callbacks and cancel them on `Destroy()`, including when an error callback starts another `Run()` attempt.
+- Mark a `Launch` session destroyed and clean it up if its window is destroyed during a custom build; do not report `Ready` or call `OnReady` afterward.
+- Do not call `KeySystem.OnCancel` when cancelling a launch session after key authentication has succeeded; the session-level `OnCancel` callback remains available.
+
 ## 1.5.0-rc.3
 
 - The access screen now shows the local player's avatar by default and uses "Verify key" for its primary action. Custom images and monograms remain configurable.

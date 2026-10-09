@@ -63,7 +63,7 @@ end
 
 function LaunchSession:Cancel()
     if self.Status == "Destroyed" or self.Status == "Failed" then return false end
-    if self._keyCancelCallback and not self._keyCancelCalled then
+    if self.Status == "WaitingForKey" and self.Gate and self._keyCancelCallback and not self._keyCancelCalled then
         self._keyCancelCalled = true
         local ok = launch_callback(self._keyCancelCallback, self.Gate, self)
         if not ok then self.LastError = "Key system callback failed" end
@@ -135,8 +135,10 @@ local function window_spec(spec)
 end
 
 local function launch_window_destroyed(session)
-    launch_destroy(session.Loader)
-    if session.Status=="Ready"then session.Status="Destroyed";Library.Launches[session]=nil end
+    if session.Status=="Loading" or session.Status=="Ready"then
+        session.Status="Destroyed"
+        launch_cleanup(session)
+    end
 end
 
 local function launch_run(session, spec, steps, useLoader)

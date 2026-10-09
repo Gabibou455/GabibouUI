@@ -272,7 +272,9 @@ function Loader:Run(steps)
                 self._running=false;self._runThread=nil
                 self.LastError="A loader step failed";self:SetStatus("Preparation could not be completed")
                 local onError=self.Options.OnError
-                if onError then pcall(onError,self,step.Title,index)end
+                if onError then
+                    spawn_owned(self,function()pcall(onError,self,step.Title,index)end)
+                end
                 return
             end
             self:SetProgress(index/#staged,step.Title)
