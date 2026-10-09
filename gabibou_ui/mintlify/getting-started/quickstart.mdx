@@ -1,0 +1,90 @@
+---
+title: Quickstart
+description: Create a responsive window with persistent controls.
+---
+
+This example creates a settings window with a toggle, slider, and value callback. It uses the declarative `UI:Create` API.
+
+## 1. Load the module
+
+Install the `GabibouUI` ModuleScript in `ReplicatedStorage`, then require it from a client `LocalScript`:
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+```
+
+See [Installation](/getting-started/installation) for Studio and loadstring setup.
+
+## 2. Create a window
+
+```lua
+local window = UI:Create({
+    Id = "MySettings",
+    Title = "My project",
+    Subtitle = "Settings",
+    Responsive = {Breakpoint = 620, TouchTarget = 44, Margin = 12},
+    Tabs = {
+        {
+            Title = "General",
+            Icon = "settings",
+            Sections = {
+                {
+                    Title = "Display",
+                    Controls = {
+                        {
+                            Type = "Toggle",
+                            Id = "effects",
+                            Title = "Effects",
+                            Value = true,
+                            Callback = function(enabled)
+                                print("Effects enabled:", enabled)
+                            end,
+                        },
+                        {
+                            Type = "Slider",
+                            Id = "volume",
+                            Title = "Volume",
+                            Min = 0,
+                            Max = 100,
+                            Step = 5,
+                            Value = 50,
+                        },
+                    },
+                },
+            },
+        },
+    },
+})
+
+window:Get("effects"):On("Changed", function(value, previous)
+    print("Effects changed from", previous, "to", value)
+end)
+
+window:SetValues({volume = 75}, false)
+```
+
+Every declarative control needs a unique, nonempty `Id`. `window:Get(id)` returns that control. `SetValues` validates the entire table before applying values.
+
+## Build incrementally
+
+Use `CreateWindow` when tabs or controls need to be added in response to application state:
+
+```lua
+local window = UI:CreateWindow({Title = "My project"})
+local tab = window:Tab({Title = "General", Icon = "settings"})
+local section = tab:Section({Title = "Display"})
+
+local enabled = section:Toggle({
+    Id = "effects",
+    Title = "Effects",
+    Value = true,
+    Callback = function(value)
+        print("Effects:", value)
+    end,
+})
+
+enabled:Set(false, true)
+```
+
+`Set(value, true)` calls the control callback if the value changes. See [Controls](/customization/controls) and [Values and configuration](/customization/values-and-config) for details.

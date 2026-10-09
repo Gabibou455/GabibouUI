@@ -1,0 +1,120 @@
+---
+title: Key systems and Discord
+description: Add a client key-entry screen backed by server validation.
+---
+
+<Warning>
+A key gate is client-side UI, not authentication. A client can be modified or bypassed. Keep keys and validation rules on the server, and check authorization for every protected server action.
+</Warning>
+
+## Key validator contract
+
+`UI:CreateKeySystem(options)` requires `Validate(key)`. The validator can yield and must return `true, result` for acceptance or `false, message` for rejection. `gate:Submit(key)` starts validation asynchronously. Raw validator exceptions and submitted keys are not shown in the gate's generic error status.
+
+```lua
+local gate = UI:CreateKeySystem({
+    Title = "Access key",
+    Subtitle = "Enter your key to continue.",
+    Logo = "Avatar",
+    MarkText = "G",
+    SubmitText = "Verify key",
+    Validate = function(key)
+        return validateKey:InvokeServer(key)
+    end,
+    OnSuccess = function(gate, result)
+        print("Access granted")
+    end,
+    OnCancel = function(gate)
+        print("Key entry cancelled")
+    end,
+})
+```
+
+The key gate shows the local player's avatar by default with `Logo = "Avatar"`. Set `Logo = false` to show `MarkText`, or pass an uploaded image URI such as `rbxassetid://123456`. `gate:GetParts()` exposes `MarkImage` and `MarkText` for further customization. The submit button defaults to `Verify key`.
+
+The default width is 420 px (280–600). Automatic heights are 332 px without Discord or GetKey, 394 px with Discord only, 404 px with GetKey only, and 462 px with both. `Height` accepts 280–560 px. When the height is automatic, adding or removing Discord/GetKey recalculates it; an explicitly supplied height remains fixed during updates. The layout gives the Verify action a full-width row when GetKey is present, followed by Get key and Cancel actions.
+
+## Get a key
+
+`GetKey` is disabled when omitted or set to `false`. A URL string or `{Url, Text, Copy}` table adds a button that attempts to copy a provider link. URLs must be HTTPS, include a host, contain no whitespace or control characters, and be at most 2048 bytes. `Text` defaults to `Get key` and is limited to 48 characters. The optional `Copy(url)` callback can provide clipboard support. If copying is unavailable, fails, or returns `false`, the gate shows the URL in a selectable field for manual copying. The UI never opens the link automatically.
+
+```lua
+GetKey = {
+    Url = "https://example.com/get-key", -- Replace with your provider URL.
+    Text = "Get key",
+    -- Optional clipboard implementation:
+    -- Copy = function(url) setclipboard(url); return true end,
+}
+```
+
+For a custom action, set `GetKey = function(gate) ... end`. Call `gate:GetKey()` to run it; this returns a success boolean and optional reason. The action is single-flight. Update/destroy invalidates any stale result from a yielding action. `gate:Update({GetKey = false})` removes the button. `GetParts()` exposes `GetKeyButton`, `KeyLink`, and `KeyLinkStatus`.
+
+When a window already exists in the same scope, a custom action can use it to show the provider instructions:
+
+```lua
+GetKey = function(gate)
+    window:Notify({
+        Title = "Get a key",
+        Content = "Visit the provider and return here to enter your key.",
+        Kind = "info",
+    })
+end
+```
+
+The built-in UI demo uses a custom callback to display its sample key, `demo`, in a notification. That callback is only a local preview; it does not replace server validation.
+
+## Discord invite button
+
+`Discord` can be an invite URL string or a table with `Url`, `Text`, `CopiedText`, `Color`, optional image `Logo`, and optional `Copy(url)` callback. Supported invite forms are `https://discord.gg/<code>` and `https://discord.com/invite/<code>`. The UI does not call Discord or check whether an invite is active.
+
+```lua
+Discord = {
+    Url = "https://discord.gg/your-server",
+    Text = "Copy our Discord invite",
+    CopiedText = "Invite copied",
+    Color = Color3.fromRGB(88, 101, 242),
+}
+```
+
+Set `Discord = false` to remove the button. `gate:CopyDiscordLink()` returns a boolean and an optional reason. Without a working clipboard function, the dialog shows a selectable link for manual copying. `gate:Update({Discord = false})` removes Discord while the gate is idle and open. `GetParts()` exposes the Discord button, icon, selectable link, and status label.
+
+## Gate lifecycle and options
+
+`gate:Cancel()` cancels the current attempt but leaves the dialog open. `gate:Destroy()` closes it and silences future callbacks. `gate:Update(options)` validates and applies partial options while key validation is not running; it refuses updates during validation or after completion/destruction. An update may invalidate a pending `GetKey` action and suppress its stale result.
+
+Key dialog text defaults include `Title = "Access key"`, `Subtitle = "Enter your key to continue."`, `Placeholder = "Enter key…"`, `InputLabel = "Access key"`, `SubmitText = "Verify key"`, `ValidatingText = "Verifying…"`, `CancelledText = "Cancelled"`, and `MarkText = "G"`. `MaxLength` defaults to 256 and accepts 1–4096. See [API reference](/reference/api) for the rest of the gate options.
+
+## Use `Launch` for startup
+
+`UI:Launch(spec)` combines declarative window creation with `KeySystem`, `Loading`, sequential `Steps`, and lifecycle callbacks. The gate appears first. On success the library runs each setup step, then builds the window.
+
+```lua
+local session = UI:Launch({
+    Id = "Settings",
+    Title = "Settings",
+    KeySystem = {
+        Validate = function(key)
+            return validateKey:InvokeServer(key)
+        end,
+        Discord = {Url = "https://discord.gg/your-server"},
+    },
+    Loading = {Title = "Preparing", Variant = "Centered", Height = 300},
+    Steps = {{Title = "Load preferences", Run = function(loader)
+        -- Load application data here.
+    end}},
+    Tabs = {{Title = "Home", Icon = "home"}},
+    OnReady = function(window, currentSession)
+        window:Notify({Title = "Ready", Content = "Setup is complete.", Kind = "success"})
+    end,
+    OnError = function(message)
+        warn(message)
+    end,
+    OnCancel = function(currentSession)
+        print("Startup cancelled", currentSession.Status)
+    end,
+})
+```
+
+The session exposes `Status`, `LastError`, `Gate`, `Loader`, `Window`, `Cancel()`, and `Destroy()`. `Cancel()` calls `OnCancel` once. `Destroy()` releases resources without calling that callback. Status values are `WaitingForKey`, `Loading`, `Ready`, `Failed`, and `Destroyed`.
+
+See [Discord key example](/examples/key-discord) and [server validation example](/examples/server-validation).

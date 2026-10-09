@@ -1,0 +1,33 @@
+---
+title: Installation
+description: Install Gabibou UI in Studio or load a published release.
+---
+
+## Roblox Studio
+
+1. Create a `ModuleScript` named `GabibouUI` under `ReplicatedStorage`.
+2. Copy the standalone module source into it.
+3. Require it from a client `LocalScript`:
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+```
+
+Do not put private credentials or key lists in the client module. The optional key validation example uses a `RemoteFunction` whose validation policy stays in `ServerScriptService`.
+
+## Loadstring environments
+
+Some client environments expose both `loadstring` and `game:HttpGet`. This example uses the pinned URL for the `v1.5.0-rc.3` candidate:
+
+```lua
+local url = "https://raw.githubusercontent.com/Gabibou455/GabibouUI/v1.5.0-rc.3/gabibou_ui.luau"
+local source = game:HttpGet(url)
+local UI = assert(loadstring(source))()
+```
+
+This is not a standard Roblox Studio loading method. The example is pinned to the project's `v1.5.0-rc.3` release candidate; check the repository's Releases page for its availability before using it. See [Remote loading example](/examples/remote-loading) for separate HTTP, compile, and result checks.
+
+## Mintlify documentation preview
+
+The docs source lives in the `gabibou_ui/mintlify` directory. Follow the official [Mintlify quickstart](https://mintlify.com/docs/quickstart) to install its CLI, then run `mint dev` from that directory. For deployment, follow the [monorepo setup instructions](https://raw.githubusercontent.com/mintlify/docs/main/deploy/monorepo.mdx) and select `/gabibou_ui/mintlify` as the docs subdirectory in Mintlify Git Settings. Saving those settings triggers deployment.

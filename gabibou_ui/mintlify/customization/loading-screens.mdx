@@ -1,0 +1,91 @@
+---
+title: Loading screens
+description: Show real startup progress and customize the loader layout.
+---
+
+## Choose an integration
+
+- `UI:Create({Loading = true})` shows the default loader while declarative tabs and controls are built.
+- `UI:Create({Loading = {...}})` uses loader options for schema-build progress.
+- `UI:CreateLoader(options)` creates a standalone loader for application work you control.
+- `UI:Launch(spec)` coordinates optional key validation, sequential steps, the loader, and the final window.
+
+The integrated `Create` loader reports controls constructed. Use a standalone loader or `Launch` steps to report data loading or other work. A displayed percentage represents only the progress your code reports.
+
+## Presets and options
+
+`Variant` accepts `Compact`, `Centered`, or `Minimal`. Compact is the default and uses a 216 px default height. Centered defaults to 300 px; it centers the logo and title and falls back to compact below 260 px of available card height. Minimal uses compact layout without the logo. `Height` may be set explicitly from 160 to 480 px.
+
+Other options include:
+
+| Option | Default | Notes |
+|---|---|---|
+| `Title` | `Gabibou UI` | Up to 80 characters |
+| `Subtitle` | `Preparing your interface` | Up to 240 characters |
+| `MarkText` | `G` | Up to 8 characters; used when no logo image is shown |
+| `Logo` | none | `Avatar`, image-content string, or `false` to clear |
+| `Width` | 420 | 280–560 px |
+| `Padding` | 24 | 12–40 px |
+| `LogoSize` | 46 | 24–80 px |
+| `ShowSubtitle` | `true` | Toggles the subtitle |
+| `ShowPercentage` | `true` | Toggles the numeric progress |
+| `ShowLogo` | `true` | Toggles the logo area |
+| `ShowActivity` | `true` | Toggles the moving activity indicator |
+| `ProgressHeight` | 4 | 2–12 px |
+| `MinimumDuration` | 0 | 0–10 seconds |
+| `ExitDuration` | 0.18 | 0–2 seconds |
+
+Other options are `Theme`, `Style`, `Position`, `AnchorPoint`, `BackgroundTransparency`, `Parent`, `DisplayOrder`, `ReducedMotion`, `OnComplete(loader)`, and `OnError(loader, title, index)`. The window's parent, theme, style, and reduced-motion setting are inherited by the integrated loader when omitted.
+
+## Report progress
+
+```lua
+local loader = UI:CreateLoader({
+    Title = "Starting Garden Tools",
+    Subtitle = "Loading preferences",
+    Variant = "Centered",
+    Height = 300,
+    Logo = "Avatar",
+    MinimumDuration = 0.5,
+})
+
+loader:SetProgress(0.25, "Reading profile")
+-- Perform the work represented by the next progress update.
+loader:SetProgress(0.75, "Preparing controls")
+loader:Complete("Ready")
+```
+
+`SetProgress(ratio, status)` accepts a ratio from 0 to 1 and optional status text. `SetStatus(text)` changes the status independently. `Complete(status)` sets progress to 100%, honors the remaining minimum display time, plays the exit transition, destroys the loader, then calls `OnComplete`. `Destroy()` cancels it without calling `OnComplete`.
+
+`Update(options)` merges a partial table with the current options and validates before applying it. The current height is preserved when only the variant changes. To change a default compact loader to centered, update both values:
+
+```lua
+loader:Update({Variant = "Centered", Height = 300})
+```
+
+`loader:Run(steps)` accepts a nonempty dense array of `{Title, Run}` entries. Each step runs sequentially and may yield. Progress advances after a step returns successfully. A failure stops the sequence, leaves the loader open, sets a generic `LastError`, and calls `OnError(loader, title, index)` when supplied. Call `Run` only once at a time.
+
+## Compose a custom loading screen
+
+`loader:GetParts()` returns `Overlay`, `Card`, `Logo`, `LogoImage`, `LogoText`, `Title`, `Subtitle`, `Status`, `Percentage`, `Track`, `Fill`, `Activity`, and `Content`. `Content` is a free frame between the heading and status area.
+
+```lua
+local loader = UI:CreateLoader({Variant = "Centered", Height = 300})
+local parts = loader:GetParts()
+
+local message = Instance.new("TextLabel")
+message.BackgroundTransparency = 1
+message.Size = UDim2.fromScale(1, 1)
+message.Text = "Connecting to your service…"
+message.TextColor3 = Color3.fromRGB(240, 240, 240)
+message.Parent = parts.Content
+
+loader:SetPartLayout("Content", {
+    Position = UDim2.fromOffset(24, 168),
+    Size = UDim2.new(1, -48, 0, 48),
+})
+```
+
+`SetPartLayout` and `ResetPartLayout` support `Logo`, `Title`, `Subtitle`, `Status`, `Percentage`, `Track`, and `Content`. `SetPartLayout` accepts finite `UDim2` `Position`/`Size`, `Vector2` `AnchorPoint` from 0 to 1, and boolean `Visible`. Responsive layout reapplies these overrides on resize. Use `loader:Own(resource)` to release custom connections, tweens, or callbacks when the loader closes. There is no opaque custom-renderer callback; create custom content under `Content`.
+
+See the [loading example](/examples/loading) for a complete `Run(steps)` flow.

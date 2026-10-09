@@ -1,0 +1,121 @@
+---
+title: Customization reference
+description: Exact defaults, ranges, and runtime behavior for the main customization APIs.
+---
+
+Use this page as a compact reference alongside the guides for [controls](/customization/controls), [values and configuration](/customization/values-and-config), [appearance and layout](/customization/appearance-and-layout), [icons](/customization/icons-and-branding), [loading](/customization/loading-screens), [key systems](/customization/key-systems), [events](/customization/events-and-lifecycle), [animations and components](/customization/animations-and-components), and [notifications](/customization/notifications).
+
+## Window defaults
+
+`UI:CreateWindow(options)`, the root of `UI:Create(spec)`, and the root of `UI:Launch(spec)` accept the common window options below. `Create` also accepts `Tabs` and `Loading`; `Launch` adds `KeySystem`, `Steps`, and startup callbacks.
+
+| Option | Default | Accepted values |
+|---|---|---|
+| `Title` | `Gabibou UI` | Converted to a string; no library length limit |
+| `Subtitle` | `Interface settings` | Converted to a string; no library length limit |
+| `Theme` | `Graphite` | `Graphite`, `Aurora`, `Ember`, or a partial color-token table |
+| `Width` | 800 | Finite number; clamped to 320-1400 px |
+| `Height` | 590 | Finite number; clamped to 300-1000 px |
+| `ToggleKey` | `Enum.KeyCode.RightControl` | `Enum.KeyCode` |
+| `DisplayOrder` | 90 | Passed through to `ScreenGui.DisplayOrder`; no library range validation |
+| `ReducedMotion` | Roblox reduced-motion preference | Boolean override |
+| `Parent` | Local player's `PlayerGui` | GUI parent instance |
+| `Responsive` | `{Breakpoint = 620, TouchTarget = 44, Margin = 12}` | Table of optional overrides |
+
+`Width` and `Height` must be finite numbers; the window clamps them to the listed range. Responsive options are validated and rejected outside their ranges. Passing `Responsive = false` behaves like omitting the option; it does not disable responsive layout. The window uses the available safe area and reduces its usable height when the on-screen keyboard is visible. Custom child content still needs device-specific verification. If Roblox's reduced-motion preference cannot be read, `ReducedMotion` defaults to `false`; an explicit boolean overrides the preference.
+
+## Themes, style, and motion
+
+The built-in themes are `Graphite`, `Aurora`, and `Ember`. Color tokens are `Background`, `Surface`, `Raised`, `Hover`, `Border`, `Text`, `Muted`, `Accent`, `AccentText`, `Success`, and `Danger`. A partial custom theme inherits omitted colors from Graphite. `window:SetTheme(nameOrColors)` updates an existing window and its bound descendants.
+
+`UI:SetStyle` and `UI:SetMotion` set defaults for future windows. `window:SetStyle` and `window:SetMotion` update one existing window. Current style defaults:
+
+| Field | Default | Constraint |
+|---|---:|---|
+| `Font` | `Enum.Font.Gotham` | `Enum.Font` |
+| `FontBold` | `Enum.Font.GothamBold` | `Enum.Font` |
+| `TextSize` | 14 | 10-32; other values are rejected |
+| `DescriptionSize` | 12 | 10-32; other values are rejected |
+| `TitleSize` | 18 | 10-32; other values are rejected |
+| `WindowRadius` | 16 | 0-32; other values are rejected |
+| `SectionRadius` | 12 | 0-32; other values are rejected |
+| `ControlRadius` | 8 | 0-32; other values are rejected |
+| `RowPadding` | 14 | 8-32; other values are rejected |
+
+Style ranges are validated, not clamped. `Font` and `FontBold` must be `Enum.Font` values. Motion fields are `Duration` (0-30 seconds, default 0.16), `Style` (`Enum.EasingStyle.Quad`), `Direction` (`Enum.EasingDirection.Out`), `RepeatCount` (integer -1-100, default 0), `Reverses` (false), and `Delay` (0-30 seconds, default 0); invalid values are rejected. `window:SetReducedMotion(true)` cancels managed active tweens and applies their target values immediately.
+
+## Layout
+
+Call `UI:SetLayout(options)` for future windows or `window:SetLayout(options)` for the current one. Partial tables retain unspecified values.
+
+| Option | Default | Range or values |
+|---|---:|---|
+| `TabPosition` | `Left` | `Left`, `Right`, `Top`, `Bottom` |
+| `MobileTabPosition` | `Top` | `Top`, `Bottom` |
+| `SidebarWidth` | 176 | 96-360 px |
+| `TabWidth` | 128 | 64–400 px |
+| `TabHeight` | 44 | 44–96 px |
+| `TabGap` | 9 | 0-32 px |
+| `TabIconSize` | 20 | 12–40 px |
+| `ContentPadding` | 20 | 4-40 px |
+| `ContentGap` | 20 | 0-48 px |
+| `HeaderHeight` | 76 | 64–160 px |
+| `FooterHeight` | 42 | 32–96 px |
+| `SearchHeight` | 44 | 44–96 px |
+| `SearchGap` | 12 | 0–40 px |
+| `PageTitleHeight` | 40 | 28–80 px |
+| `ButtonWidth` | 112 | 58–400 px |
+| `ButtonHeight` | 44 | 44–120 px |
+| `RowGap` | 12 | 0-40 px |
+| `SectionGap` | 12 | 0-48 px |
+| `ControlsPosition` | `Right` | `Left`, `Right`, `Below` |
+| `Draggable`, `Resizable`, `ShowSearch`, `ShowFooter`, `ShowHeader`, `ShowPageTitle` | true | Boolean |
+
+Layout ranges are validated; values outside them are rejected. Tabs accept a local `Layout` table with `Order` (integer -100000-100000), `Width` (58-600), `Height` (44-160), and `IconSize` (12-40). Controls accept `Order`, `Width`, `Height`, and `Position` (`Left`, `Right`, `Below`). A control's width range is 58-600 px and height range is 44-160 px.
+
+Navigation accepts `Variant = "Classic" | "Soft" | "Pill"` (default `Soft`) and `IconVariant = "Outline" | "Soft" | "Duotone"` (default `Outline`). Set defaults with `UI.Navigation`, set a per-window value through `Navigation`, or update a window with `window:SetNavigation(options)`. A tab's explicit `IconVariant` remains pinned when the window navigation variant is changed.
+
+`window:GetParts()` returns `Panel`, `Header`, `Tabs`, `Search`, `PageTitle`, `Pages`, `Footer`, `Reopen`, `Notifications`, `Minimize`, `Close`, and `Resize`. `window:SetPartLayout(name, options)` accepts finite `UDim2` `Position` and `Size`, `Vector2` `AnchorPoint` components from 0 to 1, and boolean `Visible`. These overrides apply after responsive layout and are not screen-clamped. `ResetPartLayout(name)` restores calculated layout.
+
+## Icons and branding
+
+`UI:Icon(parent, idOrName, options)` accepts a built-in icon ID or exact case-sensitive name. IDs 1–96 are stable built-ins; custom registered icons start at 1000. See the [complete icon catalogue](/reference/icon-catalogue).
+
+Icon options include `Size` (12-64, default 20), `Thickness` (1-4, default 2), `Color` (`Color3`), `Name`, `Position` (`UDim2`), `AnchorPoint` (`Vector2`), `Window`, `Token`, and one of `Variant` or `IconVariant`. Out-of-range size, thickness, or variant values are rejected. Variants are `Outline`, `Soft`, and `Duotone`. A custom icon builder receives `(root, color, thickness, window, token, variant)`.
+
+Branding can be configured with `Branding` at window creation or `window:SetBranding(options)`. Defaults are `Mode = "Initials"`, `Placement = "TopLeft"`, and `Text = "G"`. Its fields include `Mode` (`Avatar`, `Image`, or `Initials`), `Placement` (`TopLeft`, `TopRight`, `BottomRight`, or `BothRight`), `Text` (1-4 UTF-8 characters, with at least one non-whitespace character), `Image` (a positive numeric `rbxassetid://` URI; required for `Mode = "Image"`), and optional positive integer `UserId`. Branding assets are local GUI content; the library does not upload files.
+
+## Notifications
+
+`UI:SetNotifications(options)` sets defaults for future windows. `window:SetNotifications(options)` updates one window. Partial settings merge with the current values. Numeric ranges are validated; out-of-range values are rejected. The rendered toast width and margins may be reduced to fit the viewport.
+
+| Option | Default | Range or values |
+|---|---:|---|
+| `Position` | `BottomRight` | `TopRight`, `BottomRight`, `TopLeft`, `BottomLeft` |
+| `Width` | 340 | 220–600 px |
+| `Margin` | 18 | 4–64 px |
+| `Gap` | 10 | 0–32 px |
+| `MaxVisible` | 4 | Integer 1–8 |
+| `Duration` | 4 | 0.1–120 seconds |
+| `ShowProgress` | true | Boolean |
+| `AnimationDuration` | 0.18 | 0–0.8 seconds |
+
+`window:Notify({Title, Content, Kind, Icon, Duration})` returns a toast exposing `Dismiss()` and `Destroy()`. Valid UTF-8 `Title` text is truncated to 80 characters and `Content` to 1200. `Kind` is `info`, `success`, `warning`, or `error`. A notification's `Duration` must be 0.1-120 seconds; invalid values are rejected.
+
+## Storage and configuration
+
+Persistent control values can be read through `window:GetValues()` and applied with `window:SetValues(values, fireCallbacks)`. `ExportConfig()` returns a JSON string; `ImportConfig(json, fireCallbacks)` validates and applies it. `SaveConfig(name)` requires a supplied storage adapter with `Write`; `LoadConfig(name, fireCallbacks)` requires one with `Read`. The library does not assume executor filesystem APIs or silently persist data.
+
+Configuration import accepts JSON strings up to 262,144 bytes (256 KiB). Input text defaults to 120 characters and supports a configured maximum of 1-4096 characters; overlong values are truncated. Key-gate input defaults to 256 UTF-8 characters and supports a configured integer maximum of 1-4096; text beyond that limit is truncated. See [values and configuration](/customization/values-and-config) for atomic updates and adapter examples.
+
+## Key gate
+
+`UI:CreateKeySystem(options)` requires `Validate(key)`. `MaxLength` defaults to 256 and must be an integer from 1 to 4096; `DisplayOrder` defaults to 120 and must be an integer. `Position` defaults to `UDim2.fromScale(0.5, 0.5)` and `AnchorPoint` to `Vector2.new(0.5, 0.5)`. The gate defaults to an avatar logo and `SubmitText = "Verify key"`. Set `Logo = false` to show `MarkText`, or supply a positive numeric `rbxassetid://` URI. Width defaults to 420 px; width and height accept 280–600 px and 280–560 px respectively, and the visible card is fitted to the viewport. Automatic height is 332 px without Discord/GetKey, 394 px with Discord only, 404 px with GetKey only, and 462 px with both. An explicit `Height` stays fixed through updates; automatic height recalculates when GetKey or Discord is changed.
+
+Optional `Discord` accepts `false`, an invite URL string, or an options table. Supported invite hosts are `discord.gg` and `discord.com/invite` over HTTPS. The options table accepts `Url` (up to 256 characters), `Text` (default `Copy Discord link`, up to 48 characters), `CopiedText` (default `Link copied`, up to 48 characters), `Color` (default `Color3.fromRGB(88, 101, 242)`), optional `Logo` (`rbxassetid://`), and an optional `Copy(url)` callback. The callback takes precedence; without it, the gate uses an available clipboard function or exposes a selectable link when clipboard access is unavailable.
+
+`GetKey` is disabled when omitted or set to `false`. A URL string or `{Url, Text, Copy}` table adds a copy-link action. URLs must use HTTPS, include a host, contain no whitespace or control characters, and be no longer than 2048 bytes. `Text` defaults to `Get key` and accepts up to 48 characters. The optional `Copy(url)` callback takes precedence over an environment clipboard function. If copying is unavailable, fails, or returns `false`, the gate shows a selectable link for manual copying; it never opens the URL automatically. A `function(gate)` value runs a custom action instead. `gate:GetKey()` returns a success boolean and optional reason, allows one action at a time, and ignores stale results after an update or destruction. `Update` merges nested GetKey fields and validates before mutation. `GetParts()` exposes `GetKeyButton`, `KeyLink`, and `KeyLinkStatus`. It is separate from `Validate(key)`, which performs access verification. See [key system options](/customization/key-systems).
+
+## Loading screen
+
+The loader defaults to `Variant = "Compact"`, `Width = 420`, `Height = 216`, `Padding = 24`, and `LogoSize = 46`; `Centered` defaults to 300 px high when created directly, and `Minimal` uses the compact layout without a logo. `ShowPercentage`, `ShowLogo`, `ShowActivity`, and `ShowSubtitle` default to `true`; `BackgroundTransparency` defaults to 0.3, `MinimumDuration` to 0, and `ExitDuration` to 0.18 seconds. `DisplayOrder` defaults to 100 and must be an integer. `Padding` accepts 12-40 px, `LogoSize` 24-80 px, and `BackgroundTransparency` 0-1. Height (160-480 px), width (280-560 px), `ProgressHeight` (2-12 px, default 4), `MinimumDuration` (0-10 seconds), and `ExitDuration` (0-2 seconds) are validated; invalid values are rejected. Loader titles are truncated to 80 characters and subtitles to 240. `ReducedMotion` defaults to Roblox's reduced-motion preference when readable, otherwise `false`. The card is fitted to the available viewport. Use `loader:GetParts()`, `SetPartLayout`, `ResetPartLayout`, and `Own` for custom content and cleanup. `Update` merges with existing options, so changing a compact loader to centered retains its current height unless you pass one: `loader:Update({Variant = "Centered", Height = 300})`. See [loading screen options](/customization/loading-screens).

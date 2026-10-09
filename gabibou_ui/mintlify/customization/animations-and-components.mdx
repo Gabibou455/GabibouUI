@@ -1,0 +1,70 @@
+---
+title: Animations and custom components
+description: Use managed tweens and build reusable interface components.
+---
+
+## Animate an instance
+
+`window:Animate(instance, properties, options)` animates an instance inside the window's ScreenGui and returns a Roblox `Tween`. `control:Animate(properties, options)` targets the control root. Animation options inherit from the window's motion policy and can override `Duration`, `Style`, `Direction`, `RepeatCount`, `Reverses`, or `Delay`. `OnComplete(instance)` runs only after a completed tween.
+
+```lua
+local panel = Instance.new("Frame")
+panel.Size = UDim2.fromOffset(120, 36)
+panel.Parent = custom.Content
+
+local tween = window:Animate(panel, {
+    Size = UDim2.fromOffset(160, 40),
+}, {
+    Duration = 0.25,
+    Style = Enum.EasingStyle.Quart,
+    Direction = Enum.EasingDirection.Out,
+    OnComplete = function(instance)
+        print("Expanded", instance.Name)
+    end,
+})
+```
+
+Only one managed tween runs per target instance; a new tween cancels the previous one. The library cancels managed tweens when their target is destroyed, leaves the window GUI, or the window is destroyed. Hiding a window with `window:Hide()` preserves its managed animations. `window:SetReducedMotion(true)` cancels current tweens and applies their final values. New tweens complete without animation under reduced motion.
+
+## Create a custom control
+
+`section:Custom({Build = function(content, control, window, options) ... end})` creates a custom control. The builder receives a content frame, control, window, and original options. Add children under the content frame and use `control:Connect` for scoped signals. `Height` defaults to 80 and accepts 0–2000 px; `control:SetHeight(height)` updates it later.
+
+```lua
+local custom = section:Custom({
+    Id = "preview",
+    Title = "Preview",
+    Height = 48,
+    Build = function(content, control, window)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, 0, 0, 44)
+        button.Text = "Pulse"
+        button.Parent = content
+
+        control:Connect(button.Activated, function()
+            window:Animate(button, {BackgroundTransparency = 0.2}, {Duration = 0.16})
+        end)
+    end,
+})
+```
+
+The library owns the control root and content container. Put custom instances inside `content`; do not destroy the root or content directly. Use relative sizes, wrapped text, and your own `SetHeight` behavior for responsive custom content.
+
+## Register a reusable component
+
+`UI:RegisterComponent(name, builder)` registers a builder with the same signature as `Custom.Build`. Add it with `section:Add(name, options)`, or use the registration name as a declarative control `Type`.
+
+```lua
+UI:RegisterComponent("StatusBadge", function(content, control, window, options)
+    local badge = Instance.new("TextLabel")
+    badge.Size = UDim2.new(1, 0, 0, 32)
+    badge.Text = options.Text or "Ready"
+    badge.Parent = content
+    window:BindColor(badge, "BackgroundColor3", options.ColorToken or "Raised")
+    window:BindColor(badge, "TextColor3", "Text")
+end)
+
+section:Add("StatusBadge", {Id = "service", Title = "Service", Text = "Online", Height = 40})
+```
+
+`UI:GetComponentNames()` returns registered names in alphabetical order. `UI:UnregisterComponent(name, expectedBuilder)` removes one, returning false when it does not exist or the expected builder does not match. A registration name cannot replace an existing component in the same library instance.

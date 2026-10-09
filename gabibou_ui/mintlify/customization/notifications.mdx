@@ -1,0 +1,36 @@
+---
+title: Notifications and confirmation
+description: Show status notifications and ask for user confirmation.
+---
+
+## Notifications
+
+`window:Notify({Title, Content, Kind, Icon, Duration})` displays a notification and returns a toast with `Dismiss()` and `Destroy()` methods.
+
+Kinds are `info`, `success`, `warning`, and `error`. Default icon/token pairs are `info`/Accent, `check`/Success, `bell`/Accent, and `close`/Danger. `Title` accepts up to 80 characters; `Content` accepts up to 1200.
+
+```lua
+window:Notify({
+    Title = "Saved",
+    Content = "Preferences updated.",
+    Kind = "success",
+    Duration = 5,
+})
+```
+
+Set defaults for future windows with `UI:SetNotifications(options)`, or update a window with `window:SetNotifications(options)`. Defaults are `Position = "BottomRight"`, `Width = 340`, `Margin = 18`, `Gap = 10`, `MaxVisible = 4`, `Duration = 4`, `ShowProgress = true`, and `AnimationDuration = 0.18`. Position accepts `TopRight`, `BottomRight`, `TopLeft`, or `BottomLeft`. See [API reference](/reference/api) for valid ranges.
+
+## Confirmation dialog
+
+`window:Confirm({Title, Content, ConfirmText, Callback})` opens a confirmation dialog. It returns false when a confirmation modal is already open; otherwise it returns true. `Callback` runs only after the user confirms and receives `true`; cancelling or closing the dialog does not call it.
+
+```lua
+window:Confirm({
+    Title = "Reset settings?",
+    Content = "This will restore the default values.",
+    ConfirmText = "Reset",
+    Callback = function()
+        window:SetValues(defaultValues, false)
+    end,
+})
+```

@@ -1,0 +1,67 @@
+---
+title: Icon catalogue
+description: Stable names and IDs for all 96 built-in vector icons.
+---
+
+Gabibou UI includes 96 original vector drawings. These IDs are library identifiers, not Roblox image asset IDs. They need no image download. Built-in IDs are stable and future built-ins are appended.
+
+| ID | Name | ID | Name | ID | Name |
+|---:|---|---:|---|---:|---|
+| 1 | `home` | 2 | `sliders` | 3 | `palette` |
+| 4 | `save` | 5 | `code` | 6 | `search` |
+| 7 | `close` | 8 | `check` | 9 | `chevron-down` |
+| 10 | `chevron-right` | 11 | `settings` | 12 | `user` |
+| 13 | `folder` | 14 | `download` | 15 | `upload` |
+| 16 | `refresh` | 17 | `bell` | 18 | `info` |
+| 19 | `plus` | 20 | `minus` | 21 | `farm` |
+| 22 | `panel` | 23 | `inventory` | 24 | `harvest` |
+| 25 | `seed` | 26 | `sprout` | 27 | `watering-can` |
+| 28 | `shovel` | 29 | `tools` | 30 | `tractor` |
+| 31 | `map` | 32 | `menu` | 33 | `arrow-left` |
+| 34 | `arrow-right` | 35 | `minimize` | 36 | `maximize` |
+| 37 | `restore` | 38 | `resize` | 39 | `window` |
+| 40 | `automation` | 41 | `play` | 42 | `pause` |
+| 43 | `stop` | 44 | `bolt` | 45 | `shield` |
+| 46 | `key` | 47 | `lock` | 48 | `unlock` |
+| 49 | `coins` | 50 | `gift` | 51 | `teleport` |
+| 52 | `target` | 53 | `chart` | 54 | `chart-bar` |
+| 55 | `clock` | 56 | `timer` | 57 | `compass` |
+| 58 | `heart` | 59 | `star` | 60 | `eye` |
+| 61 | `eye-off` | 62 | `filter` | 63 | `sort` |
+| 64 | `check-circle` | 65 | `alert` | 66 | `help` |
+| 67 | `copy` | 68 | `clipboard` | 69 | `trash` |
+| 70 | `edit` | 71 | `wand` | 72 | `wifi` |
+| 73 | `globe` | 74 | `link` | 75 | `mail` |
+| 76 | `message` | 77 | `terminal` | 78 | `bug` |
+| 79 | `cpu` | 80 | `server` | 81 | `database` |
+| 82 | `cloud` | 83 | `cloud-download` | 84 | `camera` |
+| 85 | `image` | 86 | `music` | 87 | `volume` |
+| 88 | `volume-off` | 89 | `sun` | 90 | `moon` |
+| 91 | `gamepad` | 92 | `trophy` | 93 | `rocket` |
+| 94 | `backpack` | 95 | `sword` | 96 | `flag` |
+
+## Use names or IDs
+
+```lua
+local farmTab = window:Tab({Title = "Farm", Icon = 21})
+farmTab:Button({Title = "Harvest", Text = "Collect", Icon = "harvest"})
+
+local id = UI:GetIconId("harvest") -- 24
+local name = UI:GetIconName(21) -- "farm"
+for _, entry in ipairs(UI:GetIconCatalogue()) do
+    print(entry.Id, entry.Name)
+end
+```
+
+Lookup methods return `nil` for unknown names or IDs. Names are exact and case-sensitive. `GetIconCatalogue()` returns a copy. Unknown or non-integer IDs are rejected before a GUI icon is allocated.
+
+## Variants and custom icons
+
+`Outline` is the default icon style. `Soft` and `Duotone` are also available. Tabs and buttons use `IconVariant`; `UI:Icon` accepts `Variant` or `IconVariant`.
+
+```lua
+local icon = UI:Icon(parent, "farm", {Size = 24, Variant = "Duotone"})
+local sameIcon = UI:Icon(parent, 21, {Size = 24, Variant = "Soft"})
+```
+
+`UI:RegisterIcon(name, builder)` registers a custom name and returns it through the icon lookup APIs. Custom IDs start at 1000 and increase monotonically within that library instance; they depend on registration order and are not persisted across instances. `UI:UnregisterIcon(name, expectedBuilder)` removes the registration and does not reuse its ID. Built-in IDs 1–96 never change.

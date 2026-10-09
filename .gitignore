@@ -1,0 +1,13 @@
+# Personal configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Development artifacts
+node_modules/
+evidence/
+*.generated.*
+*.zip
+*.log
+.DS_Store
+Thumbs.db

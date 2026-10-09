@@ -1,0 +1,86 @@
+---
+title: API reference
+description: Public methods, lifecycle objects, defaults, and important limits.
+---
+
+This page maps the public API by object. See the [customization reference](/reference/customization) for defaults and ranges and the [icon catalogue](/reference/icon-catalogue) for all built-in IDs. Task-specific guides have complete examples: [controls](/customization/controls), [values](/customization/values-and-config), [loading](/customization/loading-screens), [key systems](/customization/key-systems), and [events](/customization/events-and-lifecycle).
+
+## Library
+
+| Method | Purpose |
+|---|---|
+| `UI:Create(spec)` | Validate and build a declarative window from root options plus `Tabs` and optional `Loading`. |
+| `UI:CreateWindow(options)` | Create a window for step-by-step construction. |
+| `UI:Launch(spec)` | Coordinate optional key gate, loading, startup steps, and window creation. |
+| `UI:CreateLoader(options)` | Create a standalone loading screen. |
+| `UI:CreateKeySystem(options)` | Create a standalone key-entry gate. |
+| `UI:DestroyAll()` | Destroy all windows, key gates, loaders, and launch sessions owned by this library instance. |
+| `UI:SetLayout(options)` | Set defaults for future windows. |
+| `UI:SetStyle(options)` / `UI:SetMotion(options)` | Set style and animation defaults for future windows. |
+| `UI:SetNotifications(options)` | Set toast defaults for future windows. |
+| `UI:RegisterComponent(name, builder)` | Register a reusable custom control. |
+| `UI:GetComponentNames()` / `UI:UnregisterComponent(name, expectedBuilder)` | List or remove custom component registrations. |
+| `UI:GetIconNames()` / `UI:GetIconId(name)` / `UI:GetIconName(idOrName)` | Look up built-in and registered icons. |
+| `UI:GetIconCatalogue()` / `UI:GetIconVariants()` | Return the icon catalogue or supported visual variants. |
+| `UI:RegisterIcon(name, builder)` / `UI:UnregisterIcon(name, expectedBuilder)` | Register or safely remove an icon builder. |
+| `UI:Icon(parent, idOrName, options)` | Draw an icon into a parent GUI object. |
+
+## Window creation options
+
+`CreateWindow` and the root of `Create`/`Launch` accept `Id`, `Title`, `Subtitle`, `Theme`, `Style`, `Motion`, `Branding`, `Layout`, `Notifications`, `Navigation`, `Responsive`, `Position`, `AnchorPoint`, `Width`, `Height`, `ToggleKey`, `ReducedMotion`, `Parent`, `DisplayOrder`, and `Storage`. `Create` additionally accepts `Tabs` and `Loading`; `Launch` adds `KeySystem`, `Loading`, `Steps`, `OnReady`, `OnError`, and `OnCancel`.
+
+Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (clamped to 320–1400), `Height = 590` (clamped to 300–1000), `ToggleKey = Enum.KeyCode.RightControl`, and `DisplayOrder = 90`. The default GUI parent is the local player's `PlayerGui`. `Responsive` defaults are `Breakpoint = 620`, `TouchTarget = 44`, and `Margin = 12`.
+
+`Tabs` is a dense, nonempty array. Each tab needs a nonempty `Title` and accepts `Icon`, `IconVariant`, `Layout`, `Controls`, and `Sections`. Each section has a `Title` and optional `Controls`. Each declarative control requires a unique, nonempty `Id` (maximum 96 characters, without control characters).
+
+## Window methods
+
+| Method | Purpose |
+|---|---|
+| `Tab(options)`, `SelectTab(tab)` | Add or select a tab. |
+| `SearchFor(query)` | Apply a search query to controls. |
+| `Get(id)`, `GetValues()`, `SetValues(values, fireCallbacks)` | Read controls and persistent values. |
+| `Hide()`, `Show()`, `Toggle()` | Change window visibility. |
+| `SetSize(width, height)`, `SetPosition(position, anchor)` | Set the window dimensions or position. |
+| `SetTheme(value)`, `SetStyle(options)`, `SetMotion(options)`, `SetReducedMotion(enabled)` | Update appearance and managed animation behavior. |
+| `SetLayout(options)`, `SetNavigation(options)`, `SetBranding(options)` | Update layout and navigation settings. |
+| `SetNotifications(options)`, `Notify(options)`, `Confirm(options)` | Configure or show feedback UI. |
+| `ExportConfig()`, `ImportConfig(json, fireCallbacks)`, `SaveConfig(name)`, `LoadConfig(name, fireCallbacks)` | Export and restore persistent values. |
+| `GetParts()`, `SetPartLayout(name, options)`, `ResetPartLayout(name)` | Access and reposition named GUI parts. |
+| `Animate(instance, properties, options)`, `BindColor(instance, property, token)` | Manage animations and theme-bound colors. |
+| `On(name, callback)`, `Connect(signal, callback)`, `Own(resource)`, `OnDestroy(callback)` | Subscribe and register owner-scoped cleanup. |
+| `Destroy()` | Release the window and its owned UI resources. |
+
+## Control and section methods
+
+Create built-in controls with `Toggle`, `Slider`, `Dropdown`, `Input`, `Keybind`, `ColorPicker`, `Button`, `Paragraph`, or `Custom` on a section or tab. `tab:Section({Title = "..."})` creates a section; `section:Add(name, options)` creates a registered component.
+
+Controls expose `Get`, `Set(value, fireCallback)`, `SetTitle`, `SetDescription`, `SetVisible`, `SetEnabled`, `SetLayout`, `SetOrder`, `GetParts`, `Animate`, `On`, `Connect`, `Own`, and `Destroy`. Custom controls additionally expose `SetHeight`. `ColorPicker` exposes `GetColor()`.
+
+## Key gate
+
+`UI:CreateKeySystem(options)` requires `Validate(key)` and optionally accepts `OnSuccess(gate, result)`, `OnCancel(gate)`, and `GetKey`. `GetKey` can be an HTTPS URL/string, `{Url, Text, Copy}`, a custom `function(gate)`, or `false` to disable. `gate:GetKey()` runs a single-flight key-link/custom action and returns a success boolean plus optional reason. It exposes `Submit(key)`, `Cancel()`, `Destroy()`, `Update(options)`, `GetParts()`, `CopyDiscordLink()`, and `GetKey()`. `GetParts()` includes `GetKeyButton`, `KeyLink`, and `KeyLinkStatus`.
+
+Default `Logo` is `"Avatar"`; set it to `false` to show `MarkText`, or use an `rbxassetid://` URI. Default `SubmitText` is `Verify key`. Width defaults to 420 px (range 280–600). Automatic card heights are 332 px without Discord/GetKey, 394 px with Discord, 404 px with GetKey, and 462 px with both; `Height` accepts 280–560 px. See [Key systems](/customization/key-systems) for link behavior, Discord, and validation details.
+
+## Loader
+
+`UI:CreateLoader(options)` exposes `SetProgress`, `SetStatus`, `Update`, `Run`, `GetParts`, `SetPartLayout`, `ResetPartLayout`, `Own`, `Complete`, and `Destroy`. Fields include `Progress`, `Status`, `Completed`, `Destroyed`, and `LastError`. See [Loading screens](/customization/loading-screens) for variant and content customization.
+
+## Launch session
+
+`UI:Launch(spec)` returns a session with `Status`, `LastError`, `Gate`, `Loader`, `Window`, `Cancel()`, and `Destroy()`. Status values are `WaitingForKey`, `Loading`, `Ready`, `Failed`, and `Destroyed`. Callbacks are `OnReady(window, session)`, `OnError(message, session)`, and `OnCancel(session)`.
+
+## Theme tokens and motion fields
+
+Theme names are `Graphite`, `Aurora`, and `Ember`. Theme tokens are `Background`, `Surface`, `Raised`, `Hover`, `Border`, `Text`, `Muted`, `Accent`, `AccentText`, `Success`, and `Danger`.
+
+Style fields are `Font`, `FontBold`, `TextSize`, `DescriptionSize`, `TitleSize`, `WindowRadius`, `SectionRadius`, `ControlRadius`, and `RowPadding`. Motion fields are `Duration`, `Style`, `Direction`, `RepeatCount`, `Reverses`, and `Delay`. See [Appearance and layout](/customization/appearance-and-layout) for behavior and ranges.
+
+## Configuration limits
+
+- Input length defaults to 120; supported maximum is 4096.
+- Key input defaults to 256 UTF-8 characters; supported maximum is 4096.
+- Persistent configuration JSON is limited to 256 KiB.
+- The library uses no implicit filesystem adapter. Pass `Storage.Read` and `Storage.Write` when saving profiles.
+- Custom interface builders can have side effects that schema validation cannot predict. A failed build cleans up the new partial window but does not restore a same-ID window that was already replaced.

@@ -1,0 +1,52 @@
+---
+title: Values and configuration
+description: Read, update, export, and persist control values.
+---
+
+## Read a snapshot
+
+`window:Get(id)` returns a control or `nil`. `window:GetValues()` returns a new table of persistent control values. Nonpersistent controls such as buttons and paragraphs are excluded.
+
+```lua
+local volume = window:Get("volume")
+if volume then
+    print(volume:Get())
+end
+
+local values = window:GetValues()
+```
+
+## Apply values together
+
+`window:SetValues(values, fireCallbacks)` rejects unknown IDs, nonpersistent controls, and invalid values. It validates the complete table before applying any changes. When callbacks are enabled, only values that changed emit `Changed` and call their control callback. The function returns the number of values applied. Callback execution is protected and asynchronous; actual callback order is not guaranteed.
+
+```lua
+local applied = window:SetValues({
+    effects = false,
+    volume = 30,
+}, false)
+print("Values applied:", applied)
+```
+
+## JSON configuration
+
+`ExportConfig()` returns a JSON snapshot of persistent values and the selected built-in theme name. `ImportConfig(json, fireCallbacks)` validates and applies it. Unknown IDs and IDs for controls absent from this window are ignored; a type mismatch or invalid value for a matching persistent control rejects the import before changes are applied. With `fireCallbacks = true`, import calls each imported control's callback after applying values; it does not emit the control `Changed` event. The library does not write to disk automatically. `SaveConfig(name)` and `LoadConfig(name, fireCallbacks)` require an explicit adapter with `Write(path, contents)` and `Read(path)` functions.
+
+```lua
+local storage = {
+    Write = function(path, contents)
+        -- Write with storage available in your environment.
+    end,
+    Read = function(path)
+        -- Return the stored string, or nil when missing.
+    end,
+}
+
+local window = UI:CreateWindow({Title = "Settings", Storage = storage})
+window:SaveConfig("default")
+window:LoadConfig("default", false)
+```
+
+Profile names accept letters, numbers, underscores, and hyphens, with a 48-character maximum. JSON snapshots are limited to 256 KiB. Standard Studio LocalScripts do not expose executor-style `readfile` and `writefile`; select a storage mechanism your environment supports.
+
+For a complete list of window methods, see [API reference](/reference/api). For server-owned key validation, see [Key systems](/customization/key-systems).

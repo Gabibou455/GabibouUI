@@ -1,0 +1,55 @@
+---
+title: Events and lifecycle
+description: Subscribe to UI events and release resources with their owner.
+---
+
+## Window events
+
+`window:On(name, callback)` subscribes to a window event and returns a disconnectable subscription.
+
+| Event | Callback arguments |
+|---|---|
+| `TabChanged` | `tab, previousTab` |
+| `VisibilityChanged` | `visible` |
+| `ThemeChanged` | `themeName, themeTable` |
+| `StyleChanged` | `styleTable` |
+| `MotionChanged` | `motionTable` |
+| `ReducedMotionChanged` | `enabled` |
+| `NavigationChanged` | `navigationTable` |
+
+Table arguments are copies. `MotionChanged` reports changes to tween policy; reduced motion has its own event.
+
+## Control events
+
+`control:On(name, callback)` supports `Changed`, `HoverEnter`, `HoverLeave`, `Activated`, `FocusGained`, and `FocusLost` when the control exposes the corresponding signal. `Changed` receives `(newValue, oldValue)` when a value changes through `control:Set(..., true)`, `window:SetValues(..., true)`, or user interaction. `ImportConfig(..., true)` calls the control callbacks for imported values but does not emit `Changed`.
+
+For `Input`, focus events follow its text box. For `ColorPicker`, focus events follow the hex field. Button-like controls use Roblox selection focus events, including keyboard and gamepad selection. A captured Keybind emits `Changed` when its assignment changes; its action callback runs only when the assigned key is pressed outside capture mode.
+
+```lua
+local changed = window:Get("volume"):On("Changed", function(value, previous)
+    print(previous, "->", value)
+end)
+
+-- Disconnect this subscription before the window closes if needed.
+changed:Disconnect()
+```
+
+## Own connections and cleanup
+
+`window:Connect(signal, callback)` and `control:Connect(signal, callback)` create a Roblox connection scoped to that owner. `window:Own(resource)` and `control:Own(resource)` accept an `RBXScriptConnection` or a table with `Disconnect()`. They do not accept a bare cleanup function.
+
+```lua
+local RunService = game:GetService("RunService")
+local status = window:Get("status")
+status:Connect(RunService.Heartbeat, function(deltaTime)
+    -- Update this control while it remains alive.
+end)
+
+window:OnDestroy(function()
+    -- Cancel application tasks not owned by the UI library.
+end)
+```
+
+`window:OnDestroy(callback)` is for external resources. The window cleans up its controls, subscriptions, connections, managed tweens, and notifications. Gameplay tasks started by your callback remain your responsibility; cancel them in an owner cleanup path.
+
+Destroy a control with `control:Destroy()` and a window with `window:Destroy()`. `UI:DestroyAll()` closes all windows, gates, loaders, and launch sessions created by that library instance.

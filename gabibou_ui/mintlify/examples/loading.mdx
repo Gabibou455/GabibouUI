@@ -1,0 +1,46 @@
+---
+title: Loading example
+description: Report sequential startup work through a standalone loader.
+---
+
+This example reports progress only after each setup step succeeds. Replace the comments with your actual work.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+
+local loader = UI:CreateLoader({
+    Title = "Starting Garden Tools",
+    Subtitle = "Preparing your profile",
+    Variant = "Centered",
+    Height = 300,
+    Logo = "Avatar",
+    MarkText = "GT",
+    MinimumDuration = 0.5,
+    OnError = function(activeLoader, title, index)
+        warn("Startup step failed:", title, index)
+    end,
+    OnComplete = function(activeLoader)
+        print("Loader closed")
+    end,
+})
+
+loader:Run({
+    {
+        Title = "Loading preferences",
+        Run = function(activeLoader)
+            -- Read preferences using your application code.
+            task.wait(0.2)
+        end,
+    },
+    {
+        Title = "Preparing controls",
+        Run = function(activeLoader)
+            -- Prepare data required by the interface.
+            task.wait(0.2)
+        end,
+    },
+})
+```
+
+`Run` executes steps in order. If a step fails, the loader stays open for your retry or error UI. For custom visuals and named layout parts, see [Loading screens](/customization/loading-screens).

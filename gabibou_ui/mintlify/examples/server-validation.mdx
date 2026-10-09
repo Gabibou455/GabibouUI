@@ -1,0 +1,42 @@
+---
+title: Server validation example
+description: Keep key checks on the server and use a RemoteFunction from the client.
+---
+
+This example creates a `RemoteFunction` named `GabibouValidateKey` and keeps the key table inside `ServerScriptService`. Replace `CHANGE_ME` with your own private value before using it. The example rejects the placeholder until it is changed.
+
+```lua
+-- Script in ServerScriptService.
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local keys = { ["CHANGE_ME"] = true } -- Replace with private keys.
+local remoteName = "GabibouValidateKey"
+assert(not ReplicatedStorage:FindFirstChild(remoteName), "GabibouValidateKey already exists")
+
+local attempts = {}
+local remote = Instance.new("RemoteFunction")
+remote.Name = remoteName
+remote.OnServerInvoke = function(player, key)
+    local now = os.clock()
+    if attempts[player] and now - attempts[player] < 2 then
+        return false, "Please wait before trying again."
+    end
+    attempts[player] = now
+
+    if type(key) ~= "string" or #key > 256 or key == "CHANGE_ME" or keys[key] ~= true then
+        return false, "Key not accepted"
+    end
+
+    player:SetAttribute("GabibouAuthorized", true)
+    return true
+end
+
+remote.Parent = ReplicatedStorage
+
+Players.PlayerRemoving:Connect(function(player)
+    attempts[player] = nil
+end)
+```
+
+In the client validator, call `validateKey:InvokeServer(key)`. Check `player:GetAttribute("GabibouAuthorized") == true` on every protected server action, and validate that action's inputs on the server as well. Never treat a LocalScript gate as the permission check.

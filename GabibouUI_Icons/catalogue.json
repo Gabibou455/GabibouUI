@@ -1,0 +1,1743 @@
+{
+  "library": "Gabibou UI",
+  "version": "1.5.0-rc.3",
+  "idNamespace": "Gabibou UI internal IDs, not Roblox asset IDs",
+  "size": 256,
+  "transparent": true,
+  "sourceSha256": "4e5ddaa4178c6e276a3d909fa7b19fe858a4578fd7f4c1a91166722abfd22466",
+  "variants": [
+    "Outline",
+    "Soft",
+    "Duotone"
+  ],
+  "icons": [
+    {
+      "Id": 1,
+      "Name": "home",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/001_home.png",
+          "SVG": "Outline/001_home.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/001_home.png",
+          "SVG": "Soft/001_home.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/001_home.png",
+          "SVG": "Duotone/001_home.svg"
+        }
+      }
+    },
+    {
+      "Id": 2,
+      "Name": "sliders",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/002_sliders.png",
+          "SVG": "Outline/002_sliders.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/002_sliders.png",
+          "SVG": "Soft/002_sliders.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/002_sliders.png",
+          "SVG": "Duotone/002_sliders.svg"
+        }
+      }
+    },
+    {
+      "Id": 3,
+      "Name": "palette",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/003_palette.png",
+          "SVG": "Outline/003_palette.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/003_palette.png",
+          "SVG": "Soft/003_palette.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/003_palette.png",
+          "SVG": "Duotone/003_palette.svg"
+        }
+      }
+    },
+    {
+      "Id": 4,
+      "Name": "save",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/004_save.png",
+          "SVG": "Outline/004_save.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/004_save.png",
+          "SVG": "Soft/004_save.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/004_save.png",
+          "SVG": "Duotone/004_save.svg"
+        }
+      }
+    },
+    {
+      "Id": 5,
+      "Name": "code",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/005_code.png",
+          "SVG": "Outline/005_code.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/005_code.png",
+          "SVG": "Soft/005_code.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/005_code.png",
+          "SVG": "Duotone/005_code.svg"
+        }
+      }
+    },
+    {
+      "Id": 6,
+      "Name": "search",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/006_search.png",
+          "SVG": "Outline/006_search.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/006_search.png",
+          "SVG": "Soft/006_search.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/006_search.png",
+          "SVG": "Duotone/006_search.svg"
+        }
+      }
+    },
+    {
+      "Id": 7,
+      "Name": "close",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/007_close.png",
+          "SVG": "Outline/007_close.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/007_close.png",
+          "SVG": "Soft/007_close.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/007_close.png",
+          "SVG": "Duotone/007_close.svg"
+        }
+      }
+    },
+    {
+      "Id": 8,
+      "Name": "check",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/008_check.png",
+          "SVG": "Outline/008_check.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/008_check.png",
+          "SVG": "Soft/008_check.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/008_check.png",
+          "SVG": "Duotone/008_check.svg"
+        }
+      }
+    },
+    {
+      "Id": 9,
+      "Name": "chevron-down",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/009_chevron-down.png",
+          "SVG": "Outline/009_chevron-down.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/009_chevron-down.png",
+          "SVG": "Soft/009_chevron-down.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/009_chevron-down.png",
+          "SVG": "Duotone/009_chevron-down.svg"
+        }
+      }
+    },
+    {
+      "Id": 10,
+      "Name": "chevron-right",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/010_chevron-right.png",
+          "SVG": "Outline/010_chevron-right.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/010_chevron-right.png",
+          "SVG": "Soft/010_chevron-right.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/010_chevron-right.png",
+          "SVG": "Duotone/010_chevron-right.svg"
+        }
+      }
+    },
+    {
+      "Id": 11,
+      "Name": "settings",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/011_settings.png",
+          "SVG": "Outline/011_settings.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/011_settings.png",
+          "SVG": "Soft/011_settings.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/011_settings.png",
+          "SVG": "Duotone/011_settings.svg"
+        }
+      }
+    },
+    {
+      "Id": 12,
+      "Name": "user",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/012_user.png",
+          "SVG": "Outline/012_user.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/012_user.png",
+          "SVG": "Soft/012_user.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/012_user.png",
+          "SVG": "Duotone/012_user.svg"
+        }
+      }
+    },
+    {
+      "Id": 13,
+      "Name": "folder",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/013_folder.png",
+          "SVG": "Outline/013_folder.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/013_folder.png",
+          "SVG": "Soft/013_folder.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/013_folder.png",
+          "SVG": "Duotone/013_folder.svg"
+        }
+      }
+    },
+    {
+      "Id": 14,
+      "Name": "download",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/014_download.png",
+          "SVG": "Outline/014_download.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/014_download.png",
+          "SVG": "Soft/014_download.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/014_download.png",
+          "SVG": "Duotone/014_download.svg"
+        }
+      }
+    },
+    {
+      "Id": 15,
+      "Name": "upload",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/015_upload.png",
+          "SVG": "Outline/015_upload.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/015_upload.png",
+          "SVG": "Soft/015_upload.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/015_upload.png",
+          "SVG": "Duotone/015_upload.svg"
+        }
+      }
+    },
+    {
+      "Id": 16,
+      "Name": "refresh",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/016_refresh.png",
+          "SVG": "Outline/016_refresh.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/016_refresh.png",
+          "SVG": "Soft/016_refresh.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/016_refresh.png",
+          "SVG": "Duotone/016_refresh.svg"
+        }
+      }
+    },
+    {
+      "Id": 17,
+      "Name": "bell",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/017_bell.png",
+          "SVG": "Outline/017_bell.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/017_bell.png",
+          "SVG": "Soft/017_bell.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/017_bell.png",
+          "SVG": "Duotone/017_bell.svg"
+        }
+      }
+    },
+    {
+      "Id": 18,
+      "Name": "info",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/018_info.png",
+          "SVG": "Outline/018_info.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/018_info.png",
+          "SVG": "Soft/018_info.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/018_info.png",
+          "SVG": "Duotone/018_info.svg"
+        }
+      }
+    },
+    {
+      "Id": 19,
+      "Name": "plus",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/019_plus.png",
+          "SVG": "Outline/019_plus.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/019_plus.png",
+          "SVG": "Soft/019_plus.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/019_plus.png",
+          "SVG": "Duotone/019_plus.svg"
+        }
+      }
+    },
+    {
+      "Id": 20,
+      "Name": "minus",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/020_minus.png",
+          "SVG": "Outline/020_minus.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/020_minus.png",
+          "SVG": "Soft/020_minus.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/020_minus.png",
+          "SVG": "Duotone/020_minus.svg"
+        }
+      }
+    },
+    {
+      "Id": 21,
+      "Name": "farm",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/021_farm.png",
+          "SVG": "Outline/021_farm.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/021_farm.png",
+          "SVG": "Soft/021_farm.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/021_farm.png",
+          "SVG": "Duotone/021_farm.svg"
+        }
+      }
+    },
+    {
+      "Id": 22,
+      "Name": "panel",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/022_panel.png",
+          "SVG": "Outline/022_panel.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/022_panel.png",
+          "SVG": "Soft/022_panel.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/022_panel.png",
+          "SVG": "Duotone/022_panel.svg"
+        }
+      }
+    },
+    {
+      "Id": 23,
+      "Name": "inventory",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/023_inventory.png",
+          "SVG": "Outline/023_inventory.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/023_inventory.png",
+          "SVG": "Soft/023_inventory.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/023_inventory.png",
+          "SVG": "Duotone/023_inventory.svg"
+        }
+      }
+    },
+    {
+      "Id": 24,
+      "Name": "harvest",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/024_harvest.png",
+          "SVG": "Outline/024_harvest.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/024_harvest.png",
+          "SVG": "Soft/024_harvest.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/024_harvest.png",
+          "SVG": "Duotone/024_harvest.svg"
+        }
+      }
+    },
+    {
+      "Id": 25,
+      "Name": "seed",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/025_seed.png",
+          "SVG": "Outline/025_seed.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/025_seed.png",
+          "SVG": "Soft/025_seed.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/025_seed.png",
+          "SVG": "Duotone/025_seed.svg"
+        }
+      }
+    },
+    {
+      "Id": 26,
+      "Name": "sprout",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/026_sprout.png",
+          "SVG": "Outline/026_sprout.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/026_sprout.png",
+          "SVG": "Soft/026_sprout.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/026_sprout.png",
+          "SVG": "Duotone/026_sprout.svg"
+        }
+      }
+    },
+    {
+      "Id": 27,
+      "Name": "watering-can",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/027_watering-can.png",
+          "SVG": "Outline/027_watering-can.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/027_watering-can.png",
+          "SVG": "Soft/027_watering-can.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/027_watering-can.png",
+          "SVG": "Duotone/027_watering-can.svg"
+        }
+      }
+    },
+    {
+      "Id": 28,
+      "Name": "shovel",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/028_shovel.png",
+          "SVG": "Outline/028_shovel.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/028_shovel.png",
+          "SVG": "Soft/028_shovel.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/028_shovel.png",
+          "SVG": "Duotone/028_shovel.svg"
+        }
+      }
+    },
+    {
+      "Id": 29,
+      "Name": "tools",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/029_tools.png",
+          "SVG": "Outline/029_tools.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/029_tools.png",
+          "SVG": "Soft/029_tools.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/029_tools.png",
+          "SVG": "Duotone/029_tools.svg"
+        }
+      }
+    },
+    {
+      "Id": 30,
+      "Name": "tractor",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/030_tractor.png",
+          "SVG": "Outline/030_tractor.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/030_tractor.png",
+          "SVG": "Soft/030_tractor.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/030_tractor.png",
+          "SVG": "Duotone/030_tractor.svg"
+        }
+      }
+    },
+    {
+      "Id": 31,
+      "Name": "map",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/031_map.png",
+          "SVG": "Outline/031_map.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/031_map.png",
+          "SVG": "Soft/031_map.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/031_map.png",
+          "SVG": "Duotone/031_map.svg"
+        }
+      }
+    },
+    {
+      "Id": 32,
+      "Name": "menu",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/032_menu.png",
+          "SVG": "Outline/032_menu.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/032_menu.png",
+          "SVG": "Soft/032_menu.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/032_menu.png",
+          "SVG": "Duotone/032_menu.svg"
+        }
+      }
+    },
+    {
+      "Id": 33,
+      "Name": "arrow-left",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/033_arrow-left.png",
+          "SVG": "Outline/033_arrow-left.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/033_arrow-left.png",
+          "SVG": "Soft/033_arrow-left.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/033_arrow-left.png",
+          "SVG": "Duotone/033_arrow-left.svg"
+        }
+      }
+    },
+    {
+      "Id": 34,
+      "Name": "arrow-right",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/034_arrow-right.png",
+          "SVG": "Outline/034_arrow-right.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/034_arrow-right.png",
+          "SVG": "Soft/034_arrow-right.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/034_arrow-right.png",
+          "SVG": "Duotone/034_arrow-right.svg"
+        }
+      }
+    },
+    {
+      "Id": 35,
+      "Name": "minimize",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/035_minimize.png",
+          "SVG": "Outline/035_minimize.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/035_minimize.png",
+          "SVG": "Soft/035_minimize.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/035_minimize.png",
+          "SVG": "Duotone/035_minimize.svg"
+        }
+      }
+    },
+    {
+      "Id": 36,
+      "Name": "maximize",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/036_maximize.png",
+          "SVG": "Outline/036_maximize.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/036_maximize.png",
+          "SVG": "Soft/036_maximize.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/036_maximize.png",
+          "SVG": "Duotone/036_maximize.svg"
+        }
+      }
+    },
+    {
+      "Id": 37,
+      "Name": "restore",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/037_restore.png",
+          "SVG": "Outline/037_restore.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/037_restore.png",
+          "SVG": "Soft/037_restore.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/037_restore.png",
+          "SVG": "Duotone/037_restore.svg"
+        }
+      }
+    },
+    {
+      "Id": 38,
+      "Name": "resize",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/038_resize.png",
+          "SVG": "Outline/038_resize.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/038_resize.png",
+          "SVG": "Soft/038_resize.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/038_resize.png",
+          "SVG": "Duotone/038_resize.svg"
+        }
+      }
+    },
+    {
+      "Id": 39,
+      "Name": "window",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/039_window.png",
+          "SVG": "Outline/039_window.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/039_window.png",
+          "SVG": "Soft/039_window.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/039_window.png",
+          "SVG": "Duotone/039_window.svg"
+        }
+      }
+    },
+    {
+      "Id": 40,
+      "Name": "automation",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/040_automation.png",
+          "SVG": "Outline/040_automation.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/040_automation.png",
+          "SVG": "Soft/040_automation.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/040_automation.png",
+          "SVG": "Duotone/040_automation.svg"
+        }
+      }
+    },
+    {
+      "Id": 41,
+      "Name": "play",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/041_play.png",
+          "SVG": "Outline/041_play.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/041_play.png",
+          "SVG": "Soft/041_play.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/041_play.png",
+          "SVG": "Duotone/041_play.svg"
+        }
+      }
+    },
+    {
+      "Id": 42,
+      "Name": "pause",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/042_pause.png",
+          "SVG": "Outline/042_pause.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/042_pause.png",
+          "SVG": "Soft/042_pause.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/042_pause.png",
+          "SVG": "Duotone/042_pause.svg"
+        }
+      }
+    },
+    {
+      "Id": 43,
+      "Name": "stop",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/043_stop.png",
+          "SVG": "Outline/043_stop.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/043_stop.png",
+          "SVG": "Soft/043_stop.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/043_stop.png",
+          "SVG": "Duotone/043_stop.svg"
+        }
+      }
+    },
+    {
+      "Id": 44,
+      "Name": "bolt",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/044_bolt.png",
+          "SVG": "Outline/044_bolt.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/044_bolt.png",
+          "SVG": "Soft/044_bolt.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/044_bolt.png",
+          "SVG": "Duotone/044_bolt.svg"
+        }
+      }
+    },
+    {
+      "Id": 45,
+      "Name": "shield",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/045_shield.png",
+          "SVG": "Outline/045_shield.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/045_shield.png",
+          "SVG": "Soft/045_shield.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/045_shield.png",
+          "SVG": "Duotone/045_shield.svg"
+        }
+      }
+    },
+    {
+      "Id": 46,
+      "Name": "key",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/046_key.png",
+          "SVG": "Outline/046_key.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/046_key.png",
+          "SVG": "Soft/046_key.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/046_key.png",
+          "SVG": "Duotone/046_key.svg"
+        }
+      }
+    },
+    {
+      "Id": 47,
+      "Name": "lock",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/047_lock.png",
+          "SVG": "Outline/047_lock.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/047_lock.png",
+          "SVG": "Soft/047_lock.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/047_lock.png",
+          "SVG": "Duotone/047_lock.svg"
+        }
+      }
+    },
+    {
+      "Id": 48,
+      "Name": "unlock",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/048_unlock.png",
+          "SVG": "Outline/048_unlock.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/048_unlock.png",
+          "SVG": "Soft/048_unlock.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/048_unlock.png",
+          "SVG": "Duotone/048_unlock.svg"
+        }
+      }
+    },
+    {
+      "Id": 49,
+      "Name": "coins",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/049_coins.png",
+          "SVG": "Outline/049_coins.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/049_coins.png",
+          "SVG": "Soft/049_coins.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/049_coins.png",
+          "SVG": "Duotone/049_coins.svg"
+        }
+      }
+    },
+    {
+      "Id": 50,
+      "Name": "gift",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/050_gift.png",
+          "SVG": "Outline/050_gift.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/050_gift.png",
+          "SVG": "Soft/050_gift.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/050_gift.png",
+          "SVG": "Duotone/050_gift.svg"
+        }
+      }
+    },
+    {
+      "Id": 51,
+      "Name": "teleport",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/051_teleport.png",
+          "SVG": "Outline/051_teleport.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/051_teleport.png",
+          "SVG": "Soft/051_teleport.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/051_teleport.png",
+          "SVG": "Duotone/051_teleport.svg"
+        }
+      }
+    },
+    {
+      "Id": 52,
+      "Name": "target",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/052_target.png",
+          "SVG": "Outline/052_target.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/052_target.png",
+          "SVG": "Soft/052_target.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/052_target.png",
+          "SVG": "Duotone/052_target.svg"
+        }
+      }
+    },
+    {
+      "Id": 53,
+      "Name": "chart",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/053_chart.png",
+          "SVG": "Outline/053_chart.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/053_chart.png",
+          "SVG": "Soft/053_chart.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/053_chart.png",
+          "SVG": "Duotone/053_chart.svg"
+        }
+      }
+    },
+    {
+      "Id": 54,
+      "Name": "chart-bar",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/054_chart-bar.png",
+          "SVG": "Outline/054_chart-bar.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/054_chart-bar.png",
+          "SVG": "Soft/054_chart-bar.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/054_chart-bar.png",
+          "SVG": "Duotone/054_chart-bar.svg"
+        }
+      }
+    },
+    {
+      "Id": 55,
+      "Name": "clock",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/055_clock.png",
+          "SVG": "Outline/055_clock.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/055_clock.png",
+          "SVG": "Soft/055_clock.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/055_clock.png",
+          "SVG": "Duotone/055_clock.svg"
+        }
+      }
+    },
+    {
+      "Id": 56,
+      "Name": "timer",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/056_timer.png",
+          "SVG": "Outline/056_timer.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/056_timer.png",
+          "SVG": "Soft/056_timer.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/056_timer.png",
+          "SVG": "Duotone/056_timer.svg"
+        }
+      }
+    },
+    {
+      "Id": 57,
+      "Name": "compass",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/057_compass.png",
+          "SVG": "Outline/057_compass.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/057_compass.png",
+          "SVG": "Soft/057_compass.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/057_compass.png",
+          "SVG": "Duotone/057_compass.svg"
+        }
+      }
+    },
+    {
+      "Id": 58,
+      "Name": "heart",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/058_heart.png",
+          "SVG": "Outline/058_heart.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/058_heart.png",
+          "SVG": "Soft/058_heart.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/058_heart.png",
+          "SVG": "Duotone/058_heart.svg"
+        }
+      }
+    },
+    {
+      "Id": 59,
+      "Name": "star",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/059_star.png",
+          "SVG": "Outline/059_star.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/059_star.png",
+          "SVG": "Soft/059_star.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/059_star.png",
+          "SVG": "Duotone/059_star.svg"
+        }
+      }
+    },
+    {
+      "Id": 60,
+      "Name": "eye",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/060_eye.png",
+          "SVG": "Outline/060_eye.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/060_eye.png",
+          "SVG": "Soft/060_eye.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/060_eye.png",
+          "SVG": "Duotone/060_eye.svg"
+        }
+      }
+    },
+    {
+      "Id": 61,
+      "Name": "eye-off",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/061_eye-off.png",
+          "SVG": "Outline/061_eye-off.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/061_eye-off.png",
+          "SVG": "Soft/061_eye-off.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/061_eye-off.png",
+          "SVG": "Duotone/061_eye-off.svg"
+        }
+      }
+    },
+    {
+      "Id": 62,
+      "Name": "filter",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/062_filter.png",
+          "SVG": "Outline/062_filter.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/062_filter.png",
+          "SVG": "Soft/062_filter.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/062_filter.png",
+          "SVG": "Duotone/062_filter.svg"
+        }
+      }
+    },
+    {
+      "Id": 63,
+      "Name": "sort",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/063_sort.png",
+          "SVG": "Outline/063_sort.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/063_sort.png",
+          "SVG": "Soft/063_sort.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/063_sort.png",
+          "SVG": "Duotone/063_sort.svg"
+        }
+      }
+    },
+    {
+      "Id": 64,
+      "Name": "check-circle",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/064_check-circle.png",
+          "SVG": "Outline/064_check-circle.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/064_check-circle.png",
+          "SVG": "Soft/064_check-circle.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/064_check-circle.png",
+          "SVG": "Duotone/064_check-circle.svg"
+        }
+      }
+    },
+    {
+      "Id": 65,
+      "Name": "alert",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/065_alert.png",
+          "SVG": "Outline/065_alert.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/065_alert.png",
+          "SVG": "Soft/065_alert.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/065_alert.png",
+          "SVG": "Duotone/065_alert.svg"
+        }
+      }
+    },
+    {
+      "Id": 66,
+      "Name": "help",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/066_help.png",
+          "SVG": "Outline/066_help.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/066_help.png",
+          "SVG": "Soft/066_help.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/066_help.png",
+          "SVG": "Duotone/066_help.svg"
+        }
+      }
+    },
+    {
+      "Id": 67,
+      "Name": "copy",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/067_copy.png",
+          "SVG": "Outline/067_copy.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/067_copy.png",
+          "SVG": "Soft/067_copy.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/067_copy.png",
+          "SVG": "Duotone/067_copy.svg"
+        }
+      }
+    },
+    {
+      "Id": 68,
+      "Name": "clipboard",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/068_clipboard.png",
+          "SVG": "Outline/068_clipboard.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/068_clipboard.png",
+          "SVG": "Soft/068_clipboard.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/068_clipboard.png",
+          "SVG": "Duotone/068_clipboard.svg"
+        }
+      }
+    },
+    {
+      "Id": 69,
+      "Name": "trash",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/069_trash.png",
+          "SVG": "Outline/069_trash.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/069_trash.png",
+          "SVG": "Soft/069_trash.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/069_trash.png",
+          "SVG": "Duotone/069_trash.svg"
+        }
+      }
+    },
+    {
+      "Id": 70,
+      "Name": "edit",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/070_edit.png",
+          "SVG": "Outline/070_edit.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/070_edit.png",
+          "SVG": "Soft/070_edit.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/070_edit.png",
+          "SVG": "Duotone/070_edit.svg"
+        }
+      }
+    },
+    {
+      "Id": 71,
+      "Name": "wand",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/071_wand.png",
+          "SVG": "Outline/071_wand.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/071_wand.png",
+          "SVG": "Soft/071_wand.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/071_wand.png",
+          "SVG": "Duotone/071_wand.svg"
+        }
+      }
+    },
+    {
+      "Id": 72,
+      "Name": "wifi",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/072_wifi.png",
+          "SVG": "Outline/072_wifi.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/072_wifi.png",
+          "SVG": "Soft/072_wifi.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/072_wifi.png",
+          "SVG": "Duotone/072_wifi.svg"
+        }
+      }
+    },
+    {
+      "Id": 73,
+      "Name": "globe",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/073_globe.png",
+          "SVG": "Outline/073_globe.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/073_globe.png",
+          "SVG": "Soft/073_globe.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/073_globe.png",
+          "SVG": "Duotone/073_globe.svg"
+        }
+      }
+    },
+    {
+      "Id": 74,
+      "Name": "link",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/074_link.png",
+          "SVG": "Outline/074_link.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/074_link.png",
+          "SVG": "Soft/074_link.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/074_link.png",
+          "SVG": "Duotone/074_link.svg"
+        }
+      }
+    },
+    {
+      "Id": 75,
+      "Name": "mail",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/075_mail.png",
+          "SVG": "Outline/075_mail.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/075_mail.png",
+          "SVG": "Soft/075_mail.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/075_mail.png",
+          "SVG": "Duotone/075_mail.svg"
+        }
+      }
+    },
+    {
+      "Id": 76,
+      "Name": "message",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/076_message.png",
+          "SVG": "Outline/076_message.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/076_message.png",
+          "SVG": "Soft/076_message.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/076_message.png",
+          "SVG": "Duotone/076_message.svg"
+        }
+      }
+    },
+    {
+      "Id": 77,
+      "Name": "terminal",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/077_terminal.png",
+          "SVG": "Outline/077_terminal.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/077_terminal.png",
+          "SVG": "Soft/077_terminal.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/077_terminal.png",
+          "SVG": "Duotone/077_terminal.svg"
+        }
+      }
+    },
+    {
+      "Id": 78,
+      "Name": "bug",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/078_bug.png",
+          "SVG": "Outline/078_bug.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/078_bug.png",
+          "SVG": "Soft/078_bug.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/078_bug.png",
+          "SVG": "Duotone/078_bug.svg"
+        }
+      }
+    },
+    {
+      "Id": 79,
+      "Name": "cpu",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/079_cpu.png",
+          "SVG": "Outline/079_cpu.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/079_cpu.png",
+          "SVG": "Soft/079_cpu.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/079_cpu.png",
+          "SVG": "Duotone/079_cpu.svg"
+        }
+      }
+    },
+    {
+      "Id": 80,
+      "Name": "server",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/080_server.png",
+          "SVG": "Outline/080_server.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/080_server.png",
+          "SVG": "Soft/080_server.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/080_server.png",
+          "SVG": "Duotone/080_server.svg"
+        }
+      }
+    },
+    {
+      "Id": 81,
+      "Name": "database",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/081_database.png",
+          "SVG": "Outline/081_database.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/081_database.png",
+          "SVG": "Soft/081_database.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/081_database.png",
+          "SVG": "Duotone/081_database.svg"
+        }
+      }
+    },
+    {
+      "Id": 82,
+      "Name": "cloud",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/082_cloud.png",
+          "SVG": "Outline/082_cloud.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/082_cloud.png",
+          "SVG": "Soft/082_cloud.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/082_cloud.png",
+          "SVG": "Duotone/082_cloud.svg"
+        }
+      }
+    },
+    {
+      "Id": 83,
+      "Name": "cloud-download",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/083_cloud-download.png",
+          "SVG": "Outline/083_cloud-download.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/083_cloud-download.png",
+          "SVG": "Soft/083_cloud-download.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/083_cloud-download.png",
+          "SVG": "Duotone/083_cloud-download.svg"
+        }
+      }
+    },
+    {
+      "Id": 84,
+      "Name": "camera",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/084_camera.png",
+          "SVG": "Outline/084_camera.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/084_camera.png",
+          "SVG": "Soft/084_camera.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/084_camera.png",
+          "SVG": "Duotone/084_camera.svg"
+        }
+      }
+    },
+    {
+      "Id": 85,
+      "Name": "image",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/085_image.png",
+          "SVG": "Outline/085_image.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/085_image.png",
+          "SVG": "Soft/085_image.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/085_image.png",
+          "SVG": "Duotone/085_image.svg"
+        }
+      }
+    },
+    {
+      "Id": 86,
+      "Name": "music",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/086_music.png",
+          "SVG": "Outline/086_music.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/086_music.png",
+          "SVG": "Soft/086_music.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/086_music.png",
+          "SVG": "Duotone/086_music.svg"
+        }
+      }
+    },
+    {
+      "Id": 87,
+      "Name": "volume",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/087_volume.png",
+          "SVG": "Outline/087_volume.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/087_volume.png",
+          "SVG": "Soft/087_volume.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/087_volume.png",
+          "SVG": "Duotone/087_volume.svg"
+        }
+      }
+    },
+    {
+      "Id": 88,
+      "Name": "volume-off",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/088_volume-off.png",
+          "SVG": "Outline/088_volume-off.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/088_volume-off.png",
+          "SVG": "Soft/088_volume-off.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/088_volume-off.png",
+          "SVG": "Duotone/088_volume-off.svg"
+        }
+      }
+    },
+    {
+      "Id": 89,
+      "Name": "sun",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/089_sun.png",
+          "SVG": "Outline/089_sun.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/089_sun.png",
+          "SVG": "Soft/089_sun.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/089_sun.png",
+          "SVG": "Duotone/089_sun.svg"
+        }
+      }
+    },
+    {
+      "Id": 90,
+      "Name": "moon",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/090_moon.png",
+          "SVG": "Outline/090_moon.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/090_moon.png",
+          "SVG": "Soft/090_moon.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/090_moon.png",
+          "SVG": "Duotone/090_moon.svg"
+        }
+      }
+    },
+    {
+      "Id": 91,
+      "Name": "gamepad",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/091_gamepad.png",
+          "SVG": "Outline/091_gamepad.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/091_gamepad.png",
+          "SVG": "Soft/091_gamepad.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/091_gamepad.png",
+          "SVG": "Duotone/091_gamepad.svg"
+        }
+      }
+    },
+    {
+      "Id": 92,
+      "Name": "trophy",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/092_trophy.png",
+          "SVG": "Outline/092_trophy.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/092_trophy.png",
+          "SVG": "Soft/092_trophy.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/092_trophy.png",
+          "SVG": "Duotone/092_trophy.svg"
+        }
+      }
+    },
+    {
+      "Id": 93,
+      "Name": "rocket",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/093_rocket.png",
+          "SVG": "Outline/093_rocket.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/093_rocket.png",
+          "SVG": "Soft/093_rocket.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/093_rocket.png",
+          "SVG": "Duotone/093_rocket.svg"
+        }
+      }
+    },
+    {
+      "Id": 94,
+      "Name": "backpack",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/094_backpack.png",
+          "SVG": "Outline/094_backpack.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/094_backpack.png",
+          "SVG": "Soft/094_backpack.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/094_backpack.png",
+          "SVG": "Duotone/094_backpack.svg"
+        }
+      }
+    },
+    {
+      "Id": 95,
+      "Name": "sword",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/095_sword.png",
+          "SVG": "Outline/095_sword.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/095_sword.png",
+          "SVG": "Soft/095_sword.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/095_sword.png",
+          "SVG": "Duotone/095_sword.svg"
+        }
+      }
+    },
+    {
+      "Id": 96,
+      "Name": "flag",
+      "Files": {
+        "Outline": {
+          "PNG": "Outline/096_flag.png",
+          "SVG": "Outline/096_flag.svg"
+        },
+        "Soft": {
+          "PNG": "Soft/096_flag.png",
+          "SVG": "Soft/096_flag.svg"
+        },
+        "Duotone": {
+          "PNG": "Duotone/096_flag.png",
+          "SVG": "Duotone/096_flag.svg"
+        }
+      }
+    }
+  ]
+}

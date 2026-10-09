@@ -1,0 +1,77 @@
+---
+title: Controls
+description: Configure built-in controls and connect them to your logic.
+---
+
+Every declarative control has a `Type` and a unique `Id`. Controls can appear in a tab's `Controls` array or inside a section's `Controls` array. In the direct API, add them with a tab or section method such as `section:Toggle(options)`.
+
+Common options are `Id`, `Title`, `Description` (or `Desc`), `Disabled`, `Persistent`, `Callback`, and `Layout`. Persistent value controls default to included in value snapshots. Use `Persistent = false` to exclude a value from configuration methods.
+
+## Built-in control types
+
+| Type | Options | Stored value |
+|---|---|---|
+| `Toggle` | `Value` (boolean) | Boolean |
+| `Slider` | `Min`, `Max`, `Step`, `Value` | Snapped number |
+| `Dropdown` | `Options` (unique strings), `Value` | Selected string |
+| `Input` | `Value`, `Placeholder`, `MaxLength` | String committed when focus is lost |
+| `Keybind` | `Value` as a KeyCode name or `Enum.KeyCode` | KeyCode name |
+| `ColorPicker` | `Value` as `#RRGGBB` or `Color3`; optional `Palette` | Hex color string |
+| `Button` | `Text`, optional `Icon`, `IconVariant` | None |
+| `Paragraph` | `Title`, `Description` | None |
+| `Custom` | `Build`, `Height` | Builder-owned |
+
+Slider defaults are `Min = 0`, `Max = 100`, `Step = 1`, and `Value = Min`. Slider values are clamped and snapped to the step. Dropdown options must be a nonempty list of unique strings; the first item is the default if no value is supplied. Input `MaxLength` defaults to 120 and accepts 1–4096. Keybind defaults to `F6`. A color palette accepts 1–32 values, each supplied as hex or `Color3`.
+
+## Read and set control values
+
+```lua
+local volume = window:Get("volume")
+print(volume:Get())
+volume:Set(65, true) -- call Callback if the value changed
+volume:SetTitle("Master volume")
+volume:SetDescription("Adjust the output level.")
+volume:SetEnabled(true)
+volume:SetVisible(true)
+```
+
+`Set(value, fireCallback)` validates the value. The control callback runs only when the value changes and `fireCallback` is true. User changes call the callback. `ColorPicker` additionally exposes `GetColor()` for a `Color3` value.
+
+## Callbacks
+
+```lua
+local window = UI:Create({
+    Title = "Preferences",
+    Tabs = {{Title = "General", Controls = {
+        {
+            Type = "Dropdown",
+            Id = "quality",
+            Title = "Quality",
+            Options = {"Low", "Medium", "High"},
+            Value = "Medium",
+            Callback = function(value)
+                print("Selected quality:", value)
+            end,
+        },
+        {
+            Type = "Button",
+            Id = "apply",
+            Title = "Apply settings",
+            Text = "Apply",
+            Callback = function()
+                print("Apply the selected settings here")
+            end,
+        },
+    }}},
+})
+```
+
+Callbacks execute in protected tasks. Errors are recorded on the owning window and reported with `warn`; errors in a user callback do not stop other controls from cleaning up.
+
+For keybinds, clicking the control enters capture mode. Capturing a key changes the value and emits `Changed`, but does not call the action callback. Press the assigned key outside capture mode to run that callback.
+
+## Search and disabled controls
+
+The window search filters controls using their title and description. Give each control a clear title and a useful description. `Disabled = true` creates a noninteractive control; `SetEnabled(false)` changes that state while the window is open.
+
+Next: [Values and configuration](/customization/values-and-config) · [Events and lifecycle](/customization/events-and-lifecycle)

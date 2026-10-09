@@ -1,0 +1,59 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Gabibou UI",
+  "description": "Build responsive Roblox interfaces in Luau with controls, themes, icons, loading screens, and lifecycle helpers.",
+  "colors": {
+    "primary": "#737373",
+    "light": "#D4D4D8",
+    "dark": "#A1A1AA"
+  },
+  "appearance": {
+    "default": "dark"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting started",
+        "pages": [
+          "index",
+          "getting-started/quickstart",
+          "getting-started/installation"
+        ]
+      },
+      {
+        "group": "Customization",
+        "pages": [
+          "customization/controls",
+          "customization/values-and-config",
+          "customization/appearance-and-layout",
+          "customization/icons-and-branding",
+          "customization/loading-screens",
+          "customization/key-systems",
+          "customization/events-and-lifecycle",
+          "customization/animations-and-components",
+          "customization/notifications"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/api",
+          "reference/customization",
+          "reference/icon-catalogue",
+          "reference/quality"
+        ]
+      },
+      {
+        "group": "Examples",
+        "pages": [
+          "examples/quickstart",
+          "examples/loading",
+          "examples/key-discord",
+          "examples/server-validation",
+          "examples/remote-loading"
+        ]
+      }
+    ]
+  }
+}

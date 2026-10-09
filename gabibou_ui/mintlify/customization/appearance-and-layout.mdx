@@ -1,0 +1,62 @@
+---
+title: Appearance and responsive layout
+description: Configure themes, styles, motion, and adaptive layouts.
+---
+
+## Themes
+
+Built-in themes are `Graphite`, `Aurora`, and `Ember`. Set `Theme` when creating a window or call `window:SetTheme(nameOrColors)`. Custom theme tables use `Color3` values. Partial tables inherit omitted tokens from Graphite.
+
+Theme tokens are `Background`, `Surface`, `Raised`, `Hover`, `Border`, `Text`, `Muted`, `Accent`, `AccentText`, `Success`, and `Danger`.
+
+```lua
+window:SetTheme({
+    Background = Color3.fromRGB(8, 8, 10),
+    Surface = Color3.fromRGB(17, 18, 21),
+    Raised = Color3.fromRGB(27, 29, 33),
+    Border = Color3.fromRGB(65, 67, 73),
+    Text = Color3.fromRGB(248, 248, 250),
+    Muted = Color3.fromRGB(163, 165, 172),
+    Accent = Color3.fromRGB(245, 245, 247),
+})
+```
+
+`window:BindColor(instance, property, token)` binds a `Color3` property on a descendant of the window GUI to a theme token.
+
+## Style and motion
+
+`UI:SetStyle` and `UI:SetMotion` change defaults for future windows. `window:SetStyle` and `window:SetMotion` update one existing window.
+
+Style fields include `Font`, `FontBold`, `TextSize`, `DescriptionSize`, `TitleSize`, `WindowRadius`, `SectionRadius`, `ControlRadius`, and `RowPadding`. Motion fields are `Duration`, `Style`, `Direction`, `RepeatCount`, `Reverses`, and `Delay`.
+
+```lua
+window:SetStyle({TitleSize = 20, WindowRadius = 18, ControlRadius = 8})
+window:SetMotion({Duration = 0.24, Style = Enum.EasingStyle.Quart})
+window:SetReducedMotion(true)
+```
+
+For valid values and ranges, see [API reference](/reference/api). Reduced motion cancels active managed tweens and applies their final values.
+
+## Responsive settings
+
+Responsive layout is enabled by default. `Responsive` accepts a table with `Breakpoint` (320–1000 px; default 620), `TouchTarget` (44–72 px; default 44), and `Margin` (4–40 px; default 12). The library adapts navigation and controls to window size, safe insets, and the on-screen keyboard. Test your own custom content on the devices you support; automated layouts do not verify physical-device input.
+
+## Layout options
+
+Set defaults for new windows with `UI:SetLayout(options)`, or update one window with `window:SetLayout(options)`. Settings cover tab position, mobile tab position, sidebar width, tab dimensions and gaps, content padding and spacing, header and footer sizes, search visibility, and control alignment.
+
+Tabs and controls accept a local `Layout` table. Tab keys include `Order`, `Width`, `Height`, and `IconSize`. Control keys include `Order`, `Width`, `Height`, and `Position` (`Left`, `Right`, `Below`). See [API reference](/reference/api) for the complete defaults and ranges.
+
+## Window parts
+
+`window:GetParts()` exposes `Panel`, `Header`, `Tabs`, `Search`, `PageTitle`, `Pages`, `Footer`, `Reopen`, `Notifications`, `Minimize`, `Close`, and `Resize`.
+
+```lua
+window:SetPartLayout("Header", {Position = UDim2.fromOffset(20, 8)})
+-- Restore the calculated position later.
+window:ResetPartLayout("Header")
+```
+
+`SetPartLayout` accepts `Position` and `Size` as finite `UDim2` values, `AnchorPoint` as a `Vector2` in the 0–1 range, and `Visible` as a boolean. Overrides apply after automatic responsive layout and can overlap or extend beyond the window. Reset parts when they should return to automatic layout.
+
+Next: [Icons and branding](/customization/icons-and-branding) · [Loading screens](/customization/loading-screens)

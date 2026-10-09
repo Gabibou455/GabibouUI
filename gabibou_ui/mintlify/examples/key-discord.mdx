@@ -1,0 +1,107 @@
+---
+title: Key gate with Discord
+description: Complete Launch example with a Discord invite and a server-backed key check.
+---
+
+Place this `LocalScript` in `StarterPlayerScripts`. Install the server example from [Server validation](/examples/server-validation) and replace the Discord invite with your own.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+local validateKey = ReplicatedStorage:WaitForChild("GabibouValidateKey")
+
+local session = UI:Launch({
+    Id = "DiscordExample",
+    Title = "Garden Tools",
+    Subtitle = "A small example application",
+    Theme = "Graphite",
+    Responsive = {Breakpoint = 620, TouchTarget = 44, Margin = 12},
+    KeySystem = {
+        Title = "Welcome",
+        Subtitle = "Enter your access key to continue.",
+        Logo = "Avatar",
+        MarkText = "GT",
+        SubmitText = "Verify key",
+        Discord = {
+            Url = "https://discord.gg/your-server",
+            Text = "Copy our Discord invite",
+            CopiedText = "Invite copied",
+            Color = Color3.fromRGB(88, 101, 242),
+            -- Optional uploaded logo: Logo = "rbxassetid://1234567890",
+            -- Optional clipboard callback: Copy = function(url) ... end,
+        },
+        GetKey = {
+            Url = "https://example.com/get-key", -- Replace with your provider URL.
+            Text = "Get key",
+            -- Optional clipboard callback: Copy = function(url) ... end,
+        },
+        Validate = function(key)
+            return validateKey:InvokeServer(key)
+        end,
+    },
+    Loading = {
+        Title = "Garden Tools",
+        Subtitle = "Preparing your interface",
+        Variant = "Centered",
+        Logo = "Avatar",
+        MinimumDuration = 0.5,
+    },
+    Steps = {{
+        Title = "Loading preferences",
+        Run = function(loader)
+            -- Load or prepare application data here.
+        end,
+    }},
+    Tabs = {{
+        Title = "Home",
+        Icon = "home",
+        Sections = {{
+            Title = "Preferences",
+            Controls = {
+                {
+                    Type = "Toggle",
+                    Id = "notifications",
+                    Title = "Notifications",
+                    Value = true,
+                    Callback = function(enabled)
+                        print("Notifications enabled:", enabled)
+                    end,
+                },
+                {
+                    Type = "Button",
+                    Id = "testNotification",
+                    Title = "Preview",
+                    Text = "Show notification",
+                    Callback = function()
+                        print("The interface is ready")
+                    end,
+                },
+            },
+        }},
+    }},
+    OnReady = function(window, currentSession)
+        local preview = window:Get("testNotification")
+        if preview then
+            preview.Callback = function()
+                window:Notify({
+                    Title = "Ready",
+                    Content = "The key was accepted and setup completed.",
+                    Kind = "success",
+                })
+            end
+        end
+        print("Launch status:", currentSession.Status)
+    end,
+    OnError = function(message)
+        warn("Startup failed:", message)
+    end,
+    OnCancel = function()
+        print("Startup cancelled")
+    end,
+})
+
+-- Later, when the owning application is removed:
+-- session:Destroy()
+```
+
+By default the key gate uses the local player's avatar and the `Verify key` button label. Without `setclipboard`, the Discord invite or GetKey URL appears in a selectable text field so the user can copy it manually. Neither action opens a browser automatically. The gate does not validate Discord links or grant server permissions.

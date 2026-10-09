@@ -1,0 +1,38 @@
+---
+title: Remote loading example
+description: Fetch a pinned release, compile it, and validate the result.
+---
+
+This pattern requires a client environment with `game:HttpGet` and `loadstring`. It is pinned to the project's `v1.5.0-rc.3` release candidate; check the repository's Releases page for availability before using the URL. Standard Roblox Studio should use a `ModuleScript` and `require`.
+
+```lua
+-- Client environment with game:HttpGet and loadstring support.
+local owner = "Gabibou455"
+local repository = "GabibouUI"
+local version = "v1.5.0-rc.3"
+
+assert(owner:match("^[%w-]+$"), "Set owner to a valid GitHub username before loading")
+assert(type(loadstring) == "function", "This environment has no loadstring; use ModuleScript + require")
+
+local url = "https://raw.githubusercontent.com/" .. owner .. "/" .. repository .. "/" .. version .. "/gabibou_ui.luau"
+local fetched, source = pcall(function()
+    return game:HttpGet(url)
+end)
+assert(fetched and type(source) == "string" and #source > 0,
+    "Download failed; verify the repository, tag, and URL: " .. url)
+
+local chunk, problem = loadstring(source, "GabibouUI@" .. version)
+assert(chunk, "Compile failed: " .. tostring(problem))
+
+local UI = chunk()
+assert(type(UI) == "table" and type(UI.CreateWindow) == "function",
+    "Downloaded file is not the Gabibou UI library")
+
+local window = UI:CreateWindow({Id = "RemoteExample", Title = "My project", Theme = "Graphite"})
+local tab = window:Tab({Title = "Settings", Icon = "settings"})
+tab:Toggle({Id = "effects", Title = "Effects", Value = true, Callback = function(enabled)
+    print("Effects enabled:", enabled)
+end})
+```
+
+Keep distributed scripts pinned to a reviewed release tag. Check the project's Releases page before updating the version, and report an external fetch as verified only after actually testing it.
