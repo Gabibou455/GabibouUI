@@ -99,6 +99,9 @@ branding:Dropdown({Id="demo_branding",Title="Picture position",Options={"Top rig
     local placements={["Top right"]="TopRight",["Bottom right"]="BottomRight",["Both right"]="BothRight",["Top left"]="TopLeft"}
     window:SetBranding({Mode="Avatar",Placement=placements[value]})
 end})
+branding:Toggle({Id="demo_watermark",Title="Show library watermark",Description="Hide the library name and version while keeping the hide-key hint.",Value=window.ShowWatermark,Persistent=false,Callback=function(value)
+    window:SetWatermark(value)
+end})
 local arrangement=appearance:Section({Title="Layout"})
 arrangement:Dropdown({Id="demo_tabs_position",Title="Tab position",Options={"Left","Right","Top","Bottom"},Value="Left",Persistent=false,Callback=function(value)window:SetLayout({TabPosition=value})end})
 arrangement:Dropdown({Id="demo_mobile_tabs",Title="Mobile tabs",Options={"Top","Bottom"},Value="Top",Persistent=false,Callback=function(value)window:SetLayout({MobileTabPosition=value})end})

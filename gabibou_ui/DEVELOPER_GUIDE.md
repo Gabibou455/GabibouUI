@@ -1,6 +1,6 @@
 # Gabibou UI Developer Guide
 
-- Version: `1.5.0-rc.5` (release candidate)
+- Version: `1.5.0-rc.6` (release candidate)
 - Language: Luau
 - Runtime: Roblox client
 
@@ -239,7 +239,7 @@ local tab = window:Tab({Title = "Farm", Icon = "farm", IconVariant = "Soft"})
 local iconId = UI:GetIconId("watering-can")
 ```
 
-Window branding supports an initial, avatar, or image, and can be positioned around the title bar. Use `Branding = {...}` at creation or `window:SetBranding(partialOptions)`. Image branding accepts an `rbxassetid://` URI. Avatar mode uses Roblox's thumbnail service. See [CUSTOMIZATION.md](CUSTOMIZATION.md) for branding fields.
+Window branding supports an initial, avatar, or image, and can be positioned around the title bar. Use `Branding = {...}` at creation or `window:SetBranding(partialOptions)`. Image branding accepts an `rbxassetid://` URI. Avatar mode uses Roblox's thumbnail service. See [CUSTOMIZATION.md](CUSTOMIZATION.md) for branding fields. The footer watermark shows the library name and version by default; set `ShowWatermark = false` or call `window:SetWatermark(false)` to hide that text while keeping the desktop hide-key hint.
 
 ## Loading screens
 

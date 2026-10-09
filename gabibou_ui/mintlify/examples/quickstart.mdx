@@ -1,6 +1,6 @@
 ---
-title: Quickstart example
-description: Complete ModuleScript example with a tab, controls, and value events.
+title: Complete quickstart example
+description: A copyable ModuleScript example with controls, callbacks, and value updates.
 ---
 
 Use this in a client `LocalScript` after adding the library `ModuleScript` to `ReplicatedStorage`.
@@ -9,6 +9,43 @@ Use this in a client `LocalScript` after adding the library `ModuleScript` to `R
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
 
+local window = UI:CreateWindow("My project")
+local tab = window:Tab("Settings", "settings")
+
+local effects = tab:Toggle("Effects", function(enabled)
+    print("Effects:", enabled)
+end)
+
+local volume = tab:Slider("Volume", {Min = 0, Max = 100, Value = 50}, function(value)
+    print("Volume:", value)
+end)
+
+local quality = tab:Dropdown("Quality", {
+    Options = {"Low", "Medium", "High"},
+    Value = "Medium",
+}, function(choice)
+    print("Quality:", choice)
+end)
+
+tab:Button("Reset values", function()
+    effects:Set(false)
+    volume:Set(50)
+    quality:Set("Medium")
+end)
+
+print("Current effects setting:", effects:Get())
+volume:Set(75, true) -- The second argument calls the callback when the value changes.
+```
+
+In this example, the toggle uses its default `false` value. The slider starts at `50`, and the dropdown starts at `Medium` because those starting values are supplied explicitly. A value control's callback receives the new value after a user change. `Get()` reads a value; `Set(value)` changes it without firing the callback, and `Set(value, true)` fires it if the value changed.
+
+For the shortest setup, see [Quickstart](/getting-started/quickstart). See [Controls](/customization/controls) for each control's full options and defaults.
+
+## Advanced: declarative setup
+
+`UI:Create` builds a window from a table. Use this form when you prefer to describe tabs and controls as data instead of adding them one by one.
+
+```lua
 local window = UI:Create({
     Id = "MyInterface",
     Title = "My project",
@@ -34,10 +71,8 @@ local window = UI:Create({
 })
 
 window:Get("effects"):On("Changed", function(value)
-    print("Effects", value)
+    print("Effects:", value)
 end)
-
-window:SetValues({effects = true, volume = 75}, false)
 ```
 
-See [Quickstart](/getting-started/quickstart) for an explanation of each part.
+For all options accepted by each form, see the [API reference](/reference/api).

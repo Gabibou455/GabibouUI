@@ -29,7 +29,7 @@ For the short API, use `UI:CreateWindow("My project")`, `window:Tab("Home", "hom
 
 ## Window creation options
 
-`CreateWindow` and the root of `Create`/`Launch` accept `Id`, `Title`, `Subtitle`, `Theme`, `Style`, `Motion`, `Branding`, `Layout`, `Notifications`, `Navigation`, `Responsive`, `Position`, `AnchorPoint`, `Width`, `Height`, `ToggleKey`, `ReducedMotion`, `Parent`, `DisplayOrder`, and `Storage`. `Create` additionally accepts `Tabs` and `Loading`; `Launch` adds `KeySystem`, `Loading`, `Steps`, `OnReady`, `OnError`, and `OnCancel`.
+`CreateWindow` and the root of `Create`/`Launch` accept `Id`, `Title`, `Subtitle`, `Theme`, `Style`, `Motion`, `Branding`, `Layout`, `Notifications`, `Navigation`, `Responsive`, `Position`, `AnchorPoint`, `Width`, `Height`, `ToggleKey`, `ShowWatermark`, `ReducedMotion`, `Parent`, `DisplayOrder`, and `Storage`. `ShowWatermark` defaults to `true`; set it to `false` to hide the footer name and version while keeping the desktop hide-key hint and other actions. `Create` additionally accepts `Tabs` and `Loading`; `Launch` adds `KeySystem`, `Loading`, `Steps`, `OnReady`, `OnError`, and `OnCancel`.
 
 Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (clamped to 320–1400), `Height = 590` (clamped to 300–1000), `ToggleKey = Enum.KeyCode.RightControl`, and `DisplayOrder = 90`. The default GUI parent is the local player's `PlayerGui`. `Responsive` defaults are `Breakpoint = 620`, `TouchTarget = 44`, and `Margin = 12`.
 
@@ -46,6 +46,7 @@ Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (cl
 | `Hide()`, `Show()`, `Toggle()` | Change window visibility. |
 | `SetSize(width, height)`, `SetPosition(position, anchor)` | Set the window dimensions or position. |
 | `SetTheme(value)`, `SetStyle(options)`, `SetMotion(options)`, `SetReducedMotion(enabled)` | Update appearance and managed animation behavior. |
+| `SetWatermark(enabled)` | Show or hide the footer name and library version. |
 | `SetLayout(options)`, `SetNavigation(options)`, `SetBranding(options)` | Update layout and navigation settings. |
 | `SetNotifications(options)`, `Notify(options)`, `Confirm(options)` | Configure or show feedback UI. |
 | `ExportConfig()`, `ImportConfig(json, fireCallbacks)`, `SaveConfig(name)`, `LoadConfig(name, fireCallbacks)` | Export and restore persistent values. |

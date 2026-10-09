@@ -10,7 +10,7 @@ Install the Mintlify CLI by following the [official installation guide](https://
 
 The documentation site is [gabibou-ui.mintlify.app](https://gabibou-ui.mintlify.app), connected to `Gabibou455/GabibouUI`, branch `main`, directory `gabibou_ui/mintlify`. To reproduce this setup, open [Git Settings](https://app.mintlify.com/settings/deployment/git-settings), enable **docs.json is in a subdirectory**, and enter `/gabibou_ui/mintlify` without a trailing slash. See Mintlify's [monorepo guide](https://raw.githubusercontent.com/mintlify/docs/main/deploy/monorepo.mdx).
 
-The docs describe release candidate `1.5.0-rc.5`. Beginner examples use the fixed `main` module URL and short constructors; a reviewed release tag can replace `main` when a project needs a fixed version. The Quality page lists verified checks and remaining validation.
+The docs describe release candidate `1.5.0-rc.6`. Beginner examples use the fixed `main` module URL and short constructors; a reviewed release tag can replace `main` when a project needs a fixed version. The Quality page lists verified checks and remaining validation.
 
 ## Structure
 

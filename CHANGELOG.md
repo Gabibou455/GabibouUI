@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0-rc.6
+
+- Add `ShowWatermark` and `SetWatermark` so developers can hide the library name/version while keeping the desktop hide-key hint and existing branding.
+- Return unused mobile footer space to the content when its text is hidden.
+- Keep first-use examples focused on the short window, tab, and callback flow.
+
 ## 1.5.0-rc.5
 
 - Group navigation tabs with `window:Category("Workspace")` and `category:Tab("Home", "home")`.

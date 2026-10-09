@@ -83,7 +83,15 @@ function Window:_Arrange(width,height,mobile,compact,tiny,minimal)
     local l=self.Layout
     local pad=l.ContentPadding
     local header=l.ShowHeader and not minimal and l.HeaderHeight or 0
-    local footer=l.ShowFooter and not tiny and l.FooterHeight or (tiny and 12 or pad)
+    local footerText={}
+    if self.ShowWatermark then footerText[#footerText+1]="Gabibou UI  "..Library.Version end
+    if not mobile then footerText[#footerText+1]=self.ToggleKey.Name.." to hide" end
+    self.Footer.Text=table.concat(footerText,"     ·     ")
+    local brandingPlacement=self.Branding and self.Branding.Placement
+    local footerBrand=not tiny and width>=320 and l.ShowFooter and
+        (brandingPlacement=="BottomRight" or brandingPlacement=="BothRight")
+    local footerHasContent=#footerText>0 or footerBrand
+    local footer=l.ShowFooter and not tiny and footerHasContent and l.FooterHeight or (tiny and 12 or pad)
     local placement=mobile and l.MobileTabPosition or l.TabPosition
     local horizontal=placement=="Top"or placement=="Bottom"
     if self.HorizontalTabs~=horizontal then self.Nav.CanvasPosition=Vector2.zero end
@@ -118,7 +126,7 @@ function Window:_Arrange(width,height,mobile,compact,tiny,minimal)
     else pageY=header+(showTitle and l.PageTitleHeight+16 or 0)end
     local bottomReserve=footer+(placement=="Bottom"and not tiny and tabHeight+l.SearchGap or 0)
     self.PageHost.Position=UDim2.fromOffset(contentX,pageY);self.PageHost.Size=UDim2.fromOffset(contentWidth,math.max(1,height-pageY-bottomReserve))
-    self.Footer.Visible=l.ShowFooter and not tiny
+    self.Footer.Visible=l.ShowFooter and not tiny and #footerText>0
     for _,tab in ipairs(self.Tabs)do local flow=tab.Page:FindFirstChildOfClass("UIListLayout");if flow then flow.Padding=UDim.new(0,l.SectionGap)end end
 end
 function Control:SetLayout(options)

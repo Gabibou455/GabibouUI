@@ -1,8 +1,8 @@
-# Gabibou UI 1.5.0-rc.5
+# Gabibou UI 1.5.0-rc.6
 
 A Roblox interface library written in Luau. Load it in one line, create a window, and add controls using short constructors. The full options-table API remains available for layouts, animations, loading screens, key screens and other customization. Graphite is the default black, gray and white theme; the library includes 96 original icons in three variants.
 
-> This guide describes release candidate 1.5.0-rc.5. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart) and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
+> This guide describes release candidate 1.5.0-rc.6. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart) and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
 
 Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a complete feature map. Use [CUSTOMIZATION.md](CUSTOMIZATION.md) for advanced styling, custom controls, events, and animations.
 
@@ -29,26 +29,24 @@ The URL follows updates on `main`; replace `main` with a reviewed release tag to
 
 The server script limits each player to one attempt every 2 seconds, rejects keys longer than 256 bytes, and sets the server-side `GabibouAuthorized` attribute after accepting a key. Check this attribute on the server for every protected action. Never put private keys in a `LocalScript`.
 
-The startup example without a gate:
+The shortest ModuleScript setup:
 
 ```lua
 local UI = require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
-local window = UI:Create({
-    Id = "MyInterface", Title = "My project", Subtitle = "Settings",
-    Branding = {Mode = "Avatar", Placement = "BothRight"},
-    Loading = {Title = "My project", Subtitle = "Preparing settings", Logo = "Avatar", MinimumDuration = 0.6},
-    Tabs = {{Title = "Settings", Icon = "settings", Sections = {{Title = "Display", Controls = {
-        {Type = "Toggle", Id = "effects", Title = "Effects", Value = true},
-        {Type = "Slider", Id = "volume", Title = "Volume", Min = 0, Max = 100, Value = 50},
-    }}}}},
-})
-window:Get("effects"):On("Changed", function(value) print("Effects", value) end)
-window:SetValues({effects = true, volume = 75})
+local window = UI:CreateWindow("My project")
+local tab = window:Tab("Settings", "settings")
+local effects = tab:Toggle("Effects", function(enabled)
+    print("Effects:", enabled)
+end)
+local volume = tab:Slider("Volume", {Min = 0, Max = 100, Value = 50}, function(value)
+    print("Volume:", value)
+end)
+volume:Set(75, true)
 ```
 
-This example is also in [`quickstart.luau`](quickstart.luau). `UI:Create(schema)` takes window options at the root, along with `Tabs` and `Loading`. It validates the schema and control IDs before creating the interface. Every declarative control must have a unique, nonempty `Id` of at most 96 characters, with no control characters. Controls created through the direct API `window:Tab():Section():Toggle()` keep their existing behavior and can still receive automatically generated IDs.
+This example is also in [`quickstart.luau`](quickstart.luau). A toggle starts off unless `Value = true` is supplied. `Get()` reads a control, and `Set(value, true)` changes it and calls its callback when the value changes. For a data-driven setup, `UI:Create(schema)` accepts root window options with `Tabs` and `Loading`; it validates the schema and control IDs before creating the interface. Every declarative control needs a unique, nonempty `Id` of at most 96 characters, with no control characters.
 
-`PlayerGui` is used by default. Window options include `Id`, `Title`, `Subtitle`, `Theme`, `Style`, `Motion`, `Responsive`, `Layout`, `Navigation`, `Notifications`, `Width`, `Height`, `Parent`, `DisplayOrder`, `ToggleKey`, `ReducedMotion`, `Storage`, and `Branding`. `Create` consumes `Tabs` and `Loading` and removes them before its internal call to `CreateWindow`. Reusing the same `Id` destroys the previous window as creation of the new one begins. If a `Custom` builder fails at runtime, the partial new interface is cleaned up; the previous window with that `Id` has already been replaced.
+`PlayerGui` is used by default. Window options include `Id`, `Title`, `Subtitle`, `Theme`, `Style`, `Motion`, `Responsive`, `Layout`, `Navigation`, `Notifications`, `Width`, `Height`, `Parent`, `DisplayOrder`, `ToggleKey`, `ShowWatermark`, `ReducedMotion`, `Storage`, and `Branding`. `Create` consumes `Tabs` and `Loading` and removes them before its internal call to `CreateWindow`. Reusing the same `Id` destroys the previous window as creation of the new one begins. If a `Custom` builder fails at runtime, the partial new interface is cleaned up; the previous window with that `Id` has already been replaced.
 
 ## Declarative controls
 

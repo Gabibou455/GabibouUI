@@ -9,10 +9,10 @@ Build a Roblox client interface with a window, tabs, and controls. Start with th
 local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
 local window = UI:CreateWindow('My project')
 local tab = window:Tab('Home', 'home')
-tab:Button('Say hello', function() print('Hello!') end)
+tab:Toggle('Effects', function(enabled) print('Effects:', enabled) end)
 ```
 
-<Frame caption="Gabibou UI running in Roblox, with grouped navigation and the Overview page open.">
+<Frame caption="Real Roblox capture from v1.5.0-rc.5: the Graphite window, grouped navigation, and Overview page.">
   ![Gabibou UI window showing the Graphite theme, navigation categories, and Overview page](images/ui-overview.png)
 </Frame>
 

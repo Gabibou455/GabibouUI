@@ -1,6 +1,6 @@
-# Customization and animations — Gabibou UI 1.5.0-rc.5
+# Customization and animations — Gabibou UI 1.5.0-rc.6
 
-This guide describes Gabibou UI 1.5.0-rc.5. Start with the [Developer Guide](DEVELOPER_GUIDE.md) for one-line loading and short constructors. These advanced examples use the full options-table API, which remains available for customization. Unless a snippet shows initialization, load the library before using it. The library is still under development, so names may change in future releases.
+This guide describes Gabibou UI 1.5.0-rc.6. Start with the [Developer Guide](DEVELOPER_GUIDE.md) for one-line loading and short constructors. These advanced examples use the full options-table API, which remains available for customization. Unless a snippet shows initialization, load the library before using it. The library is still under development, so names may change in future releases.
 
 ## Build a window from a schema
 

@@ -41,4 +41,16 @@ local window = UI:CreateWindow({
 })
 ```
 
+## Footer watermark
+
+The footer shows `Gabibou UI` and the library version by default. Hide only that text in the window options or change it later with `window:SetWatermark(false)`. The desktop hide-key hint, logos, and other footer actions stay visible.
+
+```lua
+local window = UI:CreateWindow("Garden Tools", {ShowWatermark = false})
+-- Later:
+window:SetWatermark(true) -- Show the name and version again.
+```
+
+`ShowWatermark` defaults to `true`.
+
 For the key gate's separate logo and Discord mark, see [Key systems](/customization/key-systems).

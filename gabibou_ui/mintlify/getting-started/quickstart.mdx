@@ -3,33 +3,34 @@ title: Quickstart
 description: Load Gabibou UI, create a window, and add working controls.
 ---
 
-## Build a window
+## Add your first control
 
-This complete example uses the short API. The loader requires a client environment with `loadstring` and `game:HttpGet`.
+Run this in a client environment that supports `loadstring` and `game:HttpGet`:
 
 ```lua
 local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
-
 local window = UI:CreateWindow('My project')
 local tab = window:Tab('Home', 'home')
-
-tab:Button('Say hello', function()
-    print('Hello!')
-end)
-
-tab:Toggle('Effects', { Value = true }, function(enabled)
-    print('Effects enabled:', enabled)
-end)
+tab:Toggle('Effects', function(enabled) print('Effects:', enabled) end)
 ```
 
-<Frame caption="The complete library window running in Roblox. The active Overview tab, grouped navigation, search field, and footer are visible.">
+<Frame caption="Real Roblox capture from v1.5.0-rc.5: the complete window with grouped tabs and Overview selected.">
   ![Complete Gabibou UI window in Roblox, with Overview selected and navigation grouped by category](../images/ui-overview.png)
 </Frame>
 
-`Value` sets a control's starting value. The toggle starts off when `Value` is omitted; its callback receives the new boolean when the player changes it. The callback does not run just because the control was created. A button callback runs when clicked and receives no value.
+The toggle starts off by default. Its callback receives the new boolean when the player changes it; the callback does not run just because the control was created.
 
-The same controls accept an options table, for example `tab:Toggle({Title = 'Effects', Value = true, Callback = function(enabled) print(enabled) end})`. Use `tab:Section('Settings')` to group controls.
+To choose a different starting value, pass an options table: `tab:Toggle('Effects', {Value = true}, callback)`. Use `tab:Section('Settings')` when you want to group related controls.
+
+Read or update a value control later:
+
+```lua
+local effects = tab:Toggle('Effects', function(enabled) print('Effects:', enabled) end)
+print(effects:Get())
+effects:Set(true) -- Updates the value without calling the callback.
+effects:Set(false, true) -- Updates the value and calls the callback if it changed.
+```
 
 For Roblox Studio, add the library as a `ModuleScript` in `ReplicatedStorage` and load it with `require`; see [Installation](/getting-started/installation). The `main` loader URL follows repository updates; use a published release tag to pin a version.
 
-Next: [Controls](/customization/controls) for control options, or [Appearance and layout](/customization/appearance-and-layout) to customize the window.
+Next: [Controls](/customization/controls) for each control's options, defaults, callbacks, and value methods; see [Appearance and layout](/customization/appearance-and-layout) for themes and layout.

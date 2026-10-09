@@ -4,7 +4,7 @@ local TweenService=game:GetService("TweenService")
 local HttpService=game:GetService("HttpService")
 local GuiService=game:GetService("GuiService")
 local TextService=game:GetService("TextService")
-local Library={Version="1.5.0-rc.5",Windows={}}
+local Library={Version="1.5.0-rc.6",Windows={}}
 local style_for,motion_for,branding_for,layout_for,control_layout_for,tab_layout_for,notification_for,navigation_for
 Library.Themes={
     Graphite={Background=Color3.fromRGB(14,15,18),Surface=Color3.fromRGB(23,25,30),Raised=Color3.fromRGB(33,36,42),Hover=Color3.fromRGB(44,48,55),Border=Color3.fromRGB(54,59,67),Text=Color3.fromRGB(243,245,247),Muted=Color3.fromRGB(163,169,178),Accent=Color3.fromRGB(231,234,239),AccentText=Color3.fromRGB(21,23,27),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
@@ -203,6 +203,13 @@ function Window:SetReducedMotion(value)
     if changed then self:_Emit(self,"ReducedMotionChanged",value)end
     return self
 end
+function Window:SetWatermark(value)
+    assert(not self.Destroyed,"Window is destroyed")
+    assert(type(value)=="boolean","ShowWatermark must be boolean")
+    self.ShowWatermark=value
+    self:_Layout()
+    return self
+end
 function Window:_Viewport()
     local size
     if self.Canvas and self.Canvas.AbsoluteSize.X>0 and self.Canvas.AbsoluteSize.Y>0 then size=self.Canvas.AbsoluteSize
@@ -245,7 +252,6 @@ function Window:_Layout()
     if self._headerDivider then self._headerDivider.Visible=self._headerWash.Visible end
     self._headerWash.Size=UDim2.new(1,0,0,math.min(height,self.Layout.HeaderHeight+16))
     self._subtitle.Visible=not compact
-    self.Footer.Text=mobile and "Gabibou UI  "..Library.Version or "Gabibou UI  "..Library.Version.."     ·     "..self.ToggleKey.Name.." to hide"
     self._resize.Visible=not mobile and not tiny and self.Layout.Resizable
     self:_LayoutNavigation(self.HorizontalTabs)
     if previousHorizontalTabs~=self.HorizontalTabs then self:_EnsureTabVisible(self.CurrentTab)end
@@ -469,6 +475,7 @@ end
 function Library:CreateWindow(options)
     options=options or {}
     assert(type(options)=="table","Window options must be a table")
+    assert(options.ShowWatermark==nil or type(options.ShowWatermark)=="boolean","ShowWatermark must be boolean")
     local player=Players.LocalPlayer;assert(player,"Gabibou UI runs on a Roblox client")
     local parent=options.Parent or player:FindFirstChildOfClass("PlayerGui")
     assert(typeof(parent)=="Instance","Pass a GUI parent or wait for PlayerGui")
@@ -494,7 +501,7 @@ function Library:CreateWindow(options)
     local reduced=false;pcall(function()reduced=GuiService.ReducedMotionEnabled end)
     if options.ReducedMotion~=nil then assert(type(options.ReducedMotion)=="boolean","ReducedMotion must be boolean");reduced=options.ReducedMotion end
     if self.Windows[id] then self.Windows[id]:Destroy() end
-    local self=setmetatable({Id=id,Title=tostring(options.Title or "Gabibou UI"),Theme=theme,ThemeName=type(options.Theme)=="table" and "Custom" or (options.Theme or "Graphite"),Responsive=responsive,ReducedMotion=reduced,ToggleKey=key,Destroyed=false,Closed=false,Tabs={},Controls={},Query="",Storage=options.Storage,_connections={},_destroyCallbacks={},_themeTargets={},_tweens=setmetatable({},{__mode="k"}),_serial=0,_notifications={},_desiredSize=Vector2.new(math.clamp(options.Width or 800,320,1400),math.clamp(options.Height or 590,300,1000))},Window)
+    local self=setmetatable({Id=id,Title=tostring(options.Title or "Gabibou UI"),Theme=theme,ThemeName=type(options.Theme)=="table" and "Custom" or (options.Theme or "Graphite"),Responsive=responsive,ReducedMotion=reduced,ToggleKey=key,ShowWatermark=options.ShowWatermark~=false,Destroyed=false,Closed=false,Tabs={},Controls={},Query="",Storage=options.Storage,_connections={},_destroyCallbacks={},_themeTargets={},_tweens=setmetatable({},{__mode="k"}),_serial=0,_notifications={},_desiredSize=Vector2.new(math.clamp(options.Width or 800,320,1400),math.clamp(options.Height or 590,300,1000))},Window)
     self.Style=style;self.Motion=motion;self.Layout=layout;self.Notifications=notifications;self.Navigation=navigation;self._positionSpec=initialPosition;self._anchorPoint=anchor;self._partLayouts={};self._events={};self._styleTargets={};self._bindingConnections={};self._animationRecords={}
     self.Gui=create("ScreenGui",{Name="GabibouUI_"..id,ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=options.DisplayOrder or 90,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},parent)
     self.Canvas=create("Frame",{Name="SafeArea",BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},self.Gui)
