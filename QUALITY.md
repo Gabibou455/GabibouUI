@@ -4,10 +4,10 @@ This release candidate was validated on 2026-10-09. Passing checks describe the 
 
 ## Verified
 
-- 1230 assertions across 19 runtime suites in the connected Windows Roblox client.
-- 42 isolated logic checks and 4 quick-start checks (1276 assertions total).
+- 1250 assertions across 19 runtime suites in the connected Windows Roblox client.
+- 42 isolated logic checks and 4 quick-start checks (1296 assertions total).
 - Standalone module and managed demo static analysis: zero errors and zero warnings. Official Luau compilation passed for the module and supplied examples.
-- Deterministic standalone rebuild; source hash: `9c1d4a5ce2bf4c77873eb37d98460b1e86b51d2015a07dbbec138233ce4ace11`.
+- Deterministic standalone rebuild; source hash: `888a5f4309cd90c8e50341db9181c81f931b66382892b92b9dd3efffccae1ddf`.
 - 96 original icon names and IDs; IDs 1-71 preserved. All three variants render natively.
 - 288 PNG/SVG pairs checked for valid files, dimensions, transparency, nonempty artwork and unclipped bounds. Exported geometry matches the current icon source.
 - Desktop and narrow 360 px layout assertions passed in the Roblox client. Resizing preserves the selected tab in the visible navigation area.
@@ -15,32 +15,33 @@ This release candidate was validated on 2026-10-09. Passing checks describe the 
 - Native clicks exercised the Discord button with an injected copier, typed key entry and successful verification. Tests did not write to the system clipboard.
 - The key screen displays the local player's thumbnail by default and uses "Verify key". Custom images, monograms, avatar updates and pending-task cleanup passed.
 - Loading presets, persistent part overrides, custom animation ownership and external destruction were checked.
+- Short constructors for windows, tabs, sections and controls passed callback, value, input-validation and options-ownership checks. The original options-table API passed the same runtime suites.
 - Yielding Button, Changed and Connect callbacks stop when their owner is destroyed. Hide/Show preserves callbacks, and a callback that destroys its own control can finish its current invocation. Loader error handlers and restarted sequences stop on destruction. Launch does not reach Ready after its window is destroyed during construction, and cancellation after key acceptance does not call the key gate's OnCancel.
 - Get key URL/callback actions, manual-copy fallback, single-flight behavior, stale results and native clicks passed. The key layout has a 420 px default width and automatic heights of 332/394/404/462 px.
-- Mintlify configuration passed the provider's schema validator; all 21 MDX pages compiled with GFM support and valid frontmatter. Navigation, internal links and five complete Luau examples passed local checks. No Mintlify-hosted preview or deployment was run.
+- Mintlify configuration passed the provider's schema validator; all 21 MDX pages compiled with GFM support and valid frontmatter. Navigation and internal links passed local checks. All 48 Luau documentation blocks compiled, and the 12 blocks in the controls walkthrough ran together in the connected client. Hosted availability is checked separately after publication.
 - Remote example compiled the actual standalone source through `loadstring`, created working controls, cleaned up, and handled HTTP/compile/invalid-response errors. HTTP was supplied by a local test shim.
 
 | Runtime suite | Assertions | Result |
 |---|---:|---|
-| extensions | 67 | Passed |
-| launch | 34 | Passed |
 | engine | 51 | Passed |
 | regression | 10 | Passed |
+| extensions | 67 | Passed |
 | robustness | 15 | Passed |
 | input | 13 | Passed |
 | native_extensions | 9 | Passed |
+| loading | 47 | Passed |
 | branding | 18 | Passed |
 | navigation | 29 | Passed |
-| convenience | 30 | Passed |
 | icons | 727 | Passed |
 | layout | 30 | Passed |
 | notifications | 21 | Passed |
 | key_system | 66 | Passed |
+| launch | 34 | Passed |
 | native_access | 4 | Passed |
 | visual | 45 | Passed |
 | native_visual | 6 | Passed |
 | remote | 8 | Passed |
-| loading | 47 | Passed |
+| convenience | 50 | Passed |
 
 ## Session observations
 

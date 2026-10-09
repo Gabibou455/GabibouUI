@@ -1,8 +1,8 @@
 -- Client environment with game:HttpGet and loadstring support.
--- Publish the repository and tag before this URL can be fetched.
+-- The main URL follows published updates. Use a release tag to pin a version.
 local owner = "Gabibou455"
 local repository = "GabibouUI"
-local version = "v1.5.0-rc.3"
+local version = "main"
 assert(owner:match("^[%w-]+$"), "Set owner to a valid GitHub username before loading Gabibou UI")
 assert(type(loadstring) == "function", "This environment does not expose loadstring; use ModuleScript + require in Studio")
 
@@ -15,8 +15,8 @@ assert(chunk, "Gabibou UI compile failed: " .. tostring(problem))
 local UI = chunk()
 assert(type(UI) == "table" and type(UI.CreateWindow) == "function", "The downloaded file is not the Gabibou UI library")
 
-local window = UI:CreateWindow({Id = "RemoteExample", Title = "My project", Theme = "Graphite"})
-local settings = window:Tab({Title = "Settings", Icon = "settings"})
-settings:Toggle({Id = "effects", Title = "Effects", Value = true, Callback = function(enabled)
+local window = UI:CreateWindow("My project", {Id = "RemoteExample"})
+local settings = window:Tab("Settings", "settings")
+settings:Toggle("Effects", {Id = "effects", Value = true}, function(enabled)
     print("Effects", enabled)
-end})
+end)

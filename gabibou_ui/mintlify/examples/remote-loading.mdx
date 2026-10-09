@@ -1,38 +1,46 @@
 ---
 title: Remote loading example
-description: Fetch a pinned release, compile it, and validate the result.
+description: Load Gabibou UI in one line, or handle download and compile errors separately.
 ---
 
-This pattern requires a client environment with `game:HttpGet` and `loadstring`. It is pinned to the project's `v1.5.0-rc.3` release candidate; check the repository's Releases page for availability before using the URL. Standard Roblox Studio should use a `ModuleScript` and `require`.
+## Quick load
+
+In a client environment with `game:HttpGet` and `loadstring`:
+
+```lua
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
+```
+
+The `main` URL follows published updates. A reviewed release tag can replace `main` when you need a fixed version. Standard Studio projects use a `ModuleScript` and `require`.
+
+## Handle errors explicitly
+
+Use this longer pattern when your project needs separate download, compile and result checks:
 
 ```lua
 -- Client environment with game:HttpGet and loadstring support.
+-- The main URL follows published updates. Use a release tag to pin a version.
 local owner = "Gabibou455"
 local repository = "GabibouUI"
-local version = "v1.5.0-rc.3"
-
-assert(owner:match("^[%w-]+$"), "Set owner to a valid GitHub username before loading")
-assert(type(loadstring) == "function", "This environment has no loadstring; use ModuleScript + require")
+local version = "main"
+assert(owner:match("^[%w-]+$"), "Set owner to a valid GitHub username before loading Gabibou UI")
+assert(type(loadstring) == "function", "This environment does not expose loadstring; use ModuleScript + require in Studio")
 
 local url = "https://raw.githubusercontent.com/" .. owner .. "/" .. repository .. "/" .. version .. "/gabibou_ui.luau"
-local fetched, source = pcall(function()
-    return game:HttpGet(url)
-end)
+local fetched, source = pcall(function() return game:HttpGet(url) end)
 assert(fetched and type(source) == "string" and #source > 0,
-    "Download failed; verify the repository, tag, and URL: " .. url)
-
+    "Gabibou UI download failed; verify the public repository, version tag and URL: " .. url)
 local chunk, problem = loadstring(source, "GabibouUI@" .. version)
-assert(chunk, "Compile failed: " .. tostring(problem))
-
+assert(chunk, "Gabibou UI compile failed: " .. tostring(problem))
 local UI = chunk()
-assert(type(UI) == "table" and type(UI.CreateWindow) == "function",
-    "Downloaded file is not the Gabibou UI library")
+assert(type(UI) == "table" and type(UI.CreateWindow) == "function", "The downloaded file is not the Gabibou UI library")
 
-local window = UI:CreateWindow({Id = "RemoteExample", Title = "My project", Theme = "Graphite"})
-local tab = window:Tab({Title = "Settings", Icon = "settings"})
-tab:Toggle({Id = "effects", Title = "Effects", Value = true, Callback = function(enabled)
-    print("Effects enabled:", enabled)
-end})
+local window = UI:CreateWindow("My project", {Id = "RemoteExample"})
+local settings = window:Tab("Settings", "settings")
+settings:Toggle("Effects", {Id = "effects", Value = true}, function(enabled)
+    print("Effects", enabled)
+end)
+
 ```
 
-Keep distributed scripts pinned to a reviewed release tag. Check the project's Releases page before updating the version, and report an external fetch as verified only after actually testing it.
+See [Quickstart](/getting-started/quickstart) to add your first controls.

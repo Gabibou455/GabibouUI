@@ -1,8 +1,8 @@
 # Gabibou UI 1.5.0-rc.4
 
-A Roblox interface library written in Luau. The local, unreleased 1.5.0-rc.4 candidate includes lifecycle corrections for callbacks, loaders, launch sessions, and key cancellation. It also includes 96 original vector icons in three styles, continuous rounded strokes, and an expanded mobile-friendly gallery. Navigation offers three variants, and buttons can display icons. The demo includes an interactive gallery and a visual Farm template. The library retains configurable layouts, notifications, the key screen, and `Launch` orchestration. Graphite remains the default black, gray, and white theme.
+A Roblox interface library written in Luau. Load it in one line, create a window, and add controls using short constructors. The full options-table API remains available for layouts, animations, loading screens, key screens and other customization. Graphite is the default black, gray and white theme; the library includes 96 original icons in three variants.
 
-> The public `v1.5.0-rc.3` tag remains the version pinned by the loadstring example below. The local rc.4 lifecycle corrections described here are not present in that published source. The library is under active development, so its API may change.
+> This guide describes release candidate 1.5.0-rc.4. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart) and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
 
 Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a complete feature map. Use [CUSTOMIZATION.md](CUSTOMIZATION.md) for advanced styling, custom controls, events, and animations.
 
@@ -11,10 +11,15 @@ Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a comp
 For client environments that expose `loadstring` and `game:HttpGet`, load the standalone module without installing it:
 
 ```lua
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/v1.5.0-rc.3/gabibou_ui.luau"))()
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
+local window = UI:CreateWindow("My project")
+local tab = window:Tab("Home", "home")
+tab:Button("Say hello", function()
+    print("Hello!")
+end)
 ```
 
-This URL is for client environments that support both APIs; it is not a standard Studio loading method. See [remote_example.luau](remote_example.luau) for fetch and compile error handling. Studio client scripts use the `ModuleScript` installation below. Repository and release instructions are in [PUBLISHING.md](../PUBLISHING.md).
+The URL follows updates on `main`; replace `main` with a reviewed release tag to keep a fixed version. This requires a client environment exposing both APIs. See [remote_example.luau](remote_example.luau) for separate fetch and compile errors. Studio uses the `ModuleScript` installation below. Repository and release instructions are in [PUBLISHING.md](../PUBLISHING.md).
 
 ## Installation and quick start
 

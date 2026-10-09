@@ -1,6 +1,6 @@
 # Customization and animations — Gabibou UI 1.5.0-rc.4
 
-This guide describes the local, unreleased 1.5.0-rc.4 candidate. Its lifecycle corrections are local changes; the public `v1.5.0-rc.3` tag remains the version used by the pinned loadstring examples. The library is still under development, so names may change in future releases. Unless a snippet shows global initialization, examples are fragments for a Studio `LocalScript` after the module has been loaded. For the beginner path and complete feature map, see the [Developer Guide](DEVELOPER_GUIDE.md).
+This guide describes Gabibou UI 1.5.0-rc.4. Start with the [Developer Guide](DEVELOPER_GUIDE.md) for one-line loading and short constructors. These advanced examples use the full options-table API, which remains available for customization. Unless a snippet shows initialization, load the library before using it. The library is still under development, so names may change in future releases.
 
 ## Build a window from a schema
 

@@ -8,9 +8,9 @@ Install the Mintlify CLI by following the [official installation guide](https://
 
 ## Connect a deployment
 
-To configure a monorepo deployment, connect the GitHub repository and open [Git Settings](https://app.mintlify.com/settings/deployment/git-settings). Enable **docs.json is in a subdirectory**, enter `/gabibou_ui/mintlify` (without a trailing slash), and choose the intended branch. Saving these settings triggers deployment. This README documents the steps only; no deployment has been configured here. See Mintlify's [monorepo guide](https://raw.githubusercontent.com/mintlify/docs/main/deploy/monorepo.mdx) for the provider's current instructions.
+The documentation site is [gabibou-ui.mintlify.app](https://gabibou-ui.mintlify.app), connected to `Gabibou455/GabibouUI`, branch `main`, directory `gabibou_ui/mintlify`. To reproduce this setup, open [Git Settings](https://app.mintlify.com/settings/deployment/git-settings), enable **docs.json is in a subdirectory**, and enter `/gabibou_ui/mintlify` without a trailing slash. See Mintlify's [monorepo guide](https://raw.githubusercontent.com/mintlify/docs/main/deploy/monorepo.mdx).
 
-The repository is `Gabibou455/GabibouUI`. The local docs describe the unreleased `1.5.0-rc.4` candidate and its lifecycle corrections; the public `v1.5.0-rc.3` tag remains pinned in remote-loading examples and does not include those local changes. Confirm the published release and raw-file URL before reporting an external fetch as verified. The Quality page covers this candidate's local checks and remaining validation.
+The docs describe release candidate `1.5.0-rc.4`. Beginner examples use the fixed `main` module URL and short constructors; a reviewed release tag can replace `main` when a project needs a fixed version. The Quality page lists verified checks and remaining validation.
 
 ## Structure
 

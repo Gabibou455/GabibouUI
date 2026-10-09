@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.5.0-rc.4 (Unreleased)
+## 1.5.0-rc.4
+
+- Added short constructors for windows, tabs, sections and controls, while preserving the full options-table API.
+- Simplified onboarding around one-line remote loading and practical examples for every control.
+- Use the fixed archive name `GabibouUI.zip` for distribution.
 
 - Cancel library-managed Button, `Changed`, and `Connect` callback tasks when their control or window owner is destroyed; suppress errors and notifications from stale callbacks.
 - Track yielding loader `OnError` callbacks and cancel them on `Destroy()`, including when an error callback starts another `Run()` attempt.

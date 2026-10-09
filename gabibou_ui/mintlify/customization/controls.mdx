@@ -1,77 +1,204 @@
 ---
 title: Controls
-description: Configure built-in controls and connect them to your logic.
+description: Add buttons, settings, and custom content to a window.
 ---
 
-Every declarative control has a `Type` and a unique `Id`. Controls can appear in a tab's `Controls` array or inside a section's `Controls` array. In the direct API, add them with a tab or section method such as `section:Toggle(options)`.
+## Start with a window
 
-Common options are `Id`, `Title`, `Description` (or `Desc`), `Disabled`, `Persistent`, `Callback`, and `Layout`. Persistent value controls default to included in value snapshots. Use `Persistent = false` to exclude a value from configuration methods.
-
-## Built-in control types
-
-| Type | Options | Stored value |
-|---|---|---|
-| `Toggle` | `Value` (boolean) | Boolean |
-| `Slider` | `Min`, `Max`, `Step`, `Value` | Snapped number |
-| `Dropdown` | `Options` (unique strings), `Value` | Selected string |
-| `Input` | `Value`, `Placeholder`, `MaxLength` | String committed when focus is lost |
-| `Keybind` | `Value` as a KeyCode name or `Enum.KeyCode` | KeyCode name |
-| `ColorPicker` | `Value` as `#RRGGBB` or `Color3`; optional `Palette` | Hex color string |
-| `Button` | `Text`, optional `Icon`, `IconVariant` | None |
-| `Paragraph` | `Title`, `Description` | None |
-| `Custom` | `Build`, `Height` | Builder-owned |
-
-Slider defaults are `Min = 0`, `Max = 100`, `Step = 1`, and `Value = Min`. Slider values are clamped and snapped to the step. Dropdown options must be a nonempty list of unique strings; the first item is the default if no value is supplied. Input `MaxLength` defaults to 120 and accepts 1–4096. Keybind defaults to `F6`. A color palette accepts 1–32 values, each supplied as hex or `Color3`.
-
-## Read and set control values
+This short setup loads the library, creates one window, and opens a tab. It requires a client environment that supports `loadstring` and `game:HttpGet`.
 
 ```lua
-local volume = window:Get("volume")
-print(volume:Get())
-volume:Set(65, true) -- call Callback if the value changed
-volume:SetTitle("Master volume")
-volume:SetDescription("Adjust the output level.")
-volume:SetEnabled(true)
-volume:SetVisible(true)
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
+local window = UI:CreateWindow("My project")
+local tab = window:Tab("Home", "home")
 ```
 
-`Set(value, fireCallback)` validates the value. The control callback runs only when the value changes and `fireCallback` is true. User changes call the callback. `ColorPicker` additionally exposes `GetColor()` for a `Color3` value.
-
-## Callbacks
+Add controls to `tab`, or put related controls in a section:
 
 ```lua
-local window = UI:Create({
-    Title = "Preferences",
-    Tabs = {{Title = "General", Controls = {
-        {
-            Type = "Dropdown",
-            Id = "quality",
-            Title = "Quality",
-            Options = {"Low", "Medium", "High"},
-            Value = "Medium",
-            Callback = function(value)
-                print("Selected quality:", value)
-            end,
-        },
-        {
-            Type = "Button",
-            Id = "apply",
-            Title = "Apply settings",
-            Text = "Apply",
-            Callback = function()
-                print("Apply the selected settings here")
-            end,
-        },
-    }}},
+local graphics = tab:Section("Graphics")
+graphics:Toggle("Shadows", function(enabled)
+    print("Shadows enabled:", enabled)
+end)
+```
+
+The short API takes a title first. Value controls can also take an options table and then a callback, as in `tab:Slider("Volume", {Min = 0, Max = 100}, callback)`. The older table API remains available, for example `tab:Toggle({Title = "Shadows", Value = false, Callback = callback})`.
+
+`Id` is optional when you add controls directly; the library assigns an ID. Declarative controls require an `Id`. If you open more than one window, give each window a distinct `Id` so they can stay open together.
+
+## Button
+
+A button runs an action when the user clicks it. Use `Text` to choose the button caption; it defaults to `Run`. The callback receives no arguments.
+
+```lua
+local refreshButton = tab:Button("Refresh list", {Text = "Refresh"}, function()
+    print("Refresh the list here")
+end)
+```
+
+`Title` is the row title and `Text` is the clickable button label. `Description` is optional helper text. `Icon` and `IconVariant` are optional visual settings. Buttons do not store a value; use their callback instead of value methods.
+
+## Toggle
+
+A toggle stores `true` or `false`. The default is `false`. Clicking it changes the value and calls the callback with the new boolean.
+
+```lua
+local effects = tab:Toggle("Effects", {Value = false}, function(enabled)
+    print("Effects:", enabled)
+end)
+
+effects:Set(true, true) -- set it on and call the callback
+print(effects:Get()) -- true
+```
+
+`Value` sets the starting state. `Description` can explain what the setting controls. `Get()` reads the current boolean. `Set(value)` updates it without calling the callback; pass `true` as the second argument to call the callback when the value changes.
+
+## Slider
+
+A slider selects a number in a range. This example adjusts music volume from 0 to 1 in increments of 0.05.
+
+```lua
+local volume = tab:Slider("Music volume", {
+    Min = 0,
+    Max = 1,
+    Step = 0.05,
+    Value = 0.5,
+}, function(value)
+    print("Music volume:", value)
+end)
+
+print(volume:Get()) -- 0.5
+volume:Set(0.75, true) -- update the slider and call the callback
+```
+
+`Min` defaults to `0`, `Max` to `100`, `Step` to `1`, and `Value` to `Min`. Values are clamped to the range and snapped to steps measured from `Min`. For example, with `Min = 10` and `Step = 4`, the steps are 10, 14, 18, and so on. The callback receives the snapped number. `Get()` reads it; `Set(value, true)` also calls the callback if it changed.
+
+## Dropdown
+
+A dropdown lets the user choose one string from a list. Options must be unique strings, and the list cannot be empty. The first option is selected by default.
+
+```lua
+local quality = tab:Dropdown("Quality", {
+    Options = {"Low", "Medium", "High"},
+    Value = "Medium",
+}, function(choice)
+    print("Quality:", choice)
+end)
+
+print(quality:Get()) -- Medium
+quality:Set("High", true) -- select High and call the callback
+```
+
+`Options` is the list of choices. `Value` is optional and must match one of those choices. The callback receives the selected string. `Get()` reads the choice. `Set(value, true)` changes it and calls the callback if the choice changed.
+
+## Input
+
+An input stores text. When the text has changed, the callback runs after the user finishes editing and the text box loses focus, such as when they press Enter or click elsewhere.
+
+```lua
+local playerName = tab:Input("Player name", {
+    Value = "",
+    Placeholder = "Enter a name",
+    MaxLength = 24,
+}, function(text)
+    print("Player name:", text)
+end)
+
+print(playerName:Get())
+playerName:Set("Nova", true) -- update the text and call the callback
+```
+
+`Value` defaults to an empty string. `Placeholder` defaults to `Type here...`. `MaxLength` defaults to `120` and accepts values from `1` to `4096`. The callback receives the committed string. `Get()` reads it; `Set(value, true)` updates it and calls the callback when it changes.
+
+## Keybind
+
+A keybind lets the user choose a keyboard key. Clicking its key button starts key capture. After the user assigns a key, pressing that key runs the callback with its `KeyCode` name as a string.
+
+```lua
+local actionKey = tab:Keybind("Action key", {Value = Enum.KeyCode.K}, function(keyName)
+    print("Pressed:", keyName) -- K
+end)
+
+print(actionKey:Get()) -- K
+actionKey:Set("J", true) -- assign J and call the callback if the value changed
+```
+
+`Value` accepts an `Enum.KeyCode` such as `Enum.KeyCode.K` or its name as a string such as `"K"`. It defaults to `F6`. `Get()` returns the key name as a string. Setting a key this way can call the callback; capturing a key by clicking the control updates its value without running the action callback. The callback runs when the assigned key is pressed outside capture mode.
+
+## Color picker
+
+A color picker shows a palette and lets the user select a color or enter a hex value. The callback receives the chosen color as a `#RRGGBB` string.
+
+```lua
+local accent = tab:ColorPicker("Accent color", {
+    Value = "#78B8FF",
+    Palette = {"#78B8FF", "#A18FFF", "#F08B8B"},
+}, function(hex)
+    print("Accent color:", hex)
+end)
+
+print(accent:Get()) -- #78B8FF
+print(accent:GetColor()) -- Roblox Color3 value
+accent:Set("#A18FFF", true) -- select purple and call the callback
+```
+
+`Value` accepts a hex string or a Roblox `Color3`; it defaults to `#F2F4F8`. `Palette` is optional and defaults to the built-in palette. A custom palette must contain 1 to 32 hex strings or `Color3` values. `Get()` returns the hex string, and `GetColor()` returns a `Color3`. `Set(value, true)` updates the selected color and calls the callback if it changed.
+
+## Paragraph
+
+A paragraph displays a title and description without an interactive control. Use it for a short note or status message.
+
+```lua
+tab:Paragraph("Connection status", {Description = "Connected to the server."})
+```
+
+The first argument is the title. `Description` is the text shown below it. Paragraphs have no value and do not accept a callback.
+
+## Section
+
+A section groups related controls under a heading in the current tab.
+
+```lua
+local audio = tab:Section("Audio")
+audio:Toggle("Music", {Value = true}, function(enabled)
+    print("Music enabled:", enabled)
+end)
+audio:Slider("Music volume", {Min = 0, Max = 100, Value = 60}, function(value)
+    print("Music volume:", value)
+end)
+```
+
+Pass the section title as a string, or use `{Title = "Audio"}`. Add controls to the returned section just as you add them to a tab.
+
+## Custom
+
+Use `Custom` when you need content that is not one of the built-in controls. It accepts an options table. `Build` receives `(content, control, window, options)`; parent your Roblox UI instances to `content` so they appear inside the control.
+
+```lua
+local preview = tab:Custom({
+    Title = "Preview",
+    Height = 48,
+    Build = function(content, control, window, options)
+        local label = Instance.new("TextLabel")
+        label.BackgroundTransparency = 1
+        label.Size = UDim2.fromScale(1, 1)
+        label.Text = "Preview is ready"
+        label.TextColor3 = window.Theme.Text
+        label.Parent = content
+    end,
 })
+
+preview:SetHeight(64) -- change the content area's height later
 ```
 
-Callbacks execute in protected tasks. Errors are recorded on the owning window and reported with `warn`; errors in a user callback do not stop other controls from cleaning up.
+`Title` labels the control. `Height` is its content area's height in pixels; it defaults to `80` and accepts `0` to `2000`. `Build` is optional. In the builder, `content` is the frame for your UI, `control` is the custom control, `window` is its window, and `options` is the options table. `Custom` is table-only; it has no stored value or built-in callback.
 
-For keybinds, clicking the control enters capture mode. Capturing a key changes the value and emits `Changed`, but does not call the action callback. Press the assigned key outside capture mode to run that callback.
+## Shared options and value methods
 
-## Search and disabled controls
+For direct controls, common options include `Title`, `Description`, `Id`, `Disabled`, and `Layout`. `Desc` is also accepted as an alias for `Description`. Set `Disabled = true` to start a control disabled. Value controls can use `Persistent = false` to exclude their value from configuration snapshots.
 
-The window search filters controls using their title and description. Give each control a clear title and a useful description. `Disabled = true` creates a noninteractive control; `SetEnabled(false)` changes that state while the window is open.
+Value controls (`Toggle`, `Slider`, `Dropdown`, `Input`, `Keybind`, and `ColorPicker`) return a control object. Use `control:Get()` to read its value and `control:Set(value, fireCallback)` to set it. The second argument calls the callback only when the value changes and is exactly `true`. User changes call callbacks automatically, except assigning a key during key capture, which updates the key without running its action callback.
+
+For saving and restoring values, see [Values and configuration](/customization/values-and-config). For custom components and animation, see [Animations and custom components](/customization/animations-and-components).
 
 Next: [Values and configuration](/customization/values-and-config) · [Events and lifecycle](/customization/events-and-lifecycle)

@@ -7,10 +7,12 @@ This page maps the public API by object. See the [customization reference](/refe
 
 ## Library
 
+For the short API, use `UI:CreateWindow("My project")`, `window:Tab("Home", "home")`, and `tab:Button("Hello", callback)`. Add an options table after the title when needed; value controls can take a callback after that table. The [controls walkthrough](/customization/controls) explains each control with a working example. Full options-table calls remain supported.
+
 | Method | Purpose |
 |---|---|
 | `UI:Create(spec)` | Validate and build a declarative window from root options plus `Tabs` and optional `Loading`. |
-| `UI:CreateWindow(options)` | Create a window for step-by-step construction. |
+| `UI:CreateWindow(title, options?)` / `UI:CreateWindow(options)` | Create a window for step-by-step construction. |
 | `UI:Launch(spec)` | Coordinate optional key gate, loading, startup steps, and window creation. |
 | `UI:CreateLoader(options)` | Create a standalone loading screen. |
 | `UI:CreateKeySystem(options)` | Create a standalone key-entry gate. |
@@ -37,7 +39,7 @@ Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (cl
 
 | Method | Purpose |
 |---|---|
-| `Tab(options)`, `SelectTab(tab)` | Add or select a tab. |
+| `Tab(title, iconOrOptions?)` / `Tab(options)`, `SelectTab(tab)` | Add or select a tab. |
 | `SearchFor(query)` | Apply a search query to controls. |
 | `Get(id)`, `GetValues()`, `SetValues(values, fireCallbacks)` | Read controls and persistent values. |
 | `Hide()`, `Show()`, `Toggle()` | Change window visibility. |

@@ -1,10 +1,41 @@
 # Gabibou UI Developer Guide
 
-Version: `1.5.0-rc.4` (local, unreleased candidate)  
+Version: `1.5.0-rc.4` (release candidate)  
 Language: Luau  
 Runtime: Roblox client
 
-This guide describes the local 1.5.0-rc.4 candidate and its lifecycle corrections. The remote-loading example below remains pinned to the public `v1.5.0-rc.3` tag; that published example does not include local rc.4 changes. The library builds interface objects; your callbacks connect those controls to your own game or application logic.
+Load the library once, create a window, then add the controls you need. You do not need to paste the library's source into your script when using the remote loader. Your callbacks connect each control to your project logic.
+
+## Your first interface
+
+In a client environment with `loadstring` and `game:HttpGet`:
+
+```lua
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
+local window = UI:CreateWindow("My project")
+local tab = window:Tab("Home", "home")
+tab:Button("Say hello", function()
+    print("Hello!")
+end)
+```
+
+The first line loads Gabibou UI. The second opens your window. The third adds a tab with a built-in icon. The last call adds a button and runs your function when clicked. The Graphite theme and responsive layout are already configured by default. IDs are generated automatically for these direct constructors.
+
+Add a toggle or slider:
+
+```lua
+local effects = tab:Toggle("Effects", function(enabled)
+    print("Effects enabled:", enabled)
+end)
+
+local volume = tab:Slider("Volume", {Min = 0, Max = 100, Value = 50}, function(value)
+    print("Volume:", value)
+end)
+```
+
+`enabled` is `true` or `false`. The toggle starts off unless you pass `{Value = true}`. `value` is the slider's current number; `Min`, `Max`, and `Value` set its range and starting value. Read a value with `effects:Get()` or `volume:Get()`.
+
+See [the controls walkthrough](https://gabibou-ui.mintlify.app/customization/controls) for an explained example of every control. Start here; the sections below cover advanced configuration. The `main` URL follows updates. Replace `main` with a reviewed release tag when you need to keep a fixed version.
 
 ## Contents
 
@@ -41,11 +72,11 @@ local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
 
 ### GitHub loadstring environments
 
-Some client environments provide both `loadstring` and `game:HttpGet`. In those environments, the public `1.5.0-rc.3` source can be loaded like this:
+Some client environments provide both `loadstring` and `game:HttpGet`. In those environments, the current published source can be loaded like this:
 
 ```lua
 local source = game:HttpGet(
-    "https://raw.githubusercontent.com/Gabibou455/GabibouUI/v1.5.0-rc.3/gabibou_ui.luau"
+    "https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"
 )
 local UI = assert(loadstring(source))()
 ```
@@ -54,7 +85,9 @@ This loader is not a standard Roblox Studio feature. Studio projects should use 
 
 ## Choose a creation path
 
-Use `UI:Create(spec)` when the interface can be described as data. It validates the schema before creating the window and is the shortest path for ordinary menus.
+Start with `UI:CreateWindow("My project")` and the title-first controls shown above. Use an options table when you need additional configuration.
+
+Use `UI:Create(spec)` when the interface can be described as data. It validates the schema before creating the window.
 
 Use `UI:CreateWindow(options)` when you want to add tabs, sections, and controls step by step, or need the returned object during construction.
 

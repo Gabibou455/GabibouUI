@@ -1,54 +1,56 @@
 # Gabibou UI
 
-A customizable Luau interface library with a black, gray and white default theme. Built for readable controls, flexible layouts and developers who want to make the interface their own.
+A customizable Luau interface library with a black, gray and white default theme. Build a window, add controls, then customize its appearance when needed.
 
-**Version 1.5.0-rc.4 is a local, unreleased candidate.** This source includes four lifecycle corrections for library-managed callbacks, loader error handling, launch teardown, and key cancellation. The public `v1.5.0-rc.3` tag remains the version used in the loadstring example below; that remote source does not include these local rc.4 changes. Review [QUALITY.md](QUALITY.md) for this local candidate's verified checks and known limits.
+## Start with one line
 
-## Load from GitHub
-
-In a client environment that supports `loadstring` and `game:HttpGet`:
+In a client environment that supports `loadstring` and `game:HttpGet`, load the current source from GitHub:
 
 ```lua
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/v1.5.0-rc.3/gabibou_ui.luau"))()
-local window = UI:CreateWindow({Title = "My project", Theme = "Graphite"})
-local tab = window:Tab({Title = "Settings", Icon = "settings"})
-tab:Toggle({Id = "effects", Title = "Effects", Value = true, Callback = function(enabled)
-    print("Effects", enabled)
-end})
+local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
 ```
 
-The example pins the published `v1.5.0-rc.3` tag so later changes on `main` do not silently change the interface used by your script. This local guide describes rc.4 candidate fixes that are not in the pinned remote file. The repository is configured for the GitHub owner `Gabibou455`; check the [Releases page](https://github.com/Gabibou455/GabibouUI/releases) for published versions and downloads. Future releases use the stable ZIP asset name `GabibouUI.zip`; version details remain in each release tag, title, source, and changelog. The [remote example](gabibou_ui/remote_example.luau) includes clearer fetch and compile errors.
+The `main` URL follows repository updates. To keep a project on a fixed version, replace `main` with a published release tag from the [Releases page](https://github.com/Gabibou455/GabibouUI/releases).
 
-Standard Roblox Studio client scripts use `ModuleScript` and `require`; they do not support this remote `loadstring` pattern. Follow the [Studio installation guide](gabibou_ui/README.md#installation-and-quick-start) for that environment.
+## Create a window
 
-## What you can customize
+```lua
+local window = UI:CreateWindow('My project')
+local tab = window:Tab('Home', 'home')
+tab:Button('Hello', function()
+    print('Hello!')
+end)
+```
 
-- Colors, fonts, corner radii, spacing and motion, including reduced motion.
-- Left, right, top or bottom navigation, with independent mobile layout settings.
-- Tabs, sections, buttons, toggles, sliders, dropdowns, inputs, keybinds and color pickers.
-- Loading screens, progress, player avatar branding, notifications and key validation callbacks.
-- Native icons by name or stable numeric ID, in Outline, Soft and Duotone styles.
-- Custom components, icon builders, callbacks and animation hooks.
+The title-first API accepts simple arguments for common controls. Tables remain available for options and advanced configuration. For example, `tab:Toggle('Effects', function(enabled) print(enabled) end)` creates a toggle that starts off. See the [live documentation](https://gabibou-ui.mintlify.app) for the [quickstart](https://gabibou-ui.mintlify.app/getting-started/quickstart), [controls](https://gabibou-ui.mintlify.app/customization/controls), and [appearance options](https://gabibou-ui.mintlify.app/customization/appearance-and-layout).
 
-The library does not automate gameplay. Developers connect controls to their own project logic.
+## Roblox Studio
+
+For a standard Roblox Studio client script, place the standalone source in a `ModuleScript` named `GabibouUI` under `ReplicatedStorage`, then load it with `require`:
+
+```lua
+local ReplicatedStorage = game:GetService('ReplicatedStorage')
+local UI = require(ReplicatedStorage:WaitForChild('GabibouUI'))
+```
+
+Studio client scripts do not provide the remote `loadstring(game:HttpGet(...))` pattern. See the [Studio installation guide](https://gabibou-ui.mintlify.app/getting-started/installation) for setup details.
 
 ## Documentation and examples
 
-Start with the [complete developer guide](gabibou_ui/DEVELOPER_GUIDE.md): one small working interface first, then every customization option.
+The [live developer documentation](https://gabibou-ui.mintlify.app) covers controls, appearance, layouts, loading screens, values, and extension hooks. Repository references and examples:
 
 | Resource | Purpose |
 |---|---|
 | [API guide](gabibou_ui/README.md) | Installation, controls and public API |
 | [Customization](gabibou_ui/CUSTOMIZATION.md) | Layouts, animations and extension hooks |
-| [Icon IDs](gabibou_ui/ICONS.md) | Every icon name and numeric ID |
+| [Icon IDs](gabibou_ui/ICONS.md) | Icon names and numeric IDs |
 | [Icon browser](GabibouUI_Icons/index.html) | Offline search, variants, PNG and SVG files |
 | [Demo](gabibou_ui/demo.luau) | Interactive component and icon gallery |
 | [Quick start](gabibou_ui/quickstart.luau) | Small Studio example |
-| [Loading example](gabibou_ui/loading_example.luau) | Three layouts, custom content and owned animation |
-| [Key and Discord example](gabibou_ui/key_discord_example.luau) | Access screen and a configurable Discord copy button |
+| [Loading example](gabibou_ui/loading_example.luau) | Layouts, custom content and animation |
+| [Key and Discord example](gabibou_ui/key_discord_example.luau) | Access screen and Discord copy button |
 | [Remote example](gabibou_ui/remote_example.luau) | Remote loading with explicit errors |
-| [Publishing guide](PUBLISHING.md) | Repository, version tag and release steps |
-| [Mintlify documentation](gabibou_ui/mintlify/README.md) | English pages and navigation ready for a documentation site |
+| [Publishing guide](PUBLISHING.md) | Repository, version tags and releases |
 
 Download `GabibouUI.zip` from the [GitHub Releases page](https://github.com/Gabibou455/GabibouUI/releases), then open `GabibouUI_Icons/index.html` locally to use the icon browser. Its HTML is an offline tool; the GitHub file view does not run it.
 
@@ -64,4 +66,4 @@ Node.js is a build dependency; scripts that load the standalone library do not n
 
 ## License
 
-MIT. See [LICENSE](LICENSE). The library and its 96 catalogue drawings are original to this project. The Discord mark is covered separately in [THIRD_PARTY.md](THIRD_PARTY.md).
+MIT. See [LICENSE](LICENSE). The library and its catalogue drawings are original to this project. The Discord mark is covered separately in [THIRD_PARTY.md](THIRD_PARTY.md).

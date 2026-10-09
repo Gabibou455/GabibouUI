@@ -1,90 +1,28 @@
 ---
 title: Quickstart
-description: Create a responsive window with persistent controls.
+description: Load Gabibou UI and build a window with a few calls.
 ---
 
-This example creates a settings window with a toggle, slider, and value callback. It uses the declarative `UI:Create` API.
+## Load the library
 
-## 1. Load the module
-
-Install the `GabibouUI` ModuleScript in `ReplicatedStorage`, then require it from a client `LocalScript`:
+In a client environment that supports `loadstring` and `game:HttpGet`, load the current source with one line:
 
 ```lua
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
 ```
 
-See [Installation](/getting-started/installation) for Studio and loadstring setup.
+The `main` URL follows repository updates. Use a published release tag in the URL when a project needs a fixed version. See [Installation](/getting-started/installation) for other setup options.
 
-## 2. Create a window
+## Create a window
 
 ```lua
-local window = UI:Create({
-    Id = "MySettings",
-    Title = "My project",
-    Subtitle = "Settings",
-    Responsive = {Breakpoint = 620, TouchTarget = 44, Margin = 12},
-    Tabs = {
-        {
-            Title = "General",
-            Icon = "settings",
-            Sections = {
-                {
-                    Title = "Display",
-                    Controls = {
-                        {
-                            Type = "Toggle",
-                            Id = "effects",
-                            Title = "Effects",
-                            Value = true,
-                            Callback = function(enabled)
-                                print("Effects enabled:", enabled)
-                            end,
-                        },
-                        {
-                            Type = "Slider",
-                            Id = "volume",
-                            Title = "Volume",
-                            Min = 0,
-                            Max = 100,
-                            Step = 5,
-                            Value = 50,
-                        },
-                    },
-                },
-            },
-        },
-    },
-})
-
-window:Get("effects"):On("Changed", function(value, previous)
-    print("Effects changed from", previous, "to", value)
+local window = UI:CreateWindow('My project')
+local tab = window:Tab('Home', 'home')
+tab:Button('Hello', function()
+    print('Hello!')
 end)
-
-window:SetValues({volume = 75}, false)
 ```
 
-Every declarative control needs a unique, nonempty `Id`. `window:Get(id)` returns that control. `SetValues` validates the entire table before applying values.
+The same title-first style works for common controls:
 
-## Build incrementally
-
-Use `CreateWindow` when tabs or controls need to be added in response to application state:
-
-```lua
-local window = UI:CreateWindow({Title = "My project"})
-local tab = window:Tab({Title = "General", Icon = "settings"})
-local section = tab:Section({Title = "Display"})
-
-local enabled = section:Toggle({
-    Id = "effects",
-    Title = "Effects",
-    Value = true,
-    Callback = function(value)
-        print("Effects:", value)
-    end,
-})
-
-enabled:Set(false, true)
-```
-
-`Set(value, true)` calls the control callback if the value changes. See [Controls](/customization/controls) and [Values and configuration](/customization/values-and-config) for details.
+`tab:Toggle('Effects', function(enabled) print('Effects:', enabled) end)` adds a toggle that starts off by default. Use `tab:Section('Settings')` to add a section. The window and tab can also take options tables. Buttons and toggles accept a callback or options table after the title; sliders, inputs, dropdowns, keybinds and color pickers accept an options table and optional callback. Paragraphs display text and do not take callbacks. Existing table-based calls remain supported. Browse [Controls](/customization/controls) and [Appearance and layout](/customization/appearance-and-layout) for optional configuration.

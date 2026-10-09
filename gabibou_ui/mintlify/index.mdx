@@ -1,44 +1,48 @@
 ---
 title: Gabibou UI
-description: Build responsive Roblox interfaces in Luau.
+description: Build Roblox interfaces in Luau with a short, readable API.
 ---
 
-Gabibou UI is a Luau library for building Roblox client interfaces. Start with a declarative window, then customize its controls, appearance, loading flow, icons, and lifecycle.
+Gabibou UI is a Luau library for building Roblox client interfaces. Load it with one line in a client environment that supports `loadstring` and `game:HttpGet`, then create a window and add controls with a few calls.
+
+```lua
+local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
+local window = UI:CreateWindow('My project')
+local tab = window:Tab('Home', 'home')
+tab:Button('Hello', function() print('Hello!') end)
+```
+
+The `main` URL follows repository updates. Use a published release tag to keep a project on a fixed version. Standard Roblox Studio client scripts use a `ModuleScript` and `require`; see [Installation](/getting-started/installation).
 
 <CardGroup cols={2}>
   <Card title="Build your first window" icon="rocket" href="/getting-started/quickstart">
-    Create a working interface in a few minutes.
+    Load the library, create a window, and add controls.
   </Card>
   <Card title="Install the module" icon="download" href="/getting-started/installation">
-    Set up the library in Roblox Studio or a supported loadstring client.
+    Set up the remote loader or a Roblox Studio ModuleScript.
   </Card>
   <Card title="Customize the interface" icon="sliders" href="/customization/appearance-and-layout">
-    Configure themes, layout, navigation, and responsive behavior.
+    Explore themes, layout, navigation, and responsive behavior.
   </Card>
   <Card title="Explore examples" icon="code" href="/examples/quickstart">
-    Copy complete Luau examples for common startup flows.
+    Browse examples for common startup flows.
   </Card>
 </CardGroup>
 
 ## What the library provides
 
-- Declarative and step-by-step window creation.
-- Toggle, slider, dropdown, input, keybind, color picker, button, paragraph, and custom controls.
-- Persistent values, configuration snapshots, and caller-provided storage adapters.
-- Responsive layouts, three navigation styles, and 96 original vector icons.
-- Custom themes, managed animations, event subscriptions, and cleanup ownership.
+- Buttons, toggles, sliders, dropdowns, inputs, keybinds, color pickers, paragraphs, and custom controls.
+- Optional values, configuration snapshots, and caller-provided storage adapters.
+- Responsive layouts, navigation styles, and a catalogue of vector icons.
+- Custom themes, animations, event subscriptions, and cleanup ownership.
 - Loading screens, optional key validation UI, Discord invite controls, and startup orchestration.
 
 The key gate is client UI. Validate access and every protected action on your server. The library does not store secrets or provide server authentication.
-
-<Note>
-The local documentation describes the unreleased `1.5.0-rc.4` candidate, including its lifecycle corrections. The public `v1.5.0-rc.3` tag remains pinned in remote-loading examples and does not include those local changes. See the [quality report](/reference/quality) for this candidate's local checks and remaining validation work.
-</Note>
 
 ## Next steps
 
 - [Quickstart](/getting-started/quickstart)
 - [Controls](/customization/controls)
+- [Appearance and layout](/customization/appearance-and-layout)
 - [Loading screens](/customization/loading-screens)
 - [Key systems and Discord](/customization/key-systems)
-- [API reference](/reference/api)
