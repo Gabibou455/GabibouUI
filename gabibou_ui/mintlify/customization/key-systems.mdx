@@ -24,6 +24,8 @@ Provider SDKs in executor/client environments can be inspected or changed by the
 
 ## Key validator contract
 
+The rc.17 access screen places a credential well after the input and before the Verify action. The Get key and Cancel actions remain secondary 44 px controls. Automatic card heights remain 332 px without Discord/GetKey, 394 px with Discord only, 404 px with GetKey only, and 462 px with both. The logo can show the player's avatar with `Logo = "Avatar"`, or use `Logo = false` and `MarkText`.
+
 `UI:CreateKeySystem(options)` requires `Validate(key)`. The validator can yield and must return `true, result` for acceptance or `false, message` for rejection. `gate:Submit(key)` starts validation asynchronously. Raw validator exceptions and submitted keys are not shown in the gate's generic error status.
 
 ```lua
@@ -31,6 +33,8 @@ local gate = UI:CreateKeySystem({
     Title = "Access key",
     Subtitle = "Enter your key to continue.",
     Logo = "Avatar",
+    BackgroundTransparency = 0.42, -- full-screen dimmer
+    CardTransparency = 0.1, -- key dialog surface
     MarkText = "G",
     SubmitText = "Verify key",
     Validate = function(key)
@@ -45,9 +49,38 @@ local gate = UI:CreateKeySystem({
 })
 ```
 
-The key gate shows the local player's avatar by default with `Logo = "Avatar"`. Set `Logo = false` to show `MarkText`, or pass an uploaded image URI such as `rbxassetid://123456`. `gate:GetParts()` exposes `MarkImage` and `MarkText` for further customization. The submit button defaults to `Verify key`.
+![Live rc.21 key gate with an access-key field, Verify, Get key, Cancel, and Discord actions](/images/keygate.png)
+
+*A live rc.21 screenshot of the key-gate layout. It shows the available actions; it does not demonstrate key validation or link-copy behavior.*
+
+The key gate shows the local player's avatar by default with `Logo = "Avatar"`. Set `Logo = false` to show `MarkText`, or pass an uploaded image URI such as `rbxassetid://123456`. `gate:GetParts()` exposes `MarkImage` and `MarkText` for the logo and `CredentialWell` for the inset background behind the access-key input. Style `CredentialWell` directly. The submit button defaults to `Verify key`.
+
+Named key-gate parts use responsive layout by default. `gate:SetPartLayout(name, options)` stores a `Position`, `Size`, `AnchorPoint`, or `Visible` override across reflow and updates; `gate:ResetPartLayout(name)` restores automatic placement. The fixed `Overlay` and `Card` cannot be moved this way. See the [Design guide](/customization/design-your-interface) for a short Get key button example.
 
 The default width is 420 px (280–600). Automatic heights are 332 px without Discord or GetKey, 394 px with Discord only, 404 px with GetKey only, and 462 px with both. `Height` accepts 280–560 px. When the height is automatic, adding or removing Discord/GetKey recalculates it; an explicitly supplied height remains fixed during updates. The layout gives the Verify action a full-width row when GetKey is present, followed by Get key and Cancel actions.
+
+`BackgroundTransparency` controls the full-screen dimmer and defaults to `0.42`. `CardTransparency` controls only the key dialog surface and defaults to `0.1`. Both accept values from 0 (opaque) to 1 (transparent); change them with `gate:Update({...})`.
+
+## Choose action labels
+
+Use short labels when possible. In rc.20, a label that does not fit its button shows an ending ellipsis; its configured string remains unchanged. `SubmitText` and `CancelText` may be up to 32 characters, while `GetKey.Text` and `Discord.Text` may be up to 48:
+
+```lua
+local keyOptions = {
+    SubmitText = "Verify membership",
+    CancelText = "Return to menu",
+    GetKey = {
+        Url = "https://example.com/get-key",
+        Text = "Request a new access key",
+    },
+    Discord = {
+        Url = "https://discord.gg/your-server",
+        Text = "Copy community invite",
+    },
+}
+```
+
+Copy these fields into your existing `UI:CreateKeySystem({...})` options table, including its required `Validate` callback. Label truncation is visual; it adds no API or font-scaling setting.
 
 ## Get a key
 

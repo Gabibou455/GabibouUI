@@ -1,0 +1,173 @@
+---
+title: Design your interface
+description: Start with a preset, then adjust color, spacing, corners, and tab groups.
+icon: sliders-horizontal
+---
+
+Give your menu a consistent look with one design preset. Then change only the details you care about. These examples target release candidate 1.5.0-rc.21. Check `UI.Version` in your installed copy when using version-specific design APIs. Follow [Installation](/getting-started/installation) to set up the library as a `GabibouUI` ModuleScript in `ReplicatedStorage`.
+
+Start with `UI:Design(...)` for shared choices such as accent, density, corners, tab placement, and navigation. Surface-specific settings such as a key gate's avatar, a loader's progress, or notification placement stay with their own options.
+
+| If you want to change… | Start here | Guide |
+|---|---|---|
+| Font or text size | `UI:SetStyle` or `window:SetStyle` | [Appearance and layout](/customization/appearance-and-layout) |
+| Spacing or control layout | `Design.Density` or `UI:SetLayout` / `window:SetLayout` | [Appearance and layout](/customization/appearance-and-layout) |
+| Tab position or navigation | `Design.Tabs` / `Design.Navigation` or `window:SetNavigation` | [Appearance and layout](/customization/appearance-and-layout) |
+| Key-gate avatar | `CreateKeySystem` option `Logo = "Avatar"` | [Key systems](/customization/key-systems) |
+| Loader layout or progress | `UI:CreateLoader(options)` or `loader:Update(options)` | [Loading screens](/customization/loading-screens) |
+| Notification position or defaults | `UI:SetNotifications(options)` or `window:SetNotifications(options)` | [Notifications](/customization/notifications) |
+
+For rc.17, the default desktop layout uses a 168 px sidebar, 128 px tab width, 16 px tab icons, 7 px tab gaps, 10 px search gap, and 18 px content gap. A design density can override spacing values; for example, `Comfortable` changes the content gap from 18 to 20 px, the tab gap from 7 to 8 px, and the search gap from 10 to 12 px. These are defaults before density overrides. The 128 px `TabWidth` is the minimum automatic width for horizontal tabs; vertical tabs fill the sidebar. A per-tab `Width` overrides the automatic horizontal width.
+
+## Create a window with a design
+
+This complete example makes a **Settings** category with a **General** tab, a toggle, and a volume slider. Paste it into a `LocalScript` under `StarterPlayerScripts` after installing the ModuleScript.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+
+local design = UI:Design({
+    Preset = "Atelier",
+    Accent = Color3.fromRGB(232, 235, 238),
+    Density = "Comfortable",
+    Radius = "Balanced",
+    Navigation = "Rail",
+})
+
+local window = UI:CreateWindow({Title = "My project", Design = design})
+local settings = window:Category("Settings")
+local general = settings:Tab("General", "home")
+
+general:Toggle("Show effects", function(enabled)
+    print("Show effects:", enabled)
+end)
+
+general:Slider("Volume", {Min = 0, Max = 100, Value = 50}, function(value)
+    print("Volume:", value)
+end)
+```
+
+`UI:Design(...)` prepares a reusable set of appearance choices. `Design = design` applies it when the window is created. `Category(...)` adds a heading to the tab list, and `settings:Tab(...)` puts the tab beneath that heading. The callbacks receive the toggle's `true`/`false` value or the slider's number.
+
+## Make a quick adjustment
+
+Change one value in the design table, then run the script again:
+
+```lua
+local design = UI:Design({
+    Preset = "Minimal",
+    Accent = Color3.fromRGB(255, 190, 90),
+    Density = "Compact",
+    Radius = "Sharp",
+})
+```
+
+Built-in presets are `Studio`, `Minimal`, `Command`, and `Atelier`. Atelier pairs a monochrome palette with Comfortable spacing, Balanced corners, Left tabs, Rail navigation, and a slightly translucent window surface. `Accent` takes a Roblox `Color3`. `Density` accepts `Compact`, `Comfortable`, or `Spacious`; `Radius` accepts `Sharp`, `Balanced`, or `Soft` (or a number from 0 to 32). Other useful choices are `Tabs = "Left"` or `"Top"` and `Navigation = "Classic"`, `"Soft"`, `"Pill"`, or `"Rail"`.
+
+## Make a monochrome menu slightly see-through
+
+Atelier is already mostly solid, with a panel transparency of `0.08`. Raising `Transparency` to `0.12` lets a little more of the scene show through. The range is `0` (opaque) to `1` (transparent); this changes the main panel, not each row, and does not blur the background.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+local design = UI:Design({Preset = "Atelier", Transparency = 0.12})
+local window = UI:CreateWindow({Title = "My project", Design = design})
+local settings = window:Tab("Settings", "settings")
+settings:Toggle("Show effects", {Value = true}, function(enabled)
+    print("Effects:", enabled)
+end)
+```
+
+When you reuse this design for a key gate or loader, `Transparency` also supplies that card's `CardTransparency` unless its options set `CardTransparency` directly. `BackgroundTransparency` controls the separate full-screen dimmer. Rows and controls keep their normal surface colors.
+
+In rc.17, the header and control/section surfaces use a quieter visual hierarchy. Rail tabs have a 16 px icon with a 1.5 px icon stroke, a 2 px selection marker, and a neutral selected tile. Buttons, toggles, and sliders retain the motion-policy interactions introduced in rc.16.
+
+To move tabs to the top, add `Tabs = "Top"` to the design table. To change an existing window after it appears, use its setters, for example `window:SetLayout({TabPosition = "Top"})` or `window:SetTheme({Accent = Color3.fromRGB(255, 190, 90)})`.
+
+## Reuse a named design
+
+Register a design once when several windows or surfaces share it:
+
+```lua
+UI:RegisterDesign("StudioBrand", {
+    Preset = "Studio",
+    Accent = Color3.fromRGB(120, 190, 255),
+})
+
+local window = UI:CreateWindow({Title = "Settings", Design = "StudioBrand"})
+```
+
+A custom design starts from one built-in preset. Registration returns `false` if the name is already in use. The same design can be passed to `CreateWindow`, `CreateLoader`, and `CreateKeySystem`. Keep a key gate's required `Validate` callback; see [Server validation](/examples/server-validation) for a server-side pattern.
+
+For full control and layout options, see [Appearance and layout](/customization/appearance-and-layout), [Loading screens](/customization/loading-screens), and [Key systems](/customization/key-systems). Part overrides use `SetPartLayout(name, options)` and can be cleared with `ResetPartLayout(name)`; supported part names are returned by `GetParts()`.
+
+## Apply the design to a key gate or loader
+
+The same design can be reused for a loading card or key gate. A key gate still needs a `Validate` function. This example uses the `GabibouValidateKey` RemoteFunction from [Server validation](/examples/server-validation). Replace the example Get key URL with your own link:
+
+```lua
+local validateKey = game:GetService("ReplicatedStorage"):WaitForChild("GabibouValidateKey")
+
+local gate = UI:CreateKeySystem({
+    Design = design,
+    Title = "Access key",
+    Subtitle = "Enter your key to continue.",
+    GetKey = {Url = "https://example.com/get-key", Text = "Get key"},
+    Validate = function(key)
+        return validateKey:InvokeServer(key)
+    end,
+})
+```
+
+Use a loader while your own setup work runs. Call `Complete()` when that work is done:
+
+```lua
+local loader = UI:CreateLoader({
+    Design = design,
+    Title = "Starting my project",
+    Subtitle = "Preparing settings",
+})
+
+loader:SetProgress(0.5, "Loading settings")
+-- Run your setup work here.
+loader:Complete("Ready")
+```
+
+These examples assume the earlier `UI` and `design` variables are still in scope. Keep keys and validation rules on the server.
+
+## Move a key gate part
+
+`GetParts()` lists the available named parts. `SetPartLayout()` moves one part, and `ResetPartLayout()` returns it to responsive placement. This manual placement example may need adjustment for your card content and screen size:
+
+```lua
+local parts = gate:GetParts()
+print(parts.GetKeyButton.Name)
+
+gate:SetPartLayout("GetKeyButton", {
+    Position = UDim2.new(1, -120, 0, 280),
+    Size = UDim2.fromOffset(132, 46),
+    AnchorPoint = Vector2.new(1, 0),
+})
+
+gate:Update({Subtitle = "Use your key to continue."})
+gate:ResetPartLayout("GetKeyButton")
+```
+
+The override stays active through viewport reflow and `gate:Update()`. Reset it when you want responsive placement again. Check the result on your target screen sizes.
+## Adjust animation
+
+Set motion when you create a window, or update it later. `Duration` is in seconds; `Style` and `Direction` use Roblox easing enums.
+
+```lua
+window:SetMotion({
+    Duration = 0.18,
+    Style = Enum.EasingStyle.Quad,
+    Direction = Enum.EasingDirection.Out,
+})
+```
+
+For instant transitions, set `Duration = 0`. See [Appearance and layout](/customization/appearance-and-layout) for the full motion and layout options.
+
+

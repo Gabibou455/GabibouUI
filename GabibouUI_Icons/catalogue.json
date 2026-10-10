@@ -1,10 +1,10 @@
 {
   "library": "Gabibou UI",
-  "version": "1.5.0-rc.7",
+  "version": "1.5.0-rc.21",
   "idNamespace": "Gabibou UI internal IDs, not Roblox asset IDs",
   "size": 256,
   "transparent": true,
-  "sourceSha256": "4e5ddaa4178c6e276a3d909fa7b19fe858a4578fd7f4c1a91166722abfd22466",
+  "sourceSha256": "7a0a98043160504c3ca7c4bd5731244e48f570d950a7a759aacaed7f02c89907",
   "variants": [
     "Outline",
     "Soft",

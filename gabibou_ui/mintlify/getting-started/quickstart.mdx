@@ -1,83 +1,106 @@
 ---
 title: Quickstart
-description: Run your first Gabibou UI example and understand each part.
+description: Load Gabibou UI and build a small menu with a toggle and slider.
 ---
 
-## Before you begin
+## 1. Load the library
 
-Choose an installation method in [Installation](/getting-started/installation). The example below uses the remote loader, which needs a client environment that supports both `loadstring` and `game:HttpGet`. In that environment, paste the **whole code block** into its client code editor and run it. If you use Roblox Studio, follow the ModuleScript steps on the installation page. In the code block below, replace its first line with the two `require` lines shown there; keep the window and control lines in the same `LocalScript`.
-
-## Build a window with a toggle
+Follow [Installation](/getting-started/installation) for your environment. In a client editor that supports `loadstring` and `game:HttpGet`, this one line loads the published library:
 
 ```lua
 local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
+```
+
+In Roblox Studio, use the ModuleScript loader from Installation instead. Keep the `UI` variable name so the examples below work as written.
+
+## 2. Add a window, tab, and controls
+
+Paste these lines directly after the loader:
+
+```lua
 local window = UI:CreateWindow('My project')
-local tab = window:Tab('Home', 'home')
-tab:Toggle('Effects', function(enabled)
-    print('Effects:', enabled)
+local tab = window:Tab('Settings', 'settings')
+
+tab:Toggle('Show effects', function(enabled)
+    print('Effects enabled:', enabled)
+end)
+
+tab:Slider('Volume', {Min = 0, Max = 100, Value = 50}, function(value)
+    print('Volume:', value)
 end)
 ```
 
-After you run the code, a window titled **My project** appears with a **Home** tab and an **Effects** toggle. Click the toggle: it switches on or off, and the client output shows `Effects: true` or `Effects: false`.
+Run the script. Click **Show effects** or drag **Volume**; each control calls its function with the new value. `window` is the panel, `tab` is a page in that panel, and each control is added to the tab. The callback runs when a player changes the control.
 
-Here is what each line does:
+![Running rc.21 Gabibou UI demo with a button, one toggle off, one toggle on, and a slider](/images/controls-examples.png)
 
-1. `loadstring(...)()` downloads and loads the library. `UI` is the library object used to create your interface.
-2. `UI:CreateWindow(...)` creates the main panel. A **window** is the panel that holds your menu.
-3. `window:Tab(...)` adds a page to the window. A **tab** is one page of the menu; `'Home'` is its label and `'home'` is its icon name.
-4. `tab:Toggle(...)` adds a control to that page. A **control** is an interactive item such as a toggle, button, or slider.
+*A separate live rc.21 demo; its control labels and values differ from this Quickstart example.*
 
-The second argument to `Toggle` is a **callback**: a function the library runs when the player changes the toggle. `enabled` is `true` when it is on and `false` when it is off. Creating the toggle does not run the callback. The toggle starts off by default.
+## Choose a look (optional)
 
-## Add another control
+Design presets are part of the 1.5.0-rc.21 release candidate. If your installed copy includes the `Design` option, replace Step 2's `CreateWindow` line with this one to use Atelier:
 
-Add this line **below the `tab:Toggle(...)` block**, before the end of your script. It creates a button on the same Home tab:
+```lua
+local window = UI:CreateWindow('My project', {Design = 'Atelier'})
+```
+
+Check `UI.Version` to identify your installed copy. For setup and all design options, see [Design your interface](/customization/design-your-interface).
+
+| Preset | Palette and spacing | Corners | Tabs and navigation |
+|---|---|---|---|
+| Studio | Graphite, Comfortable | Balanced | Left, Soft |
+| Minimal | Graphite, Compact | Sharp | Left, Classic |
+| Command | Near-black, Spacious | Balanced | Top, Pill |
+| Atelier | Monochrome, Comfortable | Balanced | Left, Rail |
+
+## Connect a control to your project
+
+In Step 2, replace the existing **Show effects** toggle with this version. Its callback connects the toggle to your project state, and `effectsToggle` keeps a handle for later updates:
+
+```lua
+local effectsEnabled = false
+local effectsToggle = tab:Toggle('Show effects', {Value = effectsEnabled}, function(enabled)
+    effectsEnabled = enabled -- connect your effect system here
+end)
+
+-- Later, update the control and run its callback:
+effectsToggle:Set(true, true)
+```
+
+Change `'Show effects'` to your control's label and set `effectsEnabled` to the starting value you want. `Set(value, true)` updates the control and calls its callback when the value changes; `Set(value)` or `Set(value, false)` updates it without calling the callback. A returned control handle also has methods such as `SetTitle` and `SetEnabled`.
+
+## 3. Try other controls
+
+Use the same `tab` variable to add controls. These short examples show the common controls:
 
 ```lua
 tab:Button('Say hello', function()
     print('Hello!')
 end)
-```
 
-A **button** runs an action when clicked. Its callback has no input value because there is no setting to report. You should see `Hello!` in the client output after clicking it.
-
-You can group related controls under a heading. Add these lines below the button:
-
-```lua
-local settings = tab:Section('Settings')
-settings:Toggle('Music', function(enabled)
-    print('Music:', enabled)
-end)
-```
-
-`Section` adds a heading inside the existing tab and returns an object named `settings`. Add controls to that object just as you add them to `tab`.
-
-## Start the toggle on
-
-To start the original Effects toggle on, find its line in the complete example and replace it with this version:
-
-```lua
-tab:Toggle('Effects', {Value = true}, function(enabled)
-    print('Effects:', enabled)
-end)
-```
-
-`Value` is an option that sets the starting value. It does not run the callback. If you omit `Value`, the toggle starts off.
-
-## Read or change a value later
-
-To keep a reference to the toggle, assign the returned control to a variable. Replace the original Effects line with these lines, then add the final two lines where you want to read or change it:
-
-```lua
-local effects = tab:Toggle('Effects', function(enabled)
-    print('Effects:', enabled)
+tab:Dropdown('Quality', {Options = {'Low', 'Medium', 'High'}, Value = 'Medium'}, function(value)
+    print('Quality:', value)
 end)
 
-print(effects:Get()) -- reads the current value
-effects:Set(true) -- turns it on without calling the callback
-effects:Set(false, true) -- turns it off and calls the callback if it changed
+tab:Input('Player name', {Placeholder = 'Type a name'}, function(value)
+    print('Name:', value)
+end)
+
+tab:Keybind('Toggle menu', {Value = 'F6'}, function(key)
+    print('Pressed:', key)
+end)
+
+tab:ColorPicker('Highlight', {Value = '#78BEFF'}, function(color)
+    print('Highlight:', color)
+end)
+
+tab:Paragraph({Title = 'Tip', Description = 'You can add a short note to a tab.'})
 ```
 
-`Get()` reads the value. `Set(value)` changes it without running the callback. `Set(value, true)` also runs the callback if the value changed. Indentation is optional in Lua; keep the three lines together in the same script.
+A **button** runs an action. A **dropdown** chooses from `Options`. An **input** returns text. A **keybind** listens for a key. A **color picker** returns the chosen color. A **paragraph** displays information and has no callback. For all options and value types, see [Controls](/customization/controls).
 
-Next, see [Controls](/customization/controls) for all available controls and their options, or [Appearance and layout](/customization/appearance-and-layout) to change the interface.
+## Group controls and tabs
+
+Add a section heading within a tab with `tab:Section('Audio')`, then call controls on the returned section. Add a category heading to the navigation rail with `window:Category('Settings')`, then create tabs beneath it with `category:Tab('Audio', 'volume-2')`. See [Design your interface](/customization/design-your-interface) for a complete category example.
+
+Next, see [Appearance and layout](/customization/appearance-and-layout) to change how the window looks.

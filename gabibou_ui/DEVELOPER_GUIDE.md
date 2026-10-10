@@ -1,10 +1,10 @@
 # Gabibou UI Developer Guide
 
-- Version: `1.5.0-rc.6` (release candidate)
+- Version: `1.5.0-rc.21` (release candidate)
 - Language: Luau
 - Runtime: Roblox client
 
-Load the library once, create a window, then add the controls you need. You do not need to paste the library's source into your script when using the remote loader. Your callbacks connect each control to your project logic.
+Load the library once, create a window, then add the controls you need. You do not need to paste the library's source into your script when using the remote loader. Your callbacks connect each control to your project logic. The remote loader follows published `main`; check `UI.Version` when confirming that a version-specific API is available.
 
 ## Your first interface
 
@@ -217,7 +217,7 @@ Built-in themes are `Graphite`, `Aurora`, and `Ember`. Use `Theme = "Graphite"`,
 
 `UI:SetStyle(options)` and `UI:SetMotion(options)` set defaults for future windows. `window:SetStyle(options)` and `window:SetMotion(options)` update one window. Style fields include fonts, text sizes, window/section/control radii, and row padding. Motion fields are `Duration`, `Style`, `Direction`, `RepeatCount`, `Reverses`, and `Delay`. See [CUSTOMIZATION.md](CUSTOMIZATION.md) for ranges and examples.
 
-Navigation is configured with `Navigation = {Variant = "Soft", IconVariant = "Outline"}`. Variants are `Classic`, `Soft` (default), and `Pill`; icon variants are `Outline`, `Soft`, and `Duotone`. A tab can pin its own `IconVariant`. `window:SetNavigation(partialOptions)` updates the current window.
+Navigation is configured with `Navigation = {Variant = "Soft", IconVariant = "Outline"}`. Variants are `Classic`, `Soft` (default), `Pill`, and `Rail`; Rail gives the selected tab a distinct icon tile with a neutral label. Icon variants are `Outline`, `Soft`, and `Duotone`. A tab can pin its own `IconVariant`. `window:SetNavigation(partialOptions)` updates the current window.
 
 Use `window:Animate(instance, properties, options)` for an instance inside the window GUI, or `control:Animate(properties, options)` for the control root. The methods return a Roblox `Tween`; starting another managed tween on the same instance cancels the previous one. `window:SetReducedMotion(true)` cancels active tweens and applies final values immediately. `window:BindColor(instance, property, token)` binds a descendant's `Color3` property to a theme token.
 
@@ -225,7 +225,7 @@ Use `window:Animate(instance, properties, options)` for an instance inside the w
 
 Responsive layout is enabled by default. The library adapts tab placement and control rows to the viewport and uses a keyboard-aware safe area. `Responsive` accepts a partial options table; the defaults are a 620 px breakpoint, 44 px touch targets, and 12 px margin. These rules are automated layout behavior; test your own custom controls on target devices.
 
-`Layout` options may be set as defaults with `UI:SetLayout(options)`, per window with `window:SetLayout(options)`, and per tab/control with their `Layout` option. Common settings include `TabPosition`, `MobileTabPosition`, `SidebarWidth`, `ContentPadding`, `ContentGap`, `RowGap`, `SectionGap`, `ControlsPosition`, `ShowSearch`, `ShowHeader`, and `ShowFooter`.
+`Layout` options may be set as defaults with `UI:SetLayout(options)`, per window with `window:SetLayout(options)`, and per tab/control with their `Layout` option. `PanelTransparency` defaults to `0.1` and controls the main window surface only; `0` is opaque and `1` is transparent. For example: `window:SetLayout({PanelTransparency = 0.12})`. A loader or key gate uses `CardTransparency` for its panel and `BackgroundTransparency` for the separate full-screen dimmer. Common settings also include `TabPosition`, `MobileTabPosition`, `SidebarWidth`, `ContentPadding`, `ContentGap`, `RowGap`, `SectionGap`, `ControlsPosition`, `ShowSearch`, `ShowHeader`, and `ShowFooter`.
 
 `window:GetParts()` exposes named window parts. `window:SetPartLayout(name, options)` can override `Position`, `Size`, `AnchorPoint`, and `Visible`; `window:ResetPartLayout(name)` restores automatic layout. Part overrides apply after the responsive layout and can overlap or extend beyond the window, so keep custom offsets within the available area. The precise part names and layout bounds are listed in [CUSTOMIZATION.md](CUSTOMIZATION.md).
 
@@ -270,7 +270,7 @@ local window = UI:Create({
 
 The built-in `Create` loader reports how many schema controls have been constructed. For a standalone loading screen with manual progress, use `UI:CreateLoader(options)`, then call `SetProgress(ratio, status)`, `SetStatus(text)`, `Update(options)`, `Complete(status)`, or `Destroy()`.
 
-Loader layout variants are `Compact` (default, height 216), `Centered` (height 300 with a centered logo and title; below 260 px it falls back to compact layout), and `Minimal` (compact layout without a logo). You can set `Height` explicitly. `ShowSubtitle` controls the subtitle, `ShowLogo` controls the logo area, `ShowPercentage` controls the number, `ShowActivity` controls the moving activity indicator, and `ProgressHeight` sets the progress track height from 2 to 12 px. Other options include `Title`, `Subtitle`, `MarkText`, `Logo` (`"Avatar"` or an image string), `Theme`, `Style`, `Width` (280–560), `Position`, `AnchorPoint`, `Padding` (12–40), `LogoSize` (24–80), `BackgroundTransparency` (0–1), `Parent`, `DisplayOrder`, `ReducedMotion`, `MinimumDuration` (0–10 seconds), `ExitDuration` (0–2 seconds), `OnComplete(loader)`, and `OnError(loader, title, index)`.
+Loader layout variants are `Compact` (default, height 216), `Centered` (height 300 with a centered logo and title; below 260 px it falls back to compact layout), and `Minimal` (compact layout without a logo). You can set `Height` explicitly. `ShowSubtitle` controls the subtitle, `ShowLogo` controls the logo area, `ShowPercentage` controls the number, `ShowActivity` controls the moving activity indicator, and `ProgressHeight` sets the progress track height from 2 to 12 px. Other options include `Title`, `Subtitle`, `MarkText`, `Logo` (`"Avatar"` or an image string), `Theme`, `Style`, `Width` (280–560), `Position`, `AnchorPoint`, `Padding` (12–40), `LogoSize` (24–80), `BackgroundTransparency` (0–1), `CardTransparency` (0–1), `Parent`, `DisplayOrder`, `ReducedMotion`, `MinimumDuration` (0–10 seconds), `ExitDuration` (0–2 seconds), `OnComplete(loader)`, and `OnError(loader, title, index)`. `BackgroundTransparency` controls the full-screen dim layer and defaults to `0.3`; `CardTransparency` controls only the loader panel surface and defaults to `0.1`. Both accept values from 0 (opaque) to 1 (transparent).
 
 `Update` preserves the current `Height` when you change only `Variant`. To switch a default compact loader to the centered preset, set both fields: `loader:Update({Variant = "Centered", Height = 300})`.
 
@@ -283,6 +283,8 @@ local loader = UI:CreateLoader({
     MarkText = "G",
     Variant = "Centered",
     Theme = "Graphite",
+    BackgroundTransparency = 0.3, -- full-screen dim layer
+    CardTransparency = 0.1, -- loader panel surface
     Width = 420,
     Height = 300,
     MinimumDuration = 0.5,
@@ -298,7 +300,7 @@ loader:Run({
 })
 ```
 
-`loader:GetParts()` returns `Overlay`, `Card`, `Logo`, `LogoImage`, `LogoText`, `Title`, `Subtitle`, `Status`, `Percentage`, `Track`, `Fill`, `Activity`, and `Content`. `Content` is a free frame between the header and status row for custom instances. `SetPartLayout(name, options)` and `ResetPartLayout(name)` support `Logo`, `Title`, `Subtitle`, `Status`, `Percentage`, `Track`, and `Content`; options are `Position`, `Size`, `AnchorPoint`, and `Visible`. `Overlay`, `Card`, and inner progress objects are exposed for styling but do not have automatic-layout overrides. Responsive layout may recalculate positions on viewport changes.
+`loader:GetParts()` returns `Overlay`, `Card`, `Logo`, `LogoImage`, `LogoText`, `Title`, `Subtitle`, `StatusPanel`, `Status`, `StatusIndicator`, `Percentage`, `Track`, `Fill`, `Activity`, and `Content`. `StatusPanel` is the framed area behind the loader's status text and indicator. `Content` is a free frame between the header and status row for custom instances. `SetPartLayout(name, options)` and `ResetPartLayout(name)` support `Logo`, `Title`, `Subtitle`, `StatusPanel`, `Status`, `StatusIndicator`, `Percentage`, `Track`, and `Content`; options are `Position`, `Size`, `AnchorPoint`, and `Visible`. `Overlay`, `Card`, and inner progress objects are exposed for styling but do not have automatic-layout overrides. Responsive layout may recalculate positions on viewport changes.
 
 Register custom listeners or effects with `loader:Own(resource)`. It accepts a cleanup function, an `RBXScriptConnection`, or an object with `Disconnect()`, `Cancel()`, or `Destroy()`; the selected cleanup is called when the loader is destroyed. For example:
 
@@ -309,6 +311,11 @@ label.BackgroundTransparency = 1
 label.Size = UDim2.fromScale(1, 1)
 label.Text = "Connecting to your service…"
 label.Parent = parts.Content
+
+loader:SetPartLayout("StatusPanel", {
+    Position = UDim2.new(0, 24, 1, -72),
+    Size = UDim2.new(1, -48, 0, 48),
+})
 
 loader:SetPartLayout("Content", {
     Position = UDim2.fromOffset(24, 168),
@@ -330,6 +337,8 @@ local gate = UI:CreateKeySystem({
     Subtitle = "Enter your key to continue.",
     Logo = "Avatar",
     MarkText = "G", -- shown when Logo = false
+    BackgroundTransparency = 0.42, -- full-screen dim layer
+    CardTransparency = 0.1, -- dialog surface
     SubmitText = "Verify key",
     Validate = function(key)
         return key == "example", "Key not accepted"
@@ -347,7 +356,7 @@ The optional `Discord` value may be an invite URL string or a table with `Url`, 
 
 The visible key label and in-progress/cancelled status are customizable with `InputLabel` (default `Access key`), `ValidatingText` (default `Verifying…`), and `CancelledText` (default `Cancelled`). Each accepts up to 48 characters and can be changed with `gate:Update({...})` while the gate is idle and open.
 
-The key gate shows the local player's avatar by default with `Logo = "Avatar"`. Set `Logo = false` to show the `MarkText` monogram, or pass an uploaded image such as `Logo = "rbxassetid://123456"`. `gate:GetParts()` exposes both `MarkImage` and `MarkText` if you want to customize the existing logo elements.
+The key gate shows the local player's avatar by default with `Logo = "Avatar"`. Set `Logo = false` to show the `MarkText` monogram, or pass an uploaded image such as `Logo = "rbxassetid://123456"`. `gate:GetParts()` exposes `MarkImage` and `MarkText` for the logo and `CredentialWell` for the inset surface behind the access-key input. You can style `CredentialWell` directly; the gate keeps its responsive position.
 
 ### Add a Get key action
 
@@ -365,6 +374,8 @@ GetKey = {
 Use `GetKey = function(gate) ... end` to run a custom action. `gate:GetKey()` returns a success boolean and optional reason. The action is single-flight; updating or destroying the gate invalidates a yielding callback's stale UI result. The built-in demo uses this callback form to show the sample key `demo` in a notification; it is only a local preview. `gate:Update({GetKey = false})` removes the action. `gate:GetParts()` exposes `GetKeyButton`, `KeyLink`, and `KeyLinkStatus`.
 
 The key dialog defaults to `Width = 420`. Automatic heights are 332 px without Discord/GetKey, 394 px with Discord, 404 px with GetKey, and 462 px with both. `Height` accepts 280–560 px. Automatic height follows GetKey/Discord changes; an explicitly supplied `Height` remains fixed when other options change.
+
+`BackgroundTransparency` controls the full-screen black dim layer and defaults to `0.42`; `CardTransparency` controls only the key dialog surface and defaults to `0.1`. Both accept values from 0 (opaque) to 1 (transparent), and can be changed with `gate:Update({...})`.
 
 See [`key_discord_example.luau`](key_discord_example.luau) for a complete launch example. A client-side key dialog is only a user interface. It does not protect server data or privileged actions; validate access on the server and keep secrets out of client code.
 

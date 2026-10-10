@@ -1,0 +1,84 @@
+---
+title: Use with AI
+description: Connect an MCP-capable AI tool to the published Gabibou UI documentation.
+---
+
+## What this connection does
+
+MCP (Model Context Protocol) lets an AI tool look up information from an external service. The Gabibou UI MCP server gives a connected tool access to the published documentation, so it can find API details and examples while helping you write Luau.
+
+Your AI can use this connection to read the published docs. You install the library and run the suggested code in your Roblox project. Access to your local files or Roblox requires separate tools; connecting this documentation server does not grant it. Review the generated code and test it. Your AI tool determines which MCP connections its account or plan supports.
+
+## Connect a compatible tool
+
+Use an AI tool that supports connecting to remote MCP servers over HTTP. The exact setup screens vary between tools, so follow that tool's instructions for adding a remote HTTP server:
+
+At the top of a documentation page, open the page menu and choose **Copy MCP server URL**. **Connect to Cursor** and **Connect to VS Code** provide shortcuts for those tools. Copying the address alone does not connect your AI: complete the setup below, or confirm the shortcut's setup in your chosen tool.
+
+1. Open the tool's MCP or connected-services settings.
+2. Add a remote HTTP server named `GabibouUI`.
+3. Use this server address:
+
+   ```text
+   https://gabibou-ui.mintlify.app/mcp
+   ```
+
+4. Save the connection and connect to it. If the tool asks you to approve access to documentation tools, review and approve that request in the tool.
+5. Ask the tool to search the Gabibou UI documentation and confirm it can find a relevant page before asking it to write code.
+
+No Roblox administrator MCP, Studio connection, executor bridge, project token, or private key is needed for documentation lookup.
+
+To check the connection, ask:
+
+```text
+Use the Gabibou UI MCP to find the installation page.
+Summarize the Roblox Studio steps and include the page link.
+```
+
+Look for a documentation-tool call and a link to this site's Installation page in the answer. An answer from memory alone does not confirm that the connection worked.
+
+## Ask for a starter window
+
+After connecting, try a prompt like this:
+
+> Search the Gabibou UI documentation for the Quickstart and installation instructions. Show me a basic Roblox Studio LocalScript that requires a ModuleScript named GabibouUI from ReplicatedStorage, creates a window and a Settings tab, and adds a toggle and a slider. Explain where each line goes. Do not assume you can run Roblox Studio.
+
+The tool can use the published docs to help form an answer. To install and run the library, follow [Installation](/getting-started/installation) and [Quickstart](/getting-started/quickstart) yourself.
+
+## Ask about a customization
+
+Name the result you want and ask the tool to find the matching API before it writes an example. For instance:
+
+> Search the Gabibou UI docs for loader options. Show how to create a centered loader with a title, a 300-pixel height, and a progress update. Explain how to change it to Minimal later, and link the pages you used.
+
+For an existing project, share only the small code excerpt needed to explain the change. The documentation server does not receive your project files through this connection. Sharing an excerpt in your AI conversation gives that AI context for the change.
+
+## If the tool cannot find the docs
+
+- **The connection does not appear:** Check that your AI tool supports remote HTTP MCP servers and that you added the full address above.
+- **The tool says it has no MCP tools:** Reconnect the server or check the tool's own MCP setup instructions. Some tools require enabling a connection before a conversation can use it.
+- **Search returns no result:** Ask for a specific page, such as Quickstart, Controls, or Loading screens, and ask the tool to search the Gabibou UI documentation again.
+- **The example does not match your installed library:** The MCP server describes the published documentation, which can differ from a local or older library copy. Compare the example with your installed source and the linked guide before using it.
+- **You expected the AI to run the code:** This connection only supplies documentation. Copy the example into the appropriate script and test it in your own Roblox environment.
+
+## Short glossary
+
+- **MCP server:** A service that makes information or tools available to a compatible AI client.
+- **AI client:** The chat or coding tool where you ask questions.
+- **Remote HTTP server:** An MCP service reached through a web address, like the Gabibou UI endpoint above.
+- **Published documentation:** The guides available on the public Gabibou UI documentation site; it may not describe unreleased local changes.
+
+## Give your AI the complete project guide
+
+Share [the AI agent guide](/ai/agent-guide) when you want your AI to understand the source repository, license, controls, design options, and validation workflow together:
+
+```text
+Read https://gabibou-ui.mintlify.app/ai/agent-guide first.
+I use Roblox Studio. Build a Gabibou UI settings menu with a toggle,
+slider, and dropdown. Use APIs from the docs, explain setup, and separate
+the interface code from the project behavior I need to connect.
+```
+
+If your AI tool does not support MCP, give it the page URL if it can browse, or use **Copy page** and paste the guide into the conversation. This supplies a snapshot of the page; a connected MCP can retrieve published pages as needed.
+
+For more about this protocol and its setup, see [Mintlify's MCP documentation](https://www.mintlify.com/docs/ai/model-context-protocol). For supported library setup methods, see [Installation](/getting-started/installation).

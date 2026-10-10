@@ -35,18 +35,45 @@ function Window:_LayoutNotifications()
     local availableHeight=math.max(1,viewport.Y-margin*2)
     local totalHeight=0
     for _,toast in ipairs(self._notifications)do
-        local textLeft=60
-        local textWidth=math.max(1,width-textLeft-44-12)
-        local bounds=TextService:GetTextSize(toast.Content,self.Style.DescriptionSize,self.Style.Font,Vector2.new(textWidth,1000))
-        local textHeight=toast.Content==""and 0 or math.min(bounds.Y+2,self.Style.DescriptionSize*5+10)
+        local closeSize=math.min(44,width,availableHeight)
+        local closeRight=width>=closeSize+16 and 16 or 0
+        local closeX=math.max(0,width-closeRight-closeSize)
+        local showBadge=width>=132 and availableHeight>=56
+        toast.IconBadge.Visible=showBadge
+        local textLeft=showBadge and 64 or 16
+        local textWidth=math.max(0,closeX-textLeft-8)
+        local titleY=availableHeight<40 and 4 or 14
+        local titleHeight=math.max(0,math.min(22,availableHeight-titleY))
+        toast.CloseButton.Size=UDim2.fromOffset(closeSize,closeSize)
+        toast.CloseIcon.Visible=closeSize>=28
+        if toast.CloseIcon.Visible then
+            toast.CloseIcon.Position=UDim2.fromOffset((closeSize-14)/2,(closeSize-14)/2)
+        end
+        local showProgress=settings.ShowProgress and availableHeight>=48 and width>=32
+        local progressInset=math.min(16,math.max(0,(width-2)/2))
+        toast.Progress.Position=UDim2.new(0,progressInset,1,-8)
+        toast.Progress.Size=UDim2.new(1,-2*progressInset,0,2)
+        toast.Progress.Visible=showProgress
+        local canShowBody=toast.Content~="" and textWidth>=64 and availableHeight>=72
+        local bounds=Vector2.zero
+        if canShowBody then
+            bounds=TextService:GetTextSize(toast.Content,self.Style.DescriptionSize,self.Style.Font,Vector2.new(textWidth,1000))
+        end
+        local descriptionRoom=math.max(0,availableHeight-39-(showProgress and 14 or 4))
+        local textHeight=not canShowBody and 0 or math.min(bounds.Y+2,self.Style.DescriptionSize*5+10,descriptionRoom)
         local height=math.min(availableHeight,math.max(72,50+textHeight))
         toast.Root.Size=UDim2.new(1,0,0,height)
-        toast.Title.Position=UDim2.fromOffset(textLeft,14)
-        toast.Title.Size=UDim2.new(1,-(textLeft+56),0,22)
-        toast.Description.Position=UDim2.fromOffset(textLeft,39)
-        toast.Description.Size=UDim2.fromOffset(textWidth,textHeight)
-        toast.Description.Visible=height>=72
-        toast.Progress.Visible=settings.ShowProgress
+        toast.CloseButton.Position=UDim2.fromOffset(closeX,math.max(0,math.min(8,(height-closeSize)/2)))
+        local titleX=math.min(textLeft,width)
+        local boundedTitleY=math.min(titleY,height)
+        local boundedTitleHeight=math.max(0,math.min(titleHeight,height-boundedTitleY))
+        local boundedTextWidth=math.max(0,math.min(textWidth,width-titleX))
+        toast.Title.Position=UDim2.fromOffset(titleX,boundedTitleY)
+        toast.Title.Size=UDim2.fromOffset(boundedTextWidth,boundedTitleHeight)
+        toast.Title.Visible=boundedTextWidth>0 and boundedTitleHeight>0
+        toast.Description.Position=UDim2.fromOffset(titleX,math.min(39,height))
+        toast.Description.Size=UDim2.fromOffset(boundedTextWidth,math.min(textHeight,math.max(0,height-math.min(39,height))))
+        toast.Description.Visible=canShowBody and toast.Description.Size.Y.Offset>0
         totalHeight+=height+settings.Gap
     end
     totalHeight-=settings.Gap
@@ -78,20 +105,20 @@ function Window:Notify(options)
     local toast={Destroyed=false,Dismissing=false,_connections={},Content=content,Kind=kind}
     local root=create("Frame",{Name="Notification",BackgroundTransparency=1,LayoutOrder=self._notificationSerial,Size=UDim2.new(1,0,0,90)},self.ToastHost)
     toast.Root=root
-    local card=create("CanvasGroup",{Name="Card",Size=UDim2.fromScale(1,1),GroupTransparency=self.ReducedMotion and 0 or 1,Position=UDim2.fromOffset(self.ReducedMotion and 0 or 12,0)},root)
-    toast.Card=card;self:_Rounded(card,"SectionRadius");self:_Color(card,"BackgroundColor3","Surface");self:_Stroke(card,"Border",.28)
+    local card=create("CanvasGroup",{Name="Card",Size=UDim2.fromScale(1,1),BackgroundTransparency=.04,GroupTransparency=self.ReducedMotion and 0 or 1,Position=UDim2.fromOffset(self.ReducedMotion and 0 or 12,0)},root)
+    toast.Card=card;self:_Rounded(card,"SectionRadius");self:_Color(card,"BackgroundColor3","Raised");self:_Stroke(card,"Border",.2)
     local token=kinds[kind][2]
-    local badge=create("Frame",{Name="IconBadge",BackgroundTransparency=.84,Size=UDim2.fromOffset(34,34),Position=UDim2.new(0,16,.5,0),AnchorPoint=Vector2.new(0,.5)},card)
-    corner(badge,11);self:_Color(badge,"BackgroundColor3",token);self:_Stroke(badge,token,.72)
+    local badge=create("Frame",{Name="IconBadge",BackgroundTransparency=.9,Size=UDim2.fromOffset(40,40),Position=UDim2.new(0,16,.5,0),AnchorPoint=Vector2.new(0,.5)},card)
+    corner(badge,14);self:_Color(badge,"BackgroundColor3",token);self:_Stroke(badge,token,.78)
     toast.IconBadge=badge
-    toast.Icon=Library:Icon(badge,iconName,{Size=18,Position=UDim2.fromOffset(8,8),Window=self,Token=token})
-    local heading=self:_Label(card,title,self.Style.TextSize,"Text");heading.Name="Title";heading.Position=UDim2.fromOffset(60,14);heading.Size=UDim2.new(1,-116,0,22);heading.AutomaticSize=Enum.AutomaticSize.None;heading.TextWrapped=false;heading.TextTruncate=Enum.TextTruncate.AtEnd
+    toast.Icon=Library:Icon(badge,iconName,{Size=20,Position=UDim2.fromOffset(10,10),Window=self,Token=token})
+    local heading=self:_Label(card,title,self.Style.TextSize,"Text");heading.Name="Title";heading.Position=UDim2.fromOffset(64,14);heading.Size=UDim2.new(1,-132,0,22);heading.AutomaticSize=Enum.AutomaticSize.None;heading.TextWrapped=false;heading.TextTruncate=Enum.TextTruncate.AtEnd
     self:_Style(heading,"Font","FontBold");self:_Style(heading,"TextSize","TextSize");toast.Title=heading
-    local body=self:_Label(card,content,self.Style.DescriptionSize,"Muted");body.Name="Content";body.Position=UDim2.fromOffset(60,39);body.AutomaticSize=Enum.AutomaticSize.None;body.TextYAlignment=Enum.TextYAlignment.Top;body.TextTruncate=Enum.TextTruncate.AtEnd;self:_Style(body,"TextSize","DescriptionSize");toast.Description=body
-    local close=create("TextButton",{Name="Dismiss",Text="",AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromOffset(44,44),Position=UDim2.new(1,-44,0,4),Selectable=true},card)
+    local body=self:_Label(card,content,self.Style.DescriptionSize,"Muted");body.Name="Content";body.Position=UDim2.fromOffset(64,39);body.AutomaticSize=Enum.AutomaticSize.None;body.TextYAlignment=Enum.TextYAlignment.Top;body.TextTruncate=Enum.TextTruncate.AtEnd;self:_Style(body,"TextSize","DescriptionSize");toast.Description=body
+    local close=create("TextButton",{Name="Dismiss",Text="",AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromOffset(44,44),Position=UDim2.new(1,-60,0,8),Selectable=true},card)
     self:_Rounded(close,"ControlRadius");self:_Color(close,"BackgroundColor3","Hover")
-    Library:Icon(close,"close",{Size=14,Position=UDim2.fromOffset(15,15),Window=self,Token="Muted"});toast.CloseButton=close
-    local track=create("Frame",{Name="ProgressTrack",BackgroundTransparency=.82,Position=UDim2.new(0,14,1,-4),Size=UDim2.new(1,-28,0,1)},card);self:_Color(track,"BackgroundColor3","Border")
+    toast.CloseIcon=Library:Icon(close,"close",{Size=14,Position=UDim2.fromOffset(15,15),Window=self,Token="Muted"});toast.CloseButton=close
+    local track=create("Frame",{Name="ProgressTrack",BackgroundTransparency=.82,Position=UDim2.new(0,16,1,-8),Size=UDim2.new(1,-32,0,2)},card);self:_Color(track,"BackgroundColor3","Border")
     toast.Progress=track
     local fill=create("Frame",{Size=UDim2.fromScale(1,1)},track);self:_Color(fill,"BackgroundColor3",token);toast.Fill=fill
     local window=self

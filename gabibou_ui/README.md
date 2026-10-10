@@ -1,8 +1,8 @@
-# Gabibou UI 1.5.0-rc.7
+# Gabibou UI 1.5.0-rc.21
 
 A Roblox interface library written in Luau. Load it in one line, create a window, and add controls using short constructors. The full options-table API remains available for layouts, animations, loading screens, key screens and other customization. Graphite is the default black, gray and white theme; the library includes 96 original icons in three variants.
 
-> This guide describes release candidate 1.5.0-rc.7. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart), [external key-provider examples](https://gabibou-ui.mintlify.app/examples/key-providers), and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
+> This guide describes release candidate 1.5.0-rc.21. It includes named interface designs, button action variants, responsive layouts, key-gate part overrides, and the current controls and lifecycle APIs. Historical release notes identify when individual capabilities were introduced. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart), [external key-provider examples](https://gabibou-ui.mintlify.app/examples/key-providers), and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
 
 Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a complete feature map. Use [CUSTOMIZATION.md](CUSTOMIZATION.md) for advanced styling, custom controls, events, and animations.
 
@@ -101,7 +101,7 @@ For a network task or game-specific preparation, create a separate loader with `
 
 `MinimumDuration` sets the minimum time to show the loader before it closes after `Complete`. It does not guarantee that a download or network operation has finished. A percentage does not represent game loading unless your code connects it to a real measurement. The loader also exposes `Update(options)` for applying validated partial options and `Run(steps)` for running dense, sequential steps. `Run` updates progress after each successful step; an error stops the sequence and calls `OnError(loader, title, index)` without completing the loader. A yielding `OnError` callback belongs to the loader: `Destroy()` cancels it, including if it starts another `Run()` attempt.
 
-Loader options also include `Variant` (`Compact`, `Centered`, or `Minimal`), `ShowSubtitle`, `ShowPercentage`, `ShowLogo`, `ShowActivity`, `ProgressHeight` (2–12 px), `Height` (160–480 px), `Position`, `AnchorPoint`, `Padding`, `LogoSize`, and `BackgroundTransparency`. `Centered` defaults to 300 px high; other variants default to 216 px. At heights below 260 px, `Centered` uses compact layout. A partial `Update({Variant = "Centered"})` preserves the current height, so pass `Height = 300` too when switching a default compact loader to centered. `GetParts()` exposes the overlay, card, logo, text, progress elements, and a free `Content` frame. `SetPartLayout` and `ResetPartLayout` can reposition supported parts; `Own(resource)` registers cleanup for custom listeners and effects. See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for a complete customization example.
+Loader options also include `Variant` (`Compact`, `Centered`, or `Minimal`), `ShowSubtitle`, `ShowPercentage`, `ShowLogo`, `ShowActivity`, `ProgressHeight` (2–12 px), `Height` (160–480 px), `Position`, `AnchorPoint`, `Padding`, `LogoSize`, `BackgroundTransparency`, and `CardTransparency`. `BackgroundTransparency` controls the full-screen dimmer (0.3 by default); `CardTransparency` controls only the loader panel surface (0.1 by default). `Centered` defaults to 300 px high; other variants default to 216 px. At heights below 260 px, `Centered` uses compact layout. A partial `Update({Variant = "Centered"})` preserves the current height, so pass `Height = 300` too when switching a default compact loader to centered. `GetParts()` exposes the overlay, card, logo, text, progress elements, and a free `Content` frame. `SetPartLayout` and `ResetPartLayout` can reposition supported parts; `Own(resource)` registers cleanup for custom listeners and effects. See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for a complete customization example.
 
 ```lua
 local loader = UI:CreateLoader({
@@ -163,13 +163,13 @@ The gate is a **client-side** interface, not a server authentication mechanism. 
 
 For the optional Discord invite button, copy [`key_discord_example.luau`](key_discord_example.luau). It shows the `Discord` option and clipboard fallback. The UI does not contact Discord or validate an invite.
 
-The key gate defaults to the local player's avatar (`Logo = "Avatar"`) and the button label `Verify key`. Set `Logo = false` to display `MarkText`, or pass an `rbxassetid://` URI for a custom image. `GetParts()` exposes `MarkImage` and `MarkText`. Its default width is 420 px. Automatic heights are 332 px without Discord or GetKey, 394 px with Discord, 404 px with GetKey, and 462 px with both. An explicit `Height` remains in effect when options are updated.
+The key gate defaults to the local player's avatar (`Logo = "Avatar"`) and the button label `Verify key`. Set `Logo = false` to display `MarkText`, or pass an `rbxassetid://` URI for a custom image. `GetParts()` exposes `MarkImage` and `MarkText`. Its default width is 420 px. Automatic heights are 332 px without Discord or GetKey, 394 px with Discord, 404 px with GetKey, and 462 px with both. An explicit `Height` remains in effect when options are updated. `BackgroundTransparency` controls the full-screen dimmer (default `0.42`); `CardTransparency` controls the key panel (default `0.1`). Both accept `0–1` and can be changed with `gate:Update({...})`.
 
 `GetKey` adds a separate key-provider action. Supply an HTTPS URL to copy it, or pass a callback for a custom action. If clipboard access is unavailable or copying fails, a URL configuration displays a selectable link. The dialog does not open the provider automatically. See [`key_discord_example.luau`](key_discord_example.luau).
 
 ## Layout
 
-`Layout` sets defaults for future windows with `UI:SetLayout(options)` and controls an individual window's layout with `window:SetLayout(options)`. Options cover tab position, navigation, spacing, dimensions, and whether the header, search, and footer are shown. See [CUSTOMIZATION.md](CUSTOMIZATION.md) for all values and ranges. `window:GetParts()`, `SetPartLayout(name, options)`, and `ResetPartLayout(name)` provide advanced control over window parts.
+`Layout` sets defaults for future windows with `UI:SetLayout(options)` and controls an individual window's layout with `window:SetLayout(options)`. `PanelTransparency` defaults to `0.1` and controls only the main window surface; `0` is opaque and `1` is transparent. For example, `window:SetLayout({PanelTransparency = 0.12})`. Loader and key-gate panels use `CardTransparency` separately from their full-screen `BackgroundTransparency` dimmers. See [CUSTOMIZATION.md](CUSTOMIZATION.md) for all values and ranges. `window:GetParts()`, `SetPartLayout(name, options)`, and `ResetPartLayout(name)` provide advanced control over window parts.
 
 ## Notifications
 
@@ -177,7 +177,7 @@ The key gate defaults to the local player's avatar (`Logo = "Avatar"`) and the b
 
 ## Navigation, icons, and branding
 
-Choose `Navigation = {Variant = "Soft", IconVariant = "Outline"}` in `CreateWindow`, `Create`, or `Launch`. `window:SetNavigation(...)` applies partial options to the current window. `Soft` is the default, with nuanced surfaces; `Classic` keeps transparent navigation; `Pill` highlights the selected tab with a contrasting capsule. Each tab can pin its own `IconVariant`.
+Choose `Navigation = {Variant = "Soft", IconVariant = "Outline"}` in `CreateWindow`, `Create`, or `Launch`. `window:SetNavigation(...)` applies partial options to the current window. `Soft` is the default, with nuanced surfaces; `Classic` keeps transparent navigation; `Pill` highlights the selected tab with a contrasting capsule; `Rail` gives the selected tab a distinct icon tile and neutral label. Each tab can pin its own `IconVariant`.
 
 Every native icon has a stable ID: `Icon = 21` adds Farm and `Icon = 24` adds Harvest. Names remain supported. [ICONS.md](ICONS.md) lists all names and IDs and includes examples for tabs, buttons, and notifications. These are Gabibou UI IDs; no Roblox image asset is needed for the library icons.
 
@@ -220,7 +220,7 @@ The [customization guide](CUSTOMIZATION.md) covers `Launch`, the key gate, `Load
 - `quickstart.luau`: short example of `Library:Create` and `SetValues`.
 - `starter.luau`: `LocalScript` startup example with a server gate.
 - `key_server.example.luau`: sample server `Script` to adapt and place in `ServerScriptService`.
-- `ui.luau`, `logic.luau`, `extensions.luau`, `icons.luau`, `navigation.luau`, `branding.luau`, `layout.luau`, `loading.luau`, `key_system.luau`, `convenience.luau`, `launch.luau`, `notifications.luau`: library sources.
+- `ui.luau`, `logic.luau`, `extensions.luau`, `icons.luau`, `navigation.luau`, `branding.luau`, `layout.luau`, `design.luau`, `loading.luau`, `key_system.luau`, `convenience.luau`, `launch.luau`, `notifications.luau`: library sources.
 - `build.cjs`: rebuilds the standalone module with Node.
 - `demo.luau`: demo of controls and extensions.
 - `ICONS.md`: complete icon catalogue with names and IDs.
@@ -243,3 +243,8 @@ local settings = tools:Tab("Settings", "settings")
 ```
 
 Read the [explained category guide](https://gabibou-ui.mintlify.app/customization/appearance-and-layout#tab-categories) for search, renaming, removal and declarative examples.
+
+
+## Reusable design presets
+
+Named designs are registered with `UI:RegisterDesign`, read with `UI:Design` or `UI:GetDesignNames`, and removed with `UI:UnregisterDesign`; the registry was introduced in rc.11 and preserves the built-in monochrome presets. Button `Variant` provides Primary, Secondary, and Subtle action styles. Follow the single-page [Design guide](https://gabibou-ui.mintlify.app/customization/design-your-interface) for a complete Studio example, action hierarchy, preset variations, responsive layout, and custom parts. Check `UI.Version` when confirming version-specific APIs.

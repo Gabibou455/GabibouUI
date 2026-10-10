@@ -26,6 +26,21 @@ local tween = window:Animate(panel, {
 
 Only one managed tween runs per target instance; a new tween cancels the previous one. The library cancels managed tweens when their target is destroyed, leaves the window GUI, or the window is destroyed. Hiding a window with `window:Hide()` preserves its managed animations. `window:SetReducedMotion(true)` cancels current tweens and applies their final values. New tweens complete without animation under reduced motion.
 
+## Choose how the interface moves
+
+The default motion duration is 0.16 seconds. Update this window to use a different duration and easing style, or enable reduced motion when the player prefers immediate changes. Choose the setting that fits your interface:
+
+```lua
+window:SetMotion({Duration = 0.24, Style = Enum.EasingStyle.Quart})
+
+-- Or make changes immediate:
+window:SetReducedMotion(true)
+```
+
+Reduced motion finishes current managed animations at their final values and makes new ones complete immediately. See [Appearance and layout](/customization/appearance-and-layout) for all motion options.
+
+In rc.16, the same window motion policy also drives Rail hover, focus, and press states, button stroke states, toggle track and knob changes, and slider updates from code or keyboard. Direct slider dragging follows the pointer. Reduced motion keeps these interactions immediate.
+
 ## Create a custom control
 
 `section:Custom({Build = function(content, control, window, options) ... end})` creates a custom control. The builder receives a content frame, control, window, and original options. Add children under the content frame and use `control:Connect` for scoped signals. `Height` defaults to 80 and accepts 0–2000 px; `control:SetHeight(height)` updates it later.

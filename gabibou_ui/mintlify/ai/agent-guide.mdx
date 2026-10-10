@@ -1,0 +1,181 @@
+---
+title: AI agent guide
+description: A practical, source-aware guide for AI coding agents building with Gabibou UI.
+---
+
+This guide gives coding agents a practical path from repository discovery to building a Roblox interface. It covers installation, controls, appearance, data, lifecycle, loaders, key gates, source changes, and honest verification.
+
+## Start with authoritative project context
+
+Gabibou UI is a Luau library for client-side Roblox interfaces. Its public repository is [Gabibou455/GabibouUI](https://github.com/Gabibou455/GabibouUI); the standalone module is [`gabibou_ui.luau`](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui.luau). The repository also contains modular Luau sources, examples, a build script, documentation, and icon exports. A checkout may contain additional tests and evidence; check the exact revision before relying on them.
+
+When the documentation MCP server is available, connect your agent to `https://gabibou-ui.mintlify.app/mcp` and ask it to search the live docs before relying on remembered APIs. The docs website is [gabibou-ui.mintlify.app](https://gabibou-ui.mintlify.app). A configured `main` branch URL is mutable. A local working tree, generated standalone file, GitHub `main`, and published release can be at different revisions; identify which one the project actually installs before suggesting version-specific methods or icon IDs.
+
+For a task inside an existing game project, inspect the current scripts, module placement, Roblox services, and client/server boundaries first. Preserve the project's established naming, architecture, and behavior. Ask only for requirements that change the implementation; use neutral working defaults for routine visual choices. For AI-specific setup and prompt guidance, see [Use with AI](/getting-started/use-with-ai).
+
+### Establish the installed version
+
+For the local module, read `UI.Version` after `require`. The standalone source also declares its version near the top. For a remote loader that tracks `main`, inspect the fetched source or its `Version` value during the same session. For a release-pinned install, resolve the chosen release tag and read its source. Do not assume a version, tag, API, or icon ID from a local candidate exists in a published release. Link the matching documentation or source revision when you explain a version-specific behavior.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+print("Gabibou UI version:", UI.Version)
+```
+
+## Choose the installation that matches the environment
+
+In Roblox Studio, place the complete standalone file in a `ModuleScript` named `GabibouUI` under `ReplicatedStorage`. Use a `LocalScript` under `StarterPlayerScripts` to require it and build the interface. Standard Studio scripts do not provide the remote `loadstring(game:HttpGet(...))` pattern.
+
+In a client environment that explicitly supports both `loadstring` and `game:HttpGet`, a remote loader can fetch the standalone file. A URL ending in `/main/` follows new repository commits. For repeatable builds, pin a real release tag after verifying that it exists. Do not invent tags or recommend remote execution for ordinary Roblox Studio scripts.
+
+```lua
+-- Studio LocalScript: the ModuleScript is ReplicatedStorage.GabibouUI.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+
+-- Supported only in an environment that provides both APIs:
+-- local UI = loadstring(game:HttpGet(
+--     "https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"
+-- ))()
+```
+
+See [Installation](/getting-started/installation) for the full Studio setup and supported remote-loader conditions.
+
+## Build a small interface
+
+This example uses the current title-first API. It shows how to create a window, navigation category, tab, section, and common interactive controls. Callback bodies demonstrate where application behavior connects; they do not implement project systems.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+
+local window = UI:CreateWindow({
+    Id = "FieldConsole",
+    Title = "Field Console",
+    Width = 840,
+    Height = 620,
+    Navigation = {Variant = "Rail", IconVariant = "Outline"},
+    ReducedMotion = true,
+})
+
+local tools = window:Category("Tools")
+local tab = tools:Tab({Title = "Workbench", Icon = "tools"})
+local settings = tab:Section("Runtime settings")
+
+local enabled = settings:Toggle("Enabled", {Value = false}, function(value)
+    print("Enabled:", value)
+end)
+
+local intensity = settings:Slider("Intensity", {
+    Min = 0,
+    Max = 100,
+    Step = 5,
+    Value = 50,
+}, function(value)
+    print("Intensity:", value)
+end)
+
+local quality = settings:Dropdown("Quality", {
+    Options = {"Low", "Medium", "High"},
+    Value = "Medium",
+}, function(value)
+    print("Quality:", value)
+end)
+
+local note = settings:Input("Note", {
+    Placeholder = "Enter a note",
+    MaxLength = 80,
+}, function(value)
+    print("Note:", value)
+end)
+
+settings:Button("Apply", function()
+    print("Apply requested")
+end)
+
+-- Read or update controls later. The second Set argument fires the callback.
+print(enabled:Get(), intensity:Get(), quality:Get(), note:Get())
+enabled:Set(true, true)
+
+-- When the owner is finished, release its UI and managed resources.
+-- window:Destroy()
+```
+
+Control callbacks run in response to user changes. A UI callback is only an application hook: it does not implement the project's gameplay, persistence, network calls, or server authorization. See [Controls](/customization/controls) for each control's signature and [Quickstart](/getting-started/quickstart) for a smaller first window.
+
+## Shape the interface
+
+Use a built-in theme and navigation variant before adding custom drawing. The library includes Graphite, Aurora, and Ember themes; the named designs are Studio, Minimal, Command, and Atelier. Explicit `Theme`, `Style`, `Layout`, and `Navigation` settings can override a design's starting values.
+
+```lua
+window:SetTheme("Aurora")
+window:SetLayout({TabPosition = "Left", ContentPadding = 18})
+window:SetNavigation({Variant = "Soft", IconVariant = "Duotone"})
+window:SetReducedMotion(true)
+```
+
+Use `window:GetParts()` to inspect documented named parts. `SetPartLayout(name, options)` applies supported position, size, anchor, or visibility overrides; `ResetPartLayout(name)` returns the part to automatic layout. Prefer those APIs over reaching into private fields such as `_button` or `_track`. Layout overrides may overlap other content, so check bounds at desktop, narrow mobile, and short-height sizes.
+
+Add built-in icons by stable name or numeric ID only after checking the installed version's catalogue. The native renderer draws icons in Luau; the `GabibouUI_Icons` export folder contains PNG and SVG variants for browsing or offline reference. Do not assume a numeric ID from a local candidate is present in an older installed copy. See [Design your interface](/customization/design-your-interface), [Appearance and layout](/customization/appearance-and-layout), [Icons and branding](/customization/icons-and-branding), and the [icon catalogue](/reference/icon-catalogue).
+
+## Connect state, events, and storage
+
+Value controls provide `Get()` and `Set(value, fireCallback)`. A window provides `Get(id)`, `GetValues()`, and `SetValues(values, fireCallbacks)`. `ExportConfig()` and `ImportConfig()` serialize persistent control values; `SaveConfig()` and `LoadConfig()` require an explicit `Storage` adapter. The library does not silently choose a filesystem or write user data for you.
+
+Use `window:On(name, callback)` for documented window events and `control:On(name, callback)` for control events. `window:Connect(signal, callback)`, `control:Connect(signal, callback)`, `Own(resource)`, and `OnDestroy(callback)` help scope custom resources to their owner. Destroy the owner or disconnect subscriptions when your application no longer needs them. Library-managed callbacks and tweens are cleaned up with their owner; tasks started directly with `task.spawn` remain the application's responsibility.
+
+See [Values and configuration](/customization/values-and-config) and [Events and lifecycle](/customization/events-and-lifecycle) before adding persistence or long-lived connections. Use [Animations and custom components](/customization/animations-and-components) for managed tweens, custom controls, and component registration.
+
+## Use loading and key-gate APIs with truthful boundaries
+
+`UI:CreateLoader(options)` exposes `SetProgress`, `SetStatus`, `Update`, `Run`, `Complete`, `GetParts`, `SetPartLayout`, `ResetPartLayout`, `Own`, and `Destroy`. Report progress only for work your code actually measures or completes. A progress bar is not evidence that Roblox has loaded, that a server approved a player, or that a network operation finished.
+
+`UI:CreateKeySystem(options)` and `UI:Launch(spec)` provide key-entry UI and validation callbacks. Treat a client-side gate as presentation only. Keep credentials and policy on a trusted server, and verify permission on the server for each protected action. Never place provider admin secrets or private key lists in a distributed `LocalScript`. The adapters accept provider objects/callbacks supplied by the application; they do not fetch SDK code or make a client gate authoritative.
+
+Read [Loading screens](/customization/loading-screens), [Key systems](/customization/key-systems), [provider examples](/examples/key-providers), and [server validation](/examples/server-validation) before implementing startup or access flow.
+
+## Follow the source when extending the library
+
+The repository contains the standalone `gabibou_ui.luau` module and modular files under `gabibou_ui/`. Examples and source tests live beside those modules; the icon export browser is in `GabibouUI_Icons/`. If you edit modular sources, use the repository build script from the repository root:
+
+```text
+node gabibou_ui/build.cjs
+```
+
+Before changing public APIs, inspect the standalone file, the owning module, current tests, and docs. Make the smallest change that preserves existing contracts. Run the repository's relevant compiler and tests, then state exactly what ran and what did not. Do not claim a Roblox runtime check from a Luau parser pass, or claim a visual result without a rendered client check. Do not edit generated exports or the standalone bundle by hand when a build script owns them.
+
+## Open-source use and attribution
+
+The repository publishes Gabibou UI under the [MIT License](https://github.com/Gabibou455/GabibouUI/blob/main/LICENSE). That license permits use, modification, distribution, sublicensing, and sale, subject to retaining the copyright notice and license text in copies or substantial portions. The license provides the software without warranty. This summary is informational and does not replace the license text.
+
+The optional Discord mark has a separate attribution in [`THIRD_PARTY.md`](https://github.com/Gabibou455/GabibouUI/blob/main/THIRD_PARTY.md); it is not covered by the project's MIT license. The source repository includes a 96-icon native catalogue and exported assets. Keep the project copyright/license notices when redistributing covered source, and check the applicable notices for any third-party asset you include. An open-source license for this repository does not grant rights to Roblox, Discord, provider services, or assets from another project. Gabibou UI is an independent community project and is not an official Roblox product or endorsement.
+
+## Ask an agent to work on a project
+
+Give the agent the project context, desired behavior, constraints, and how you will verify the change. A useful hand-off is:
+
+```text
+Use the installed Gabibou UI version and read its matching source/docs before coding.
+Task: <describe the interface behavior>
+Project context: <where the LocalScript/ModuleScript lives; relevant client/server APIs>
+Requirements: <controls, starting values, layout, mobile behavior, theme>
+Constraints: Keep server authority and private credentials on the server. Preserve existing APIs and naming.
+Deliver: Make the change in the project, run the relevant Luau checks, and report files changed, exact checks run, and any runtime behavior not verified.
+```
+
+For version-specific problems, include the actual `UI.Version`, installation route, and the smallest relevant script excerpt. Never include real keys, provider secrets, private user data, or credentials in a prompt.
+
+## Find the next guide
+
+| Goal | Guide |
+|---|---|
+| Install or build the first window | [Installation](/getting-started/installation), [Quickstart](/getting-started/quickstart) |
+| Choose controls and callbacks | [Controls](/customization/controls) |
+| Set themes, layout, or design presets | [Design your interface](/customization/design-your-interface), [Appearance and layout](/customization/appearance-and-layout) |
+| Use icons or customize branding | [Icons and branding](/customization/icons-and-branding), [Icon catalogue](/reference/icon-catalogue) |
+| Persist values or manage callbacks | [Values and configuration](/customization/values-and-config), [Events and lifecycle](/customization/events-and-lifecycle) |
+| Add motion or custom components | [Animations and custom components](/customization/animations-and-components) |
+| Show notifications or confirmations | [Notifications](/customization/notifications) |
+| Add a loading flow or access gate | [Loading screens](/customization/loading-screens), [Key systems](/customization/key-systems), [Key-provider examples](/examples/key-providers) |
+| Check exact methods and option limits | [API reference](/reference/api), [Customization reference](/reference/customization) |

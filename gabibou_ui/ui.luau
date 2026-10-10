@@ -4,8 +4,8 @@ local TweenService=game:GetService("TweenService")
 local HttpService=game:GetService("HttpService")
 local GuiService=game:GetService("GuiService")
 local TextService=game:GetService("TextService")
-local Library={Version="1.5.0-rc.7",Windows={}}
-local style_for,motion_for,branding_for,layout_for,control_layout_for,tab_layout_for,notification_for,navigation_for
+local Library={Version="1.5.0-rc.21",Windows={}}
+local style_for,motion_for,branding_for,layout_for,control_layout_for,tab_layout_for,notification_for,navigation_for,resolve_design_options
 Library.Themes={
     Graphite={Background=Color3.fromRGB(14,15,18),Surface=Color3.fromRGB(23,25,30),Raised=Color3.fromRGB(33,36,42),Hover=Color3.fromRGB(44,48,55),Border=Color3.fromRGB(54,59,67),Text=Color3.fromRGB(243,245,247),Muted=Color3.fromRGB(163,169,178),Accent=Color3.fromRGB(231,234,239),AccentText=Color3.fromRGB(21,23,27),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
     Aurora={Background=Color3.fromRGB(13,14,23),Surface=Color3.fromRGB(22,24,38),Raised=Color3.fromRGB(32,35,53),Hover=Color3.fromRGB(43,47,69),Border=Color3.fromRGB(62,67,91),Text=Color3.fromRGB(243,244,255),Muted=Color3.fromRGB(158,163,190),Accent=Color3.fromRGB(161,143,255),AccentText=Color3.fromRGB(18,15,30),Success=Color3.fromRGB(119,221,181),Danger=Color3.fromRGB(247,142,164)},
@@ -475,7 +475,9 @@ end
 function Library:CreateWindow(options)
     options=options or {}
     assert(type(options)=="table","Window options must be a table")
+    options=resolve_design_options(options,"window")
     assert(options.ShowWatermark==nil or type(options.ShowWatermark)=="boolean","ShowWatermark must be boolean")
+    local discordPrompt=Library:_NormalizeDiscordPrompt(options.DiscordPrompt,"CreateWindow.DiscordPrompt")
     local player=Players.LocalPlayer;assert(player,"Gabibou UI runs on a Roblox client")
     local parent=options.Parent or player:FindFirstChildOfClass("PlayerGui")
     assert(typeof(parent)=="Instance","Pass a GUI parent or wait for PlayerGui")
@@ -501,34 +503,32 @@ function Library:CreateWindow(options)
     local reduced=false;pcall(function()reduced=GuiService.ReducedMotionEnabled end)
     if options.ReducedMotion~=nil then assert(type(options.ReducedMotion)=="boolean","ReducedMotion must be boolean");reduced=options.ReducedMotion end
     if self.Windows[id] then self.Windows[id]:Destroy() end
-    local self=setmetatable({Id=id,Title=tostring(options.Title or "Gabibou UI"),Theme=theme,ThemeName=type(options.Theme)=="table" and "Custom" or (options.Theme or "Graphite"),Responsive=responsive,ReducedMotion=reduced,ToggleKey=key,ShowWatermark=options.ShowWatermark~=false,Destroyed=false,Closed=false,Tabs={},Controls={},Query="",Storage=options.Storage,_connections={},_destroyCallbacks={},_themeTargets={},_tweens=setmetatable({},{__mode="k"}),_serial=0,_notifications={},_desiredSize=Vector2.new(math.clamp(options.Width or 800,320,1400),math.clamp(options.Height or 590,300,1000))},Window)
+    local self=setmetatable({Id=id,Title=tostring(options.Title or "Gabibou UI"),Theme=theme,ThemeName=type(options.Theme)=="table" and "Custom" or (options.Theme or "Graphite"),Responsive=responsive,ReducedMotion=reduced,ToggleKey=key,ShowWatermark=options.ShowWatermark~=false,Destroyed=false,Closed=false,Tabs={},Controls={},Query="",Storage=options.Storage,_discordPrompt=discordPrompt,_connections={},_destroyCallbacks={},_themeTargets={},_tweens=setmetatable({},{__mode="k"}),_serial=0,_notifications={},_desiredSize=Vector2.new(math.clamp(options.Width or 800,320,1400),math.clamp(options.Height or 590,300,1000))},Window)
     self.Style=style;self.Motion=motion;self.Layout=layout;self.Notifications=notifications;self.Navigation=navigation;self._positionSpec=initialPosition;self._anchorPoint=anchor;self._partLayouts={};self._events={};self._styleTargets={};self._bindingConnections={};self._animationRecords={}
     self.Gui=create("ScreenGui",{Name="GabibouUI_"..id,ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=options.DisplayOrder or 90,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},parent)
     self.Canvas=create("Frame",{Name="SafeArea",BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},self.Gui)
     self.Root=create("Frame",{Name="Window",BackgroundTransparency=1},self.Canvas)
-    for i=3,1,-1 do
-        local shadow=create("Frame",{Name="Depth"..i,Position=UDim2.fromOffset(-i*3,i*4),Size=UDim2.new(1,i*6,1,i*3),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.7+i*.07,BorderSizePixel=0,ZIndex=1},self.Root)
-        corner(shadow,19+i*2)
-    end
+    local depth=create("Frame",{Name="Depth",Position=UDim2.fromOffset(-3,4),Size=UDim2.new(1,6,1,4),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.78,BorderSizePixel=0,ZIndex=1},self.Root)
+    corner(depth,22)
     self.Panel=create("Frame",{Name="Panel",Size=UDim2.fromScale(1,1),BorderSizePixel=0,Active=true,ZIndex=3},self.Root)
-    self:_Rounded(self.Panel,"WindowRadius");self:_Color(self.Panel,"BackgroundColor3","Background");self:_Stroke(self.Panel,"Border",.18)
-    self._headerWash=create("Frame",{Name="HeaderWash",BackgroundTransparency=.76,Size=UDim2.new(1,0,0,92),ZIndex=3},self.Panel)
+    self:_Rounded(self.Panel,"WindowRadius");self:_Color(self.Panel,"BackgroundColor3","Background");self:_Stroke(self.Panel,"Border",.42)
+    self._headerWash=create("Frame",{Name="HeaderWash",BackgroundTransparency=.82,Size=UDim2.new(1,0,0,74),ZIndex=3},self.Panel)
     self:_Rounded(self._headerWash,"WindowRadius");self:_Color(self._headerWash,"BackgroundColor3","Raised")
-    local cap=create("Frame",{Name="HeaderDivider",Position=UDim2.fromOffset(18,68),Size=UDim2.new(1,-36,0,1),BackgroundTransparency=.55,BorderSizePixel=0,ZIndex=5},self.Panel)
+    local cap=create("Frame",{Name="HeaderDivider",Position=UDim2.fromOffset(18,72),Size=UDim2.new(1,-36,0,1),BackgroundTransparency=.52,BorderSizePixel=0,ZIndex=5},self.Panel)
     self._headerDivider=cap;self:_Color(cap,"BackgroundColor3","Border")
     self.Header=create("Frame",{Name="Header",BackgroundTransparency=1,Size=UDim2.new(1,-112,0,60),Position=UDim2.fromOffset(18,9),Active=true},self.Panel)
-    local mark=create("TextLabel",{Text="G",Font=bold,TextSize=18,Size=UDim2.fromOffset(38,38),Position=UDim2.fromOffset(0,5)},self.Header)
+    local mark=create("TextLabel",{Text="G",Font=bold,TextSize=17,Size=UDim2.fromOffset(36,36),Position=UDim2.fromOffset(1,7)},self.Header)
     self.Mark=mark
-    corner(mark,11);self:_Color(mark,"BackgroundColor3","Accent");self:_Color(mark,"TextColor3","AccentText")
+    corner(mark,9);self:_Color(mark,"BackgroundColor3","Raised");self:_Color(mark,"TextColor3","Text")
     self.TitleLabel=self:_Label(self.Header,self.Title,17,"Text");self.TitleLabel.Font=bold;self.TitleLabel.Position=UDim2.fromOffset(50,5);self.TitleLabel.Size=UDim2.new(1,-54,0,23);self.TitleLabel.AutomaticSize=Enum.AutomaticSize.None;self.TitleLabel.TextTruncate=Enum.TextTruncate.AtEnd;self.TitleLabel.TextWrapped=false
-    self:_Style(self.TitleLabel,"Font","FontBold");self:_Style(self.TitleLabel,"TextSize","TitleSize")
-    local subtitle=self:_Label(self.Header,options.Subtitle or "Interface settings",12,"Muted");subtitle.Position=UDim2.fromOffset(50,30);subtitle.Size=UDim2.new(1,-54,0,17);subtitle.AutomaticSize=Enum.AutomaticSize.None;subtitle.TextTruncate=Enum.TextTruncate.AtEnd;subtitle.TextWrapped=false;self._subtitle=subtitle
+    self:_Style(self.TitleLabel,"Font","FontBold");self:_Style(self.TitleLabel,"TextSize","TitleSize",function(value)return value+1 end)
+    local subtitle=self:_Label(self.Header,options.Subtitle or "Interface settings",11,"Muted");subtitle.Position=UDim2.fromOffset(50,30);subtitle.Size=UDim2.new(1,-54,0,17);subtitle.AutomaticSize=Enum.AutomaticSize.None;subtitle.TextTruncate=Enum.TextTruncate.AtEnd;subtitle.TextWrapped=false;self._subtitle=subtitle
     local hide=self:_Button(self.Panel,"",UDim2.fromOffset(44,44));hide.Name="Minimize";hide.Position=UDim2.new(1,-104,0,16)
     local close=self:_Button(self.Panel,"",UDim2.fromOffset(44,44));close.Name="Close";close.Position=UDim2.new(1,-54,0,16)
     for _,action in ipairs({hide,close})do
-        action.BackgroundTransparency=.52
+        action.BackgroundTransparency=.66
         local outline=action:FindFirstChildOfClass("UIStroke")
-        if outline then outline.Transparency=.68 end
+        if outline then outline.Transparency=.78 end
     end
     Library:Icon(hide,"minimize",{Size=18,Position=UDim2.fromOffset(13,13),Window=self,Token="Muted"})
     Library:Icon(close,"close",{Size=18,Position=UDim2.fromOffset(13,13),Window=self,Token="Muted"})
@@ -540,6 +540,8 @@ function Library:CreateWindow(options)
     Library:Icon(self.Search,"search",{Size=16,Position=UDim2.new(0,-25,.5,-8),Window=self,Token="Muted"})
     self:_Connect(self.Search:GetPropertyChangedSignal("Text"),function()self:SearchFor(self.Search.Text)end)
     self.Nav=create("ScrollingFrame",{Name="Tabs",BackgroundTransparency=1,BorderSizePixel=0,CanvasSize=UDim2.new(),ScrollBarThickness=2},self.Panel)
+    self.Nav.BackgroundTransparency=.28
+    self:_Rounded(self.Nav,"SectionRadius");self:_Color(self.Nav,"BackgroundColor3","Raised");self:_Stroke(self.Nav,"Border",.48)
     self:_Color(self.Nav,"ScrollBarImageColor3","Border");self._navLayout=list(self.Nav,7,false)
     self.PageHost=create("Frame",{Name="Pages",BackgroundTransparency=1},self.Panel)
     self.PageTitle=self:_Label(self.Panel,"",22,"Text");self:_Style(self.PageTitle,"Font","FontBold");self.PageTitle.AutomaticSize=Enum.AutomaticSize.None;self.PageTitle.TextWrapped=false;self.PageTitle.TextTruncate=Enum.TextTruncate.AtEnd
@@ -601,6 +603,14 @@ function Library:CreateWindow(options)
     self:_Connect(self.Gui.Destroying,function()self._guiDestroying=true;self:Destroy()end)
     if branding then self:SetBranding(branding)end
     self:_WatchCamera();Library.Windows[id]=self
+    if discordPrompt then
+        task.defer(function()
+            if not self.Destroyed then
+                local ok,err=self:PromptDiscord(discordPrompt)
+                if not ok and err then self.LastError=err end
+            end
+        end)
+    end
     return self
 end
 function Window:Tab(options)
@@ -639,10 +649,10 @@ function Container:Section(options)
     local section=setmetatable({Window=self.Window,Tab=self,Title=tostring(options.Title or "Section"),_children={},_visible=true,Destroyed=false},Container)
     self.Window._serial+=1
     section.Root=create("Frame",{Size=UDim2.new(1,-4,0,0),AutomaticSize=Enum.AutomaticSize.Y,LayoutOrder=self.Window._serial*2},self.Body)
-    self.Window:_Rounded(section.Root,"SectionRadius");self.Window:_Color(section.Root,"BackgroundColor3","Surface");self.Window:_Stroke(section.Root,"Border",.4);list(section.Root,0,false)
-    local header=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,44)},section.Root)
-    local label=self.Window:_Label(header,section.Title,13,"Muted");self.Window:_Style(label,"Font","FontBold");label.Position=UDim2.fromOffset(14,0);label.Size=UDim2.new(1,-28,1,0);label.AutomaticSize=Enum.AutomaticSize.None
-    local line=create("Frame",{Size=UDim2.new(1,-28,0,1),Position=UDim2.new(0,14,1,-1),BackgroundTransparency=.6},header);self.Window:_Color(line,"BackgroundColor3","Border")
+    self.Window:_Rounded(section.Root,"SectionRadius");self.Window:_Color(section.Root,"BackgroundColor3","Raised");section.Root.BackgroundTransparency=.18;self.Window:_Stroke(section.Root,"Border",.5);list(section.Root,0,false)
+    local header=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,48)},section.Root)
+    local label=self.Window:_Label(header,section.Title,14,"Text");self.Window:_Style(label,"Font","FontBold");label.Position=UDim2.fromOffset(14,0);label.Size=UDim2.new(1,-28,1,0);label.AutomaticSize=Enum.AutomaticSize.None
+    local line=create("Frame",{Size=UDim2.new(1,-28,0,1),Position=UDim2.new(0,14,1,-1),BackgroundTransparency=.58},header);self.Window:_Color(line,"BackgroundColor3","Border")
     section.Body=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,LayoutOrder=1},section.Root);list(section.Body,0,false)
     self._sections[#self._sections+1]=section;return section
 end
@@ -695,9 +705,9 @@ function Container:_Row(kind,options,rightWidth,persistent)
     if grouped then
         row.BackgroundTransparency=1;row.Size=UDim2.new(1,0,0,0)
         control._separator=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,1),LayoutOrder=row.LayoutOrder-1},self.Body)
-        local line=create("Frame",{Size=UDim2.new(1,-28,1,0),Position=UDim2.fromOffset(14,0),BackgroundTransparency=.6},control._separator);window:_Color(line,"BackgroundColor3","Border")
+        local line=create("Frame",{Size=UDim2.new(1,-28,1,0),Position=UDim2.fromOffset(14,0),BackgroundTransparency=.72},control._separator);window:_Color(line,"BackgroundColor3","Border")
     elseif kind=="Paragraph" then row.BackgroundTransparency=1
-    else window:_Rounded(row,"SectionRadius");window:_Color(row,"BackgroundColor3","Surface");window:_Stroke(row,"Border",.45)end
+    else window:_Rounded(row,"SectionRadius");window:_Color(row,"BackgroundColor3","Surface");row.BackgroundTransparency=.24;window:_Stroke(row,"Border",.62)end
     create("UISizeConstraint",{MinSize=Vector2.new(0,rightWidth and 44 or 0)},row)
     local text=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,-(rightWidth and rightWidth+14 or 0),0,0),AutomaticSize=Enum.AutomaticSize.Y},row);list(text,5,false)
     control._text=text;control._rightWidth=rightWidth
@@ -810,17 +820,79 @@ function Control:Destroy()
     if not self.Window.Destroyed then self.Window:SearchFor(self.Window.Query) end
 end
 function Container:Paragraph(options)local c=self:_Row("Paragraph",options,nil,false);self.Window:SearchFor(self.Window.Query);return c end
+local buttonVariants={
+    Primary={Background="Accent",Text="AccentText",Stroke="Accent",StrokeTransparency=.66,Icon="AccentText",BackgroundTransparency=0},
+    Secondary={Background="Raised",Text="Text",Stroke="Border",StrokeTransparency=.3,Icon="Text",BackgroundTransparency=0},
+    Subtle={Background="Surface",Text="Muted",Stroke="Border",StrokeTransparency=.72,Icon="Muted",BackgroundTransparency=.48},
+}
+local function animateControlState(window,instance,targets)
+    local record=window._animationRecords and window._animationRecords[instance]
+    local conflictingGoal=false
+    local needsTween=false
+    local unfinished=false
+    for property,target in pairs(targets) do
+        local activeGoal=record and record.Goals[property]
+        if activeGoal~=nil and activeGoal~=target then conflictingGoal=true end
+        if instance[property]~=target then
+            unfinished=true
+            if activeGoal~=target then needsTween=true end
+        end
+    end
+    if record and (conflictingGoal or needsTween) then
+        window:_CancelAnimation(instance)
+    end
+    -- Cancelling one property also cancels the target's other pending goals.
+    if needsTween or (conflictingGoal and unfinished) then window:_Tween(instance,targets) end
+end
 function Container:Button(options)
     options=options or {}
     assert(type(options)=="table","Button options must be a table")
     assert(options.Icon==nil or Library:GetIconName(options.Icon)~=nil,"Unknown button Icon")
     assert(options.IconVariant==nil or options.IconVariant=="Outline"or options.IconVariant=="Soft"or options.IconVariant=="Duotone","Invalid button IconVariant")
+    local variant=options.Variant
+    if variant==nil then variant="Primary" end
+    local visual=buttonVariants[variant]
+    assert(visual~=nil,"Button Variant must be Primary, Secondary or Subtle")
     local control=self:_Row("Button",options,110,false)
-    control._input=self.Window:_Button(control.Right,options.Text or "Run",UDim2.fromOffset(110,36),control)
+    control._input=self.Window:_Button(control.Right,options.Text or "Run",UDim2.fromOffset(110,44),control)
+    control.Variant=variant
+    control._input.TextTruncate=Enum.TextTruncate.AtEnd
+    control._input.BackgroundTransparency=visual.BackgroundTransparency
+    self.Window:_Color(control._input,"BackgroundColor3",visual.Background);self.Window:_Color(control._input,"TextColor3",visual.Text)
+    local actionStroke=control._input:FindFirstChildOfClass("UIStroke")
+    if actionStroke then self.Window:_Color(actionStroke,"Color",visual.Stroke);actionStroke.Transparency=visual.StrokeTransparency end
+    local pressedInput
+    local focused=false
+    local function renderPressState()
+        if not control.Enabled then pressedInput=nil;focused=false end
+        local active=control.Enabled and (pressedInput~=nil or focused)
+        if actionStroke then
+            local token=active and (variant=="Primary" and visual.Text or "Accent") or visual.Stroke
+            local color=self.Window.Theme[token]
+            local transparency=active and math.min(visual.StrokeTransparency,.28) or visual.StrokeTransparency
+            local thickness=active and 1.5 or 1
+            animateControlState(self.Window,actionStroke,{Color=color,Transparency=transparency,Thickness=thickness})
+        end
+    end
+    function control:_Render()renderPressState()end
+    self.Window:_Connect(control._input.InputBegan,function(input)
+        if not control.Enabled then return end
+        if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+            pressedInput=input;renderPressState()
+        end
+    end,control)
+    self.Window:_Connect(UIS.InputEnded,function(input)
+        if not pressedInput then return end
+        if input==pressedInput or (pressedInput.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseButton1) then
+            pressedInput=nil;renderPressState()
+        end
+    end,control)
+    self.Window:_Connect(control._input.SelectionGained,function()focused=true;renderPressState()end,control)
+    self.Window:_Connect(control._input.SelectionLost,function()focused=false;renderPressState()end,control)
+    self.Window:_Connect(UIS.WindowFocusReleased,function()pressedInput=nil;focused=false;renderPressState()end,control)
     if options.Icon then
         create("UIPadding",{PaddingLeft=UDim.new(0,30),PaddingRight=UDim.new(0,8)},control._input)
-        control._icon=Library:Icon(control._input,options.Icon,{Size=18,Position=UDim2.new(0,-22,.5,-9),Window=self.Window,Token="Text",Variant=options.IconVariant or "Outline"})
-        control._input.TextTruncate=Enum.TextTruncate.AtEnd
+        control._icon=Library:Icon(control._input,options.Icon,{Size=18,Position=UDim2.new(0,-22,.5,-9),Window=self.Window,Token=visual.Icon,Variant=options.IconVariant or "Outline"})
     end
     self.Window:_Connect(control._input.Activated,function()self.Window:_Callback(control)end,control)
     control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
@@ -831,11 +903,21 @@ function Container:Toggle(options)
     control.Value=options.Value==true
     control._input=create("TextButton",{Text="",AutoButtonColor=false,BackgroundTransparency=1,Size=UDim2.fromOffset(58,44),Selectable=true},control.Right)
     control._track=create("Frame",{Size=UDim2.fromOffset(54,28),BorderSizePixel=0},control._input);corner(control._track,14)
+    self.Window:_Stroke(control._track,"Border",.18)
     control._knob=create("Frame",{Size=UDim2.fromOffset(20,20),Position=UDim2.fromOffset(4,4),BorderSizePixel=0},control._track);corner(control._knob,10)
     function control:_Render()
-        self._track.BackgroundColor3=self.Window.Theme[self.Value and "Accent" or "Raised"]
-        self._knob.BackgroundColor3=self.Window.Theme[self.Value and "AccentText" or "Muted"]
-        self.Window:_Tween(self._knob,{Position=UDim2.fromOffset(self.Value and 30 or 4,4)})
+        local trackColor=self.Window.Theme[self.Value and "Accent" or "Surface"]
+        local knobColor=self.Window.Theme[self.Value and "AccentText" or "Muted"]
+        local knobPosition=UDim2.fromOffset(self.Value and 30 or 4,4)
+        if not self._rendered then
+            self._track.BackgroundColor3=trackColor
+            self._knob.BackgroundColor3=knobColor
+            self._knob.Position=knobPosition
+            self._rendered=true
+            return
+        end
+        animateControlState(self.Window,self._track,{BackgroundColor3=trackColor})
+        animateControlState(self.Window,self._knob,{BackgroundColor3=knobColor,Position=knobPosition})
     end
     self.Window:_Connect(control._input.Activated,function()if control.Enabled then control:Set(not control.Value,true) end end,control)
     control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
@@ -853,7 +935,19 @@ function Container:Slider(options)
     function control:_Render()
         local ratio=(self.Value-self.Min)/(self.Max-self.Min)
         self._value.Text=string.format("%.4g",self.Value)
-        self._fill.Size=UDim2.fromScale(ratio,1);self._knob.Position=UDim2.fromScale(ratio,.5)
+        local fillSize=UDim2.fromScale(ratio,1)
+        local knobPosition=UDim2.fromScale(ratio,.5)
+        local gesture=self.Window._gesture
+        local direct=not self._rendered or (gesture and gesture.control==self)
+        if direct then
+            self.Window:_CancelAnimation(self._fill)
+            self.Window:_CancelAnimation(self._knob)
+            self._fill.Size=fillSize;self._knob.Position=knobPosition
+        else
+            animateControlState(self.Window,self._fill,{Size=fillSize})
+            animateControlState(self.Window,self._knob,{Position=knobPosition})
+        end
+        self._rendered=true
     end
     function control:_Pointer(x)
         if not self.Enabled or self.Window.Closed or self._input.AbsoluteSize.X<=0 then return end
@@ -993,6 +1087,8 @@ function Container:ColorPicker(options)
 end
 function Window:Confirm(options)
     assert(not self.Destroyed,"Window is destroyed");options=options or {}
+    assert(type(options)=="table","Confirm options must be a table")
+    assert(options.BeforeConfirm==nil or type(options.BeforeConfirm)=="function","Confirm.BeforeConfirm must be a function")
     if self._modal then return false end
     self:_CancelInteraction(self.Root)
     self:_CloseDropdown();self._gesture=nil
@@ -1002,10 +1098,29 @@ function Window:Confirm(options)
     corner(popup,16);padding(popup,20);list(popup,12,false);self:_Color(popup,"BackgroundColor3","Surface");self:_Stroke(popup,"Border",.18)
     local title=self:_Label(popup,options.Title or "Confirm",18,"Text");title.Font=bold;title.ZIndex=52;self:_Style(title,"Font","FontBold");self:_Style(title,"TextSize","TitleSize")
     local description=self:_Label(popup,options.Content or "",12,"Muted");description.ZIndex=52;description.LayoutOrder=1
-    local actions=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,self.Responsive.TouchTarget),LayoutOrder=2,ZIndex=52},popup);list(actions,8,true)
-    local scope={_connections={},Destroyed=false};self._modal=overlay
+    local order=2
+    local linkInput
+    if options.LinkText~=nil then
+        assert(type(options.LinkText)=="string","Confirm.LinkText must be a string")
+        linkInput=create("TextBox",{Name="Link",Text=options.LinkText,ClearTextOnFocus=false,TextEditable=false,Font=font,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,Size=UDim2.new(1,0,0,38),LayoutOrder=order,ZIndex=52},popup)
+        self:_Rounded(linkInput,"ControlRadius");padding(linkInput,10);self:_Color(linkInput,"BackgroundColor3","Raised");self:_Color(linkInput,"TextColor3","Text");self:_Color(linkInput,"PlaceholderColor3","Muted");self:_Stroke(linkInput,"Border",.3)
+        order+=1
+    end
+    local status
+    if options.BeforeConfirm then
+        status=self:_Label(popup,"",11,"Danger");status.Name="ActionStatus";status.LayoutOrder=order;status.Visible=false
+        order+=1
+    end
+    local footer
+    if options.FooterText~=nil then
+        assert(type(options.FooterText)=="string","Confirm.FooterText must be a string")
+        footer=self:_Label(popup,options.FooterText,10,"Muted");footer.Name="Footer";footer.LayoutOrder=order
+        order+=1
+    end
+    local actions=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,self.Responsive.TouchTarget),LayoutOrder=order,ZIndex=52},popup);list(actions,8,true)
+    local scope={_connections={},Destroyed=false,Busy=false};self._modal=overlay
     overlay.Destroying:Once(function()scope.Destroyed=true;disconnect(scope._connections);if self._modal==overlay then self._modal=nil end end)
-    local cancel=self:_Button(actions,"Cancel",UDim2.new(.5,-4,1,0),scope);cancel.ZIndex=53
+    local cancel=self:_Button(actions,options.CancelText or "Cancel",UDim2.new(.5,-4,1,0),scope);cancel.ZIndex=53
     local confirm=self:_Button(actions,options.ConfirmText or "Confirm",UDim2.new(.5,-4,1,0),scope);confirm.ZIndex=53
     self:_Color(cancel,"BackgroundColor3","Surface");self:_Color(cancel,"TextColor3","Muted")
     local cancelOutline=cancel:FindFirstChildOfClass("UIStroke");if cancelOutline then cancelOutline.Transparency=.35 end
@@ -1013,8 +1128,25 @@ function Window:Confirm(options)
     local function close()self:_ForgetTree(overlay);overlay:Destroy()end
     self:_Connect(cancel.Activated,close,scope)
     self:_Connect(confirm.Activated,function()
-        close()
-        if type(options.Callback)=="function" then self:_Callback({Id="Confirmation",Enabled=true,Callback=options.Callback},true) end
+        if scope.Busy then return end
+        if type(options.BeforeConfirm)~="function" then
+            close()
+            if type(options.Callback)=="function" then self:_Callback({Id="Confirmation",Enabled=true,Callback=options.Callback},true) end
+            return
+        end
+        scope.Busy=true;confirm.Active=false;confirm.Text=options.WorkingText or "Please wait..."
+        task.spawn(function()
+            local ok,accepted,message=pcall(options.BeforeConfirm)
+            if scope.Destroyed or self.Destroyed then return end
+            if not ok then accepted=false;message="That action failed. You can still use the link above." end
+            if accepted==false then
+                status.Text=tostring(message or "That action failed. You can still use the link above.")
+                status.Visible=true;scope.Busy=false;confirm.Active=true;confirm.Text=options.ConfirmText or "Confirm"
+                return
+            end
+            close()
+            if type(options.Callback)=="function" then self:_Callback({Id="Confirmation",Enabled=true,Callback=options.Callback},true) end
+        end)
     end,scope)
     return true
 end

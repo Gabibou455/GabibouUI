@@ -9,10 +9,16 @@ This page maps the public API by object. See the [customization reference](/refe
 
 For the short API, use `UI:CreateWindow("My project")`, `window:Tab("Home", "home")`, and `tab:Button("Hello", callback)`. Add an options table after the title when needed; value controls can take a callback after that table. The [controls walkthrough](/customization/controls) explains each control with a working example. Full options-table calls remain supported.
 
+Button options include `Text`, `Description`, `Icon`, `IconVariant`, and `Variant`. `Variant` accepts `Primary` (default), `Secondary`, or `Subtle` to set the visual emphasis of an action. See the [button example](/customization/controls#button-run-an-action) for the options-table form.
+
 | Method | Purpose |
 |---|---|
 | `UI:Create(spec)` | Validate and build a declarative window from root options plus `Tabs` and optional `Loading`. |
 | `UI:CreateWindow(title, options?)` / `UI:CreateWindow(options)` | Create a window for step-by-step construction. |
+| `UI:Design(optionsOrName)` | Validate and clone a design schema or return a fresh copy of a named design. |
+| `UI:RegisterDesign(name, schema)` | Validate and register a reusable custom design schema. |
+| `UI:GetDesignNames()` | Return a fresh list of built-in and registered design names. |
+| `UI:UnregisterDesign(name)` | Remove a registered custom design; built-in presets are protected. |
 | `UI:Launch(spec)` | Coordinate optional key gate, loading, startup steps, and window creation. |
 | `UI:CreateLoader(options)` | Create a standalone loading screen. |
 | `UI:CreateKeySystem(options)` | Create a standalone key-entry gate. |
@@ -30,7 +36,9 @@ For the short API, use `UI:CreateWindow("My project")`, `window:Tab("Home", "hom
 
 ## Window creation options
 
-`CreateWindow` and the root of `Create`/`Launch` accept `Id`, `Title`, `Subtitle`, `Theme`, `Style`, `Motion`, `Branding`, `Layout`, `Notifications`, `Navigation`, `Responsive`, `Position`, `AnchorPoint`, `Width`, `Height`, `ToggleKey`, `ShowWatermark`, `ReducedMotion`, `Parent`, `DisplayOrder`, and `Storage`. `ShowWatermark` defaults to `true`; set it to `false` to hide the footer name and version while keeping the desktop hide-key hint and other actions. `Create` additionally accepts `Tabs` and `Loading`; `Launch` adds `KeySystem`, `Loading`, `Steps`, `OnReady`, `OnError`, and `OnCancel`.
+`CreateWindow` and the root of `Create`/`Launch` accept `Id`, `Title`, `Subtitle`, `Theme`, `Style`, `Motion`, `Branding`, `Layout`, `Notifications`, `Navigation`, `Responsive`, `Position`, `AnchorPoint`, `Width`, `Height`, `ToggleKey`, `ShowWatermark`, `DiscordPrompt`, `ReducedMotion`, `Parent`, `DisplayOrder`, and `Storage`. `DiscordPrompt` is disabled when omitted; setting it to an invite URL or options table opts in to showing the prompt after the window is created. `ShowWatermark` defaults to `true`; set it to `false` to hide the footer name and version while keeping the desktop hide-key hint and other actions. `Create` additionally accepts `Tabs` and `Loading`; `Launch` passes its root `DiscordPrompt` to the window it creates and adds `KeySystem`, `Loading`, `Steps`, `OnReady`, `OnError`, and `OnCancel`.
+
+Window, loader, and key-gate constructors accept `Design` as a schema table or registered design name. Declarative `Create` and `Launch` pass it through to the surfaces they create. `UI:Design(options)` validates and clones an options table; `UI:Design(name)` returns a fresh copy of a built-in or registered schema. Built-in presets are `Studio`, `Minimal`, `Command`, and `Atelier`. Atelier uses a monochrome palette, Comfortable density, Balanced corners, Left tabs, Rail navigation, and `0.08` panel transparency. `RegisterDesign(name, schema)` accepts a schema table, rejects duplicate and built-in names with `false`, and returns `true` when registration succeeds. `GetDesignNames()` returns a fresh list with built-ins first and custom names in registration order. `UnregisterDesign(name)` removes registered names and returns a boolean; built-in names are protected. Names are exact and case-sensitive, valid UTF-8, 1–64 bytes, contain a non-whitespace character, and contain no control characters. Custom schemas use a built-in `Preset`; they cannot inherit from other custom designs. Preset values are starting values; explicit constructor `Theme`, `Style`, `Layout`, and `Navigation` options take precedence. The `Design` schema has `Preset`, `Accent`, `Transparency`, `Radius`, `Density`, `Tabs`, and `Navigation`. See the single-page [Design guide](/customization/design-your-interface) for exact values and complete examples.
 
 Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (clamped to 320–1400), `Height = 590` (clamped to 300–1000), `ToggleKey = Enum.KeyCode.RightControl`, and `DisplayOrder = 90`. The default GUI parent is the local player's `PlayerGui`. `Responsive` defaults are `Breakpoint = 620`, `TouchTarget = 44`, and `Margin = 12`.
 
@@ -48,6 +56,7 @@ Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (cl
 | `SetSize(width, height)`, `SetPosition(position, anchor)` | Set the window dimensions or position. |
 | `SetTheme(value)`, `SetStyle(options)`, `SetMotion(options)`, `SetReducedMotion(enabled)` | Update appearance and managed animation behavior. |
 | `SetWatermark(enabled)` | Show or hide the footer name and library version. |
+| `PromptDiscord(urlOrOptions)` | Immediately open an optional Discord invite prompt; returns `true` if it opens, otherwise `false, reason`. |
 | `SetLayout(options)`, `SetNavigation(options)`, `SetBranding(options)` | Update layout and navigation settings. |
 | `SetNotifications(options)`, `Notify(options)`, `Confirm(options)` | Configure or show feedback UI. |
 | `ExportConfig()`, `ImportConfig(json, fireCallbacks)`, `SaveConfig(name)`, `LoadConfig(name, fireCallbacks)` | Export and restore persistent values. |
@@ -85,13 +94,19 @@ Controls expose `Get`, `Set(value, fireCallback)`, `SetTitle`, `SetDescription`,
 
 The Luarmor adapter reserves each SDK table for one `ScriptId`: the same table may be reused for that same ID, but a different ID needs a different SDK instance. It also fails closed if `sdk.script_id` changes after the provider is created. Provider errors fail closed and are converted to retryable status messages. KeyAuth initialization is lazy, shared across concurrent checks made through that provider callback, and retried after a failed initialization. Keep the `Validate` function's result contract: `true, result` accepts; `false, message` rejects. A client-side gate is not an authorization boundary; check protected actions on a trusted server.
 
-`UI:CreateKeySystem(options)` requires `Validate(key)` and optionally accepts `OnSuccess(gate, result)`, `OnCancel(gate)`, and `GetKey`. `GetKey` can be an HTTPS URL/string, `{Url, Text, Copy}`, a custom `function(gate)`, or `false` to disable. `gate:GetKey()` runs a single-flight key-link/custom action and returns a success boolean plus optional reason. It exposes `Submit(key)`, `Cancel()`, `Destroy()`, `Update(options)`, `GetParts()`, `CopyDiscordLink()`, and `GetKey()`. `GetParts()` includes `GetKeyButton`, `KeyLink`, and `KeyLinkStatus`.
+`UI:CreateKeySystem(options)` requires `Validate(key)` and optionally accepts `OnSuccess(gate, result)`, `OnCancel(gate)`, and `GetKey`. `GetKey` can be an HTTPS URL/string, `{Url, Text, Copy}`, a custom `function(gate)`, or `false` to disable. `gate:GetKey()` runs a single-flight key-link/custom action and returns a success boolean plus optional reason. It exposes `Submit(key)`, `Cancel()`, `Destroy()`, `Update(options)`, `GetParts()`, `SetPartLayout(name, options)`, `ResetPartLayout(name)`, `CopyDiscordLink()`, and `GetKey()`. `GetParts()` includes `CredentialWell`, `GetKeyButton`, `KeyLink`, and `KeyLinkStatus`. Layout methods accept named parts from `GetParts()` except the fixed `Overlay` and `Card`; options are `Position`, `Size`, `AnchorPoint`, and `Visible`. Overrides persist across responsive reflow and `Update`. For parts inside the scroll content, a finite vertical extent is required; moved content expands the scroll area to keep it reachable. Custom positions can overlap other controls. See the [Design guide](/customization/design-your-interface) for a short example.
 
 Default `Logo` is `"Avatar"`; set it to `false` to show `MarkText`, or use an `rbxassetid://` URI. Default `SubmitText` is `Verify key`. Width defaults to 420 px (range 280–600). Automatic card heights are 332 px without Discord/GetKey, 394 px with Discord, 404 px with GetKey, and 462 px with both; `Height` accepts 280–560 px. See [Key systems](/customization/key-systems) for link behavior, Discord, and validation details.
 
+## Discord prompt
+
+`window:PromptDiscord(urlOrOptions)` opens a community invite modal immediately. It accepts a code, `https://discord.gg/{code}`, or `https://discord.com/invite/{code}`; accepted links normalize to `https://discord.gg/{code}`. It returns `true` when opened or `false, reason` when unavailable, already open, or already shown for that invite during this library instance. The root `DiscordPrompt` option opts in to showing it after window creation; `Launch` passes that option to its window.
+
+Options are `Url` (required), `Title`, `Content`, `JoinText`, `ContinueText`, `Copy(url)`, `Open(url)`, and `OncePerSession`. Defaults are `Title = "Join the community"`, `Content = "Join the Gabibou UI community for updates and help."`, `JoinText = "Copy invite"`, `ContinueText = "Not now"`, and `OncePerSession = true`. A supplied `Open` or `Copy` callback runs only after the corresponding user action; callback results of `nil` or `true` signal success. `false` or a thrown error keeps the dialog open and leaves the normalized invite available for manual copying. Without a callback, the existing clipboard function is used when available; in Studio the link remains selectable for manual copying. The modal never opens a browser or joins a server by itself. `OncePerSession` is in-memory only and can be set to `false` to show the same invite again. The fixed modal credit is `Gabibou UI · by Gabibou`, independent of `ShowWatermark`. See [Discord prompt examples](/examples/discord-prompt) and [Notifications and confirmation](/customization/notifications).
+
 ## Loader
 
-`UI:CreateLoader(options)` exposes `SetProgress`, `SetStatus`, `Update`, `Run`, `GetParts`, `SetPartLayout`, `ResetPartLayout`, `Own`, `Complete`, and `Destroy`. Fields include `Progress`, `Status`, `Completed`, `Destroyed`, and `LastError`. See [Loading screens](/customization/loading-screens) for variant and content customization.
+`UI:CreateLoader(options)` exposes `SetProgress`, `SetStatus`, `Update`, `Run`, `GetParts`, `SetPartLayout`, `ResetPartLayout`, `Own`, `Complete`, and `Destroy`. `GetParts()` includes `StatusPanel`, which can be positioned or resized with `SetPartLayout`. Fields include `Progress`, `Status`, `Completed`, `Destroyed`, and `LastError`. See [Loading screens](/customization/loading-screens) for variant and content customization.
 
 ## Launch session
 

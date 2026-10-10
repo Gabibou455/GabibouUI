@@ -11,49 +11,71 @@
   "appearance": {
     "default": "dark"
   },
+  "contextual": {
+    "options": ["copy", "mcp", "cursor", "vscode"]
+  },
   "navigation": {
-    "groups": [
+    "tabs": [
       {
-        "group": "Start here",
-        "pages": [
-          "index",
-          "getting-started/quickstart",
-          "getting-started/installation"
+        "tab": "Guide",
+        "groups": [
+          {
+            "group": "Start here",
+            "pages": [
+              "index",
+              "getting-started/quickstart",
+              "getting-started/installation"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "examples/quickstart",
+              "examples/loading",
+              "examples/discord-prompt",
+              "examples/key-discord",
+              "examples/key-providers",
+              "examples/key-external-server",
+              "examples/server-validation",
+              "examples/remote-loading"
+            ]
+          },
+          {
+            "group": "Customize",
+            "pages": [
+              "customization/controls",
+              "customization/values-and-config",
+              "customization/appearance-and-layout",
+              "customization/icons-and-branding",
+              "customization/loading-screens",
+              "customization/key-systems",
+              "customization/events-and-lifecycle",
+              "customization/animations-and-components",
+              "customization/notifications"
+            ]
+          },
+          {
+            "group": "API reference",
+            "pages": [
+              "reference/api",
+              "reference/customization",
+              "reference/icon-catalogue",
+              "reference/quality"
+            ]
+          }
         ]
       },
       {
-        "group": "Examples",
+        "tab": "Design",
         "pages": [
-          "examples/quickstart",
-          "examples/loading",
-          "examples/key-discord",
-          "examples/key-providers",
-          "examples/key-external-server",
-          "examples/server-validation",
-          "examples/remote-loading"
+          "customization/design-your-interface"
         ]
       },
       {
-        "group": "Customize",
+        "tab": "AI",
         "pages": [
-          "customization/controls",
-          "customization/values-and-config",
-          "customization/appearance-and-layout",
-          "customization/icons-and-branding",
-          "customization/loading-screens",
-          "customization/key-systems",
-          "customization/events-and-lifecycle",
-          "customization/animations-and-components",
-          "customization/notifications"
-        ]
-      },
-      {
-        "group": "API reference",
-        "pages": [
-          "reference/api",
-          "reference/customization",
-          "reference/icon-catalogue",
-          "reference/quality"
+          "getting-started/use-with-ai",
+          "ai/agent-guide"
         ]
       }
     ]

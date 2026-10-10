@@ -97,6 +97,7 @@ local function validate_create_spec(spec)
     convenience_assert(type(spec) == "table", "spec", "expected a table")
     local tabCount = validate_array(spec.Tabs, "spec.Tabs", false)
     convenience_text(spec.Title, "spec.Title", true)
+    validate_at("spec.DiscordPrompt", function() return Library:_NormalizeDiscordPrompt(spec.DiscordPrompt, "spec.DiscordPrompt") end)
     convenience_assert(spec.Parent == nil or typeof(spec.Parent) == "Instance", "spec.Parent", "expected an Instance")
     convenience_assert(spec.Loading == nil or spec.Loading == true or type(spec.Loading) == "table", "spec.Loading", "expected true or a loader config table")
 
@@ -160,6 +161,7 @@ end
 
 local function create_interface(self,spec,onWindow)
     local controlTotal = validate_create_spec(spec)
+    if spec.Design ~= nil then self:Design(spec.Design) end
     local windowOptions = table.clone(spec)
     windowOptions.Tabs = nil
     windowOptions.Loading = nil
@@ -172,7 +174,7 @@ local function create_interface(self,spec,onWindow)
         local config = type(spec.Loading) == "table" and table.clone(spec.Loading) or {}
         if config.Parent == nil then config.Parent = spec.Parent or windowOptions.Parent end
         if config.Title == nil then config.Title = spec.Title or windowOptions.Title end
-        for _,key in ipairs({"Theme","Style","ReducedMotion"})do
+        for _,key in ipairs({"Design","Theme","Style","ReducedMotion"})do
             if config[key]==nil then config[key]=windowOptions[key]end
         end
         if config.DisplayOrder==nil then config.DisplayOrder=(windowOptions.DisplayOrder or 90)+1 end

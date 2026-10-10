@@ -26,7 +26,7 @@ See the [complete icon catalogue](/reference/icon-catalogue) for all 96 names an
 
 ## Navigation variants
 
-Set window navigation with `Navigation = {Variant = "Soft", IconVariant = "Outline"}` or call `window:SetNavigation(options)`. Variants are `Classic`, `Soft` (default), and `Pill`; icon variants are `Outline`, `Soft`, and `Duotone`. A tab can provide `IconVariant` to pin its own icon style. Buttons can also set `IconVariant`.
+Set window navigation with `Navigation = {Variant = "Soft", IconVariant = "Outline"}` or call `window:SetNavigation(options)`. Variants are `Classic`, `Soft` (default), `Pill`, and `Rail`; Rail gives the selected tab a distinct icon tile with a neutral label. Icon variants are `Outline`, `Soft`, and `Duotone`. A tab can provide `IconVariant` to pin its own icon style. Buttons can also set `IconVariant`.
 
 `UI:RegisterIcon(name, builder)` registers a custom vector builder. `UI:UnregisterIcon(name, expectedBuilder)` removes a registration, optionally checking the expected function to avoid removing another module's registration.
 

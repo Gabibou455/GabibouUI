@@ -137,9 +137,12 @@ local function drawIcon(root, color, thickness, window, token, name, variant)
 
     if name == "home" then
         path({{3,11},{12,4},{21,11}});rect(5,10,14,10,true,2)
-        rect(7,13,3,3,false,1);rect(14,13,3,3,false,1);rect(10,15,4,5,false,1)
+        -- Separate the small openings so they remain distinct at toolbar sizes.
+        rect(7,13,2.5,3,false,1);rect(14.5,13,2.5,3,false,1);rect(10.5,15,3,5,false,1)
     elseif name == "sliders" then
-        line(3,6,21,6);line(3,12,21,12);line(3,18,21,18)
+        line(3,6,5.5,6);line(10.5,6,21,6)
+        line(3,12,13.5,12);line(18.5,12,21,12)
+        line(3,18,7.5,18);line(12.5,18,21,18)
         circle(8,6,5,true);circle(15,12,5,true);circle(10,18,5,true)
     elseif name == "palette" then
         cubic({10,3.5},{6,3.5},{3.5,7},{3.5,11},5)
@@ -157,9 +160,9 @@ local function drawIcon(root, color, thickness, window, token, name, variant)
     elseif name == "code" then
         path({{8,6},{3,12},{8,18}}); path({{16,6},{21,12},{16,18}}); line(14,4,10,20)
     elseif name == "search" then
-        circle(10,10,12,true); line(14.5,14.5,21,21)
+        circle(9.5,9.5,11,true); line(13.5,13.5,20.5,20.5)
     elseif name == "close" then
-        line(5,5,19,19); line(19,5,5,19)
+        line(4.5,4.5,19.5,19.5); line(19.5,4.5,4.5,19.5)
     elseif name == "check" then
         path({{4,12},{10,18},{20,6}})
     elseif name == "chevron-down" then
@@ -168,19 +171,19 @@ local function drawIcon(root, color, thickness, window, token, name, variant)
         path({{9,5},{16,12},{9,19}})
     elseif name == "settings" then
         local teeth = {}
-        for index = 0, 31 do
-            local angle = -math.pi / 2 + index * math.pi * 2 / 32
+        for index = 0, 23 do
+            local angle = -math.pi / 2 + index * math.pi * 2 / 24
             local toothPhase = index % 4
-            local radius = (toothPhase == 0 or toothPhase == 1) and 8.5 or 7.1
+            local radius = (toothPhase == 1 or toothPhase == 2) and 9 or 7.5
             teeth[#teeth + 1] = {12 + math.cos(angle) * radius, 12 + math.sin(angle) * radius}
         end
         teeth[#teeth + 1] = teeth[1]
         path(teeth)
-        circle(12,12,7.4,true);circle(12,12,2.2,false)
+        circle(12,12,8,true);circle(12,12,2.4,false)
     elseif name == "user" then
-        circle(12,8,6.5,true)
-        cubic({4,20},{4,16},{7,14.5},{12,14.5},7)
-        cubic({12,14.5},{17,14.5},{20,16},{20,20},7)
+        circle(12,7.75,7,true)
+        cubic({4,20},{4,15},{7,13.5},{12,13.5},6)
+        cubic({12,13.5},{17,13.5},{20,15},{20,20},6)
         line(4,20,20,20)
     elseif name == "folder" then
         path({{3,8},{9,8},{11,10},{21,10},{20,19},{4,19},{3,8}})
@@ -210,8 +213,8 @@ local function drawIcon(root, color, thickness, window, token, name, variant)
                 {baseX - normalX * 1.55, baseY - normalY * 1.55},
             })
         end
-        arrowHead(arc(12, 12, 7.5, 205, 330, 14), 330)
-        arrowHead(arc(12, 12, 7.5, 30, 150, 14), 150)
+        arrowHead(arc(12, 12, 7.5, 190, 350, 14), 350)
+        arrowHead(arc(12, 12, 7.5, 10, 170, 14), 170)
     elseif name == "bell" then
         cubic({5,17},{7,15},{7,11},{7,9},5);cubic({7,9},{7,5},{10,4},{12,4},5)
         cubic({12,4},{15,4},{17,6},{17,9},5);cubic({17,9},{17,12},{17,15},{19,17},5)
@@ -223,10 +226,10 @@ local function drawIcon(root, color, thickness, window, token, name, variant)
     elseif name == "minus" then
         line(4,12,20,12)
     elseif name == "farm" then
-        path({{4,11},{12,5},{20,11},{20,19},{4,19},{4,11}})
-        line(4,11,20,11);rect(7,12,10,7,true,1);rect(10,14,4,5,false,1)
-        line(7,7,7,5);line(7,5,10,5)
-        path({{3,21},{8,20},{12,21},{16,20},{21,21}})
+        path({{4,10},{12,4},{20,10}})
+        rect(5,9,14,11,true,1)
+        path({{8,20},{8,14},{12,11},{16,14},{16,20}})
+        line(12,13,12,20);line(3,21,21,21)
     elseif name == "panel" then
         rect(3,4,18,16,true,2);line(3,9,21,9);line(12,9,12,20);circle(6,6.5,1,false);circle(9,6.5,1,false)
     elseif name == "inventory" then
@@ -270,9 +273,9 @@ local function drawIcon(root, color, thickness, window, token, name, variant)
     elseif name == "arrow-right" then
         path({{10,5},{17,12},{10,19}});line(3,12,17,12)
     elseif name == "minimize" then
-        line(4,18,20,18)
+        line(4.5,17.5,19.5,17.5)
     elseif name == "maximize" then
-        rect(4,4,16,16,true,1)
+        rect(4.5,4.5,15,15,true,1.5)
     elseif name == "restore" then
         path({{8,8},{8,4},{20,4},{20,16},{16,16}});rect(4,8,12,12,true,1)
     elseif name == "resize" then

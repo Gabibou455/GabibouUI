@@ -18,12 +18,15 @@ Use this page as a compact reference alongside the guides for [controls](/custom
 | `Height` | 590 | Finite number; clamped to 300-1000 px |
 | `ToggleKey` | `Enum.KeyCode.RightControl` | `Enum.KeyCode` |
 | `ShowWatermark` | true | Boolean; false hides the footer name and version only |
+| `DiscordPrompt` | disabled | Invite code/URL or options table; opt-in prompt after window creation |
 | `DisplayOrder` | 90 | Passed through to `ScreenGui.DisplayOrder`; no library range validation |
 | `ReducedMotion` | Roblox reduced-motion preference | Boolean override |
 | `Parent` | Local player's `PlayerGui` | GUI parent instance |
 | `Responsive` | `{Breakpoint = 620, TouchTarget = 44, Margin = 12}` | Table of optional overrides |
 
 `Width` and `Height` must be finite numbers; the window clamps them to the listed range. Responsive options are validated and rejected outside their ranges. Passing `Responsive = false` behaves like omitting the option; it does not disable responsive layout. The window uses the available safe area and reduces its usable height when the on-screen keyboard is visible. Custom child content still needs device-specific verification. If Roblox's reduced-motion preference cannot be read, `ReducedMotion` defaults to `false`; an explicit boolean overrides the preference.
+
+`DiscordPrompt` is optional and never joins a server or opens a browser automatically. It accepts `{Url, Title?, Content?, JoinText?, ContinueText?, Copy?, Open?, OncePerSession?}` or a bare invite code/URL. `OncePerSession` defaults to `true` for each normalized invite during the life of the library instance; it is not saved to disk. See [Notifications and confirmation](/customization/notifications#discord-community-prompt) for prompt behavior and [Discord prompt examples](/examples/discord-prompt) for setup.
 
 ## Themes, style, and motion
 
@@ -53,28 +56,29 @@ Call `UI:SetLayout(options)` for future windows or `window:SetLayout(options)` f
 |---|---:|---|
 | `TabPosition` | `Left` | `Left`, `Right`, `Top`, `Bottom` |
 | `MobileTabPosition` | `Top` | `Top`, `Bottom` |
-| `SidebarWidth` | 176 | 96-360 px |
+| `SidebarWidth` | 168 | 96-360 px |
 | `TabWidth` | 128 | 64–400 px |
 | `TabHeight` | 44 | 44–96 px |
-| `TabGap` | 9 | 0-32 px |
-| `TabIconSize` | 20 | 12–40 px |
-| `ContentPadding` | 20 | 4-40 px |
-| `ContentGap` | 20 | 0-48 px |
+| `TabGap` | 7 | 0-32 px |
+| `TabIconSize` | 16 | 12–40 px |
+| `ContentPadding` | 16 | 4-40 px |
+| `ContentGap` | 18 | 0-48 px |
 | `HeaderHeight` | 76 | 64–160 px |
 | `FooterHeight` | 42 | 32–96 px |
 | `SearchHeight` | 44 | 44–96 px |
-| `SearchGap` | 12 | 0–40 px |
+| `SearchGap` | 10 | 0–40 px |
 | `PageTitleHeight` | 40 | 28–80 px |
 | `ButtonWidth` | 112 | 58–400 px |
 | `ButtonHeight` | 44 | 44–120 px |
-| `RowGap` | 12 | 0-40 px |
+| `RowGap` | 8 | 0-40 px |
 | `SectionGap` | 12 | 0-48 px |
+| `PanelTransparency` | 0.1 | 0-1; affects the window surface only (`0` opaque, `1` transparent) |
 | `ControlsPosition` | `Right` | `Left`, `Right`, `Below` |
 | `Draggable`, `Resizable`, `ShowSearch`, `ShowFooter`, `ShowHeader`, `ShowPageTitle` | true | Boolean |
 
 Layout ranges are validated; values outside them are rejected. Tabs accept a local `Layout` table with `Order` (integer -100000-100000), `Width` (58-600), `Height` (44-160), and `IconSize` (12-40). Controls accept `Order`, `Width`, `Height`, and `Position` (`Left`, `Right`, `Below`). A control's width range is 58-600 px and height range is 44-160 px.
 
-Navigation accepts `Variant = "Classic" | "Soft" | "Pill"` (default `Soft`) and `IconVariant = "Outline" | "Soft" | "Duotone"` (default `Outline`). Set defaults with `UI.Navigation`, set a per-window value through `Navigation`, or update a window with `window:SetNavigation(options)`. A tab's explicit `IconVariant` remains pinned when the window navigation variant is changed.
+Navigation accepts `Variant = "Classic" | "Soft" | "Pill" | "Rail"` (default `Soft`) and `IconVariant = "Outline" | "Soft" | "Duotone"` (default `Outline`). `Rail` uses a selected icon tile with a neutral label. Set defaults with `UI.Navigation`, set a per-window value through `Navigation`, or update a window with `window:SetNavigation(options)`. A tab's explicit `IconVariant` remains pinned when the window navigation variant is changed.
 
 `window:GetParts()` returns `Panel`, `Header`, `Tabs`, `Search`, `PageTitle`, `Pages`, `Footer`, `Reopen`, `Notifications`, `Minimize`, `Close`, and `Resize`. `window:SetPartLayout(name, options)` accepts finite `UDim2` `Position` and `Size`, `Vector2` `AnchorPoint` components from 0 to 1, and boolean `Visible`. These overrides apply after responsive layout and are not screen-clamped. `ResetPartLayout(name)` restores calculated layout.
 
@@ -111,7 +115,7 @@ Configuration import accepts JSON strings up to 262,144 bytes (256 KiB). Input t
 
 ## Key gate
 
-`UI:CreateKeySystem(options)` requires `Validate(key)`. `MaxLength` defaults to 256 and must be an integer from 1 to 4096; `DisplayOrder` defaults to 120 and must be an integer. `Position` defaults to `UDim2.fromScale(0.5, 0.5)` and `AnchorPoint` to `Vector2.new(0.5, 0.5)`. The gate defaults to an avatar logo and `SubmitText = "Verify key"`. Set `Logo = false` to show `MarkText`, or supply a positive numeric `rbxassetid://` URI. Width defaults to 420 px; width and height accept 280–600 px and 280–560 px respectively, and the visible card is fitted to the viewport. Automatic height is 332 px without Discord/GetKey, 394 px with Discord only, 404 px with GetKey only, and 462 px with both. An explicit `Height` stays fixed through updates; automatic height recalculates when GetKey or Discord is changed.
+`UI:CreateKeySystem(options)` requires `Validate(key)`. `MaxLength` defaults to 256 and must be an integer from 1 to 4096; `DisplayOrder` defaults to 120 and must be an integer. `Position` defaults to `UDim2.fromScale(0.5, 0.5)` and `AnchorPoint` to `Vector2.new(0.5, 0.5)`. The gate defaults to an avatar logo and `SubmitText = "Verify key"`. Set `Logo = false` to show `MarkText`, or supply a positive numeric `rbxassetid://` URI. Width defaults to 420 px; width and height accept 280–600 px and 280–560 px respectively, and the visible card is fitted to the viewport. Automatic height is 332 px without Discord/GetKey, 394 px with Discord only, 404 px with GetKey only, and 462 px with both. An explicit `Height` stays fixed through updates; automatic height recalculates when GetKey or Discord is changed. `BackgroundTransparency` defaults to 0.42 for the full-screen dimmer; `CardTransparency` defaults to 0.1 for the key surface only. Both accept 0–1 and can be changed with `gate:Update({...})`.
 
 Optional `Discord` accepts `false`, an invite URL string, or an options table. Supported invite hosts are `discord.gg` and `discord.com/invite` over HTTPS. The options table accepts `Url` (up to 256 characters), `Text` (default `Copy Discord link`, up to 48 characters), `CopiedText` (default `Link copied`, up to 48 characters), `Color` (default `Color3.fromRGB(88, 101, 242)`), optional `Logo` (`rbxassetid://`), and an optional `Copy(url)` callback. The callback takes precedence; without it, the gate uses an available clipboard function or exposes a selectable link when clipboard access is unavailable.
 
@@ -119,4 +123,4 @@ Optional `Discord` accepts `false`, an invite URL string, or an options table. S
 
 ## Loading screen
 
-The loader defaults to `Variant = "Compact"`, `Width = 420`, `Height = 216`, `Padding = 24`, and `LogoSize = 46`; `Centered` defaults to 300 px high when created directly, and `Minimal` uses the compact layout without a logo. `ShowPercentage`, `ShowLogo`, `ShowActivity`, and `ShowSubtitle` default to `true`; `BackgroundTransparency` defaults to 0.3, `MinimumDuration` to 0, and `ExitDuration` to 0.18 seconds. `DisplayOrder` defaults to 100 and must be an integer. `Padding` accepts 12-40 px, `LogoSize` 24-80 px, and `BackgroundTransparency` 0-1. Height (160-480 px), width (280-560 px), `ProgressHeight` (2-12 px, default 4), `MinimumDuration` (0-10 seconds), and `ExitDuration` (0-2 seconds) are validated; invalid values are rejected. Loader titles are truncated to 80 characters and subtitles to 240. `ReducedMotion` defaults to Roblox's reduced-motion preference when readable, otherwise `false`. The card is fitted to the available viewport. Use `loader:GetParts()`, `SetPartLayout`, `ResetPartLayout`, and `Own` for custom content and cleanup. `Update` merges with existing options, so changing a compact loader to centered retains its current height unless you pass one: `loader:Update({Variant = "Centered", Height = 300})`. See [loading screen options](/customization/loading-screens).
+The loader defaults to `Variant = "Compact"`, `Width = 420`, `Height = 216`, `Padding = 24`, and `LogoSize = 46`; `Centered` defaults to 300 px high when created directly, and `Minimal` uses the compact layout without a logo. `ShowPercentage`, `ShowLogo`, `ShowActivity`, and `ShowSubtitle` default to `true`; `BackgroundTransparency` defaults to 0.3 for the full-screen dimmer and `CardTransparency` to 0.1 for the loader surface. Both accept 0–1. `MinimumDuration` defaults to 0 and `ExitDuration` to 0.18 seconds. `DisplayOrder` defaults to 100 and must be an integer. `Padding` accepts 12-40 px, `LogoSize` 24-80 px, and height (160-480 px), width (280-560 px), `ProgressHeight` (2-12 px, default 4), `MinimumDuration` (0-10 seconds), and `ExitDuration` (0-2 seconds) are validated; invalid values are rejected. Loader titles are truncated to 80 characters and subtitles to 240. `ReducedMotion` defaults to Roblox's reduced-motion preference when readable, otherwise `false`. The card is fitted to the available viewport. Use `loader:GetParts()`, `SetPartLayout`, `ResetPartLayout`, and `Own` for custom content and cleanup. The returned `StatusPanel` sits behind the status text and indicator; position or resize it with `loader:SetPartLayout("StatusPanel", options)`. `Update` merges with existing options, so changing a compact loader to centered retains its current height unless you pass one: `loader:Update({Variant = "Centered", Height = 300})`. See [loading screen options](/customization/loading-screens).

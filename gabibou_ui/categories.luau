@@ -24,12 +24,12 @@ function Window:Category(options)
     local entries=self:_CategoryEntries()
     for _,category in ipairs(self.Categories)do if category.Title==title then return category end end
     local category=setmetatable({Window=self,Title=title,Tabs={},Destroyed=false},TabCategory)
-    category.Root=create("Frame",{Name="TabCategory",BackgroundTransparency=1,Size=UDim2.new(1,-4,0,30),Visible=false},self.Nav)
-    category.Label=self:_Label(category.Root,title,11,"Muted")
+    category.Root=create("Frame",{Name="TabCategory",BackgroundTransparency=1,Size=UDim2.new(1,-4,0,24),Visible=false},self.Nav)
+    category.Label=self:_Label(category.Root,title,10,"Muted")
     category.Label.Name="CategoryTitle";category.Label.AutomaticSize=Enum.AutomaticSize.None
     category.Label.TextWrapped=false;category.Label.TextTruncate=Enum.TextTruncate.AtEnd
     self:_Style(category.Label,"Font","FontBold")
-    category.Line=create("Frame",{Name="Divider",BackgroundTransparency=.55,BorderSizePixel=0},category.Root)
+    category.Line=create("Frame",{Name="Divider",BackgroundTransparency=.72,BorderSizePixel=0},category.Root)
     self:_Color(category.Line,"BackgroundColor3","Border")
     self.Categories[#self.Categories+1]=category;entries[#entries+1]={Category=category}
     self:_LayoutCategories();return category
@@ -89,12 +89,12 @@ function Window:_LayoutCategories()
             if self.HorizontalTabs then
                 local width=math.clamp((utf8.len(category.Title)or #category.Title)*6+24,56,180)
                 category.Root.Size=UDim2.fromOffset(width,math.max(self.Responsive.TouchTarget,self.Layout.TabHeight))
-                category.Label.Position=UDim2.fromOffset(12,0);category.Label.Size=UDim2.new(1,-20,1,0)
-                category.Line.Position=UDim2.new(0,2,.5,-8);category.Line.Size=UDim2.fromOffset(1,16)
+                category.Label.Position=UDim2.new(0,10,.5,-14);category.Label.Size=UDim2.new(1,-16,0,28)
+                category.Line.Position=UDim2.new(0,2,.5,-6);category.Line.Size=UDim2.fromOffset(1,12)
             else
-                category.Root.Size=UDim2.new(1,-4,0,30)
-                category.Label.Position=UDim2.fromOffset(14,8);category.Label.Size=UDim2.new(1,-28,0,22)
-                category.Line.Position=UDim2.fromOffset(14,1);category.Line.Size=UDim2.new(1,-28,0,1)
+                category.Root.Size=UDim2.new(1,-4,0,24)
+                category.Label.Position=UDim2.fromOffset(12,1);category.Label.Size=UDim2.new(1,-24,0,20)
+                category.Line.Position=UDim2.fromOffset(12,22);category.Line.Size=UDim2.new(1,-24,0,1)
             end
             for _,item in ipairs(sorted)do place(item.Tab)end
         else place(entry.Tab)end

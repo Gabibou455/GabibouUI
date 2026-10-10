@@ -96,6 +96,7 @@ end
 local function validate_launch_spec(spec)
     assert(type(spec) == "table", "spec: expected a table")
     assert(type(validate_create_spec) == "function", "Library:Launch must be included after convenience.luau")
+    if spec.Design ~= nil then Library:Design(spec.Design) end
     validate_create_spec(spec)
     local steps = validate_launch_steps(spec.Steps)
     assert(spec.OnReady == nil or type(spec.OnReady) == "function", "spec.OnReady: expected a function")
@@ -117,7 +118,7 @@ end
 local function launch_loader_options(spec)
     local config = type(spec.Loading) == "table" and table.clone(spec.Loading) or {}
     if config.Parent == nil then config.Parent = spec.Parent end
-    for _, key in ipairs({"Theme", "Style", "ReducedMotion"}) do
+    for _, key in ipairs({"Design", "Theme", "Style", "ReducedMotion"}) do
         if config[key] == nil then config[key] = spec[key] end
     end
     if config.Title == nil then config.Title = spec.Title end
@@ -231,7 +232,7 @@ function Library:Launch(spec)
             end
             launch_cancel(session, true)
         end
-        for _, key in ipairs({"Parent", "Theme", "Style"}) do
+        for _, key in ipairs({"Parent", "Design", "Theme", "Style"}) do
             if keyOptions[key] == nil then keyOptions[key] = spec[key] end
         end
         if keyOptions.DisplayOrder == nil then keyOptions.DisplayOrder = (spec.DisplayOrder or 90) + 2 end

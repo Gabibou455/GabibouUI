@@ -18,6 +18,10 @@ A **window** is the main panel for your menu. A **tab** is a page inside that pa
 | Group controls | `Section` | Nothing |
 | Add custom Roblox UI | `Custom` | Nothing |
 
+![Running rc.21 Gabibou UI demo with a button, one toggle off, one toggle on, and a slider](/images/controls-examples.png)
+
+*A live rc.21 example window; it shows a button, one toggle off, one toggle on, and a slider.*
+
 ## Complete example
 
 Choose an installation method in [Installation](/getting-started/installation). Paste the complete block below into the same client script as your loader. For Roblox Studio, replace the first line with the two `require` lines shown in the installation steps; keep the remaining lines below them in the same `LocalScript`.
@@ -53,7 +57,33 @@ settings:Button('Refresh', function()
 end)
 ```
 
-Runs its callback when clicked. The callback receives no arguments. Optional settings include `Text` for the button caption (default `Run`), `Description`, `Icon`, and `IconVariant`; the first string labels the control.
+Runs its callback when clicked. The callback receives no arguments. Optional settings include `Text` for the button caption (default `Run`), `Description`, `Icon`, `IconVariant`, and `Variant`; the first string labels the control.
+
+`Variant` sets the button's visual weight. `Primary` uses the accent color and is the default. `Secondary` uses a raised surface. `Subtle` uses a softer, quieter surface for supporting actions. Use one primary action when a section has a clear main action, then give supporting actions a lighter variant:
+
+```lua
+settings:Button({
+    Title = 'Save settings',
+    Text = 'Save',
+    Variant = 'Primary',
+    Callback = function()
+        print('Settings saved')
+    end,
+})
+
+settings:Button({
+    Title = 'Restore defaults',
+    Text = 'Restore defaults',
+    Variant = 'Subtle',
+    Callback = function()
+        print('Defaults restored')
+    end,
+})
+```
+
+The accepted values are `Primary`, `Secondary`, and `Subtle`. If you omit `Variant`, the button uses `Primary`.
+
+On rc.21, custom button labels are shortened with an ending ellipsis when they exceed the available button width, whether or not the button has an icon. The configured `Text` string and callback stay unchanged.
 
 ### Toggle: turn a setting on or off
 
@@ -116,6 +146,10 @@ end)
 ```
 
 The callback receives the changed text when the player confirms it or leaves the text box. `Value` defaults to an empty string, `Placeholder` to `Type here...`, and `MaxLength` to `120`. The maximum length must be from `1` to `4096`; longer text is trimmed to that limit.
+
+![Live rc.21 settings window showing a Quality dropdown and Player name input](/images/controls-input.png)
+
+*A live rc.21 screenshot of a dropdown and text input in the Settings panel.*
 
 ### Keybind: run an action when a key is pressed
 

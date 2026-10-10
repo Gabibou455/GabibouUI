@@ -66,14 +66,14 @@ local function makeRightWidget(window, name, size, textSize)
         ZIndex = 7,
     }, window.Panel)
     window:_Rounded(frame, "ControlRadius")
-    window:_Color(frame, "BackgroundColor3", "Raised")
-    window:_Stroke(frame, "Border", 0.24)
+    window:_Color(frame, "BackgroundColor3", "Surface")
+    window:_Stroke(frame, "Border", 0.42)
 
     local highlight = create("Frame", {
         Name = "BrandHighlight",
-        Position = UDim2.fromOffset(4, 1),
-        Size = UDim2.new(1, -8, 0, 1),
-        BackgroundTransparency = 0.58,
+        Position = UDim2.fromOffset(8, 1),
+        Size = UDim2.new(1, -16, 0, 1),
+        BackgroundTransparency = 0.72,
         BorderSizePixel = 0,
         ZIndex = 10,
     }, frame)
@@ -164,6 +164,8 @@ function Window:SetBranding(options)
     self.Mark.Text = valid.Text
     self.Mark.TextTransparency = 0
     self.Mark.ClipsDescendants = false
+    self:_Color(self.Mark, "BackgroundColor3", "Surface")
+    self:_Color(self.Mark, "TextColor3", "Text")
 
     if valid.Placement == "TopLeft" then
         self.Mark.ClipsDescendants = true

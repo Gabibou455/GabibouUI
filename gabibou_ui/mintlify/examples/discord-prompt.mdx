@@ -1,0 +1,62 @@
+---
+title: Discord community prompt
+description: Opt in to a simple invite prompt or open one on demand.
+---
+
+The Discord prompt is an optional community invite. It does not gate startup or join a Discord server. The user chooses to copy/open the invite or continue; the library does not launch a browser by itself.
+
+## Show it after window creation
+
+Set `DiscordPrompt` on the root window options to opt in. The prompt appears after the window is created; omitting the option disables it.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+
+local window = UI:CreateWindow({
+    Title = "My project",
+    DiscordPrompt = "https://discord.gg/dyvpyhyD4Z",
+})
+window:Tab("Home", "home")
+```
+
+`UI:Create(spec)` and the root of `UI:Launch(spec)` also accept `DiscordPrompt`. The default is one prompt per normalized invite during the lifetime of this Gabibou UI library instance; nothing is saved to disk.
+
+## Open it after a user action
+
+Use `window:PromptDiscord(...)` when you want to control when the modal appears. Passing a string is the shortest form; an options table lets you customize the text and copy action.
+
+```lua
+local opened, reason = window:PromptDiscord("https://discord.gg/dyvpyhyD4Z")
+if not opened then
+    warn("Discord prompt did not open:", reason)
+end
+```
+
+It returns `true` after opening. It returns `false, reason` if the window was destroyed, another modal is open, or the invite was already shown while `OncePerSession` was enabled.
+
+## Customize text and repeat behavior
+
+```lua
+window:PromptDiscord({
+    Url = "https://discord.gg/dyvpyhyD4Z",
+    Title = "Join our community",
+    Content = "Share feedback and get project updates.",
+    JoinText = "Copy invite",
+    ContinueText = "Keep using the UI",
+    OncePerSession = false,
+    Copy = function(url)
+        if type(setclipboard) ~= "function" then
+            return false
+        end
+        setclipboard(url)
+        return true
+    end,
+})
+```
+
+Defaults are `Title = "Join the community"`, `Content = "Join the Gabibou UI community for updates and help."`, `JoinText = "Copy invite"`, `ContinueText = "Not now"`, and `OncePerSession = true`. `OncePerSession` is in-memory only and applies per normalized invite for the life of the library instance; set it to `false` to allow the same invite again.
+
+`Open(url)` and `Copy(url)` run only after the user clicks the invite action. Use `Open` only when your runtime provides an explicit open-link callback. A callback returning `nil` or `true` is success; `false` or an exception keeps the prompt open and reports a status. Without a callback, the library tries its existing clipboard function. If no clipboard is available, the invite stays visible in a selectable field for manual copying, including in Studio. No callback or browser open happens automatically.
+
+The modal always shows the fixed credit `Gabibou UI · by Gabibou`, even if the window watermark is hidden. It is separate from the window watermark and carries no third-party project attribution. For defaults and the full option shape, see [API reference](/reference/api#discord-prompt) and [Notifications and confirmation](/customization/notifications#discord-community-prompt).

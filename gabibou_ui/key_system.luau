@@ -142,6 +142,15 @@ local function key_text(value, fallback, limit, label)
     return valid
 end
 
+local function accent_glow(theme)
+    local highlight = theme.Accent:Lerp(theme.Text, .18)
+    return ColorSequence.new({
+        ColorSequenceKeypoint.new(0, theme.Accent),
+        ColorSequenceKeypoint.new(.5, highlight),
+        ColorSequenceKeypoint.new(1, theme.Accent),
+    })
+end
+
 local function discord_options(value)
     if value == nil or value == false then return value end
     if type(value) == "string" then value = {Url = value}
@@ -246,6 +255,12 @@ local function key_options(options)
     assert(Logic.finite(options.MaxLength) and options.MaxLength % 1 == 0 and options.MaxLength >= 1 and options.MaxLength <= 4096, "MaxLength must be an integer in 1..4096")
     options.DisplayOrder = options.DisplayOrder == nil and 120 or options.DisplayOrder
     assert(Logic.finite(options.DisplayOrder) and options.DisplayOrder % 1 == 0, "DisplayOrder must be an integer")
+    options.BackgroundTransparency = options.BackgroundTransparency == nil and .42 or options.BackgroundTransparency
+    assert(Logic.finite(options.BackgroundTransparency) and options.BackgroundTransparency >= 0 and options.BackgroundTransparency <= 1,
+        "BackgroundTransparency must be 0..1")
+    options.CardTransparency = options.CardTransparency == nil and .1 or options.CardTransparency
+    assert(Logic.finite(options.CardTransparency) and options.CardTransparency >= 0 and options.CardTransparency <= 1,
+        "CardTransparency must be 0..1")
     local player = Players.LocalPlayer
     assert(player, "Key system runs on a Roblox client")
     options.Parent = options.Parent or player:FindFirstChildOfClass("PlayerGui")
@@ -268,13 +283,80 @@ function KeyGate:_Status(text, kind)
     self.Status = text
     self._statusKind = kind or "normal"
     self.StatusLabel.Text = text
-    self.StatusLabel.TextColor3 = self.Options.Theme[kind == "success" and "Success" or kind == "error" and "Danger" or "Muted"]
+    local token = kind == "success" and "Success" or kind == "error" and "Danger" or "Muted"
+    local wasVisible = self.StatusPanel.Visible
+    local visible = self.StatusLabel.Visible and text ~= ""
+    self.StatusPanel.Visible = visible
+    self.StatusLabel.TextColor3 = self.Options.Theme[token]
+    self.StatusDot.BackgroundColor3 = self.Options.Theme[token]
+    self.StatusPanelStroke.Color = visible and self.Options.Theme[token] or self.Options.Theme.Border
+    self:_LayoutStatusSurface()
+    if visible and not wasVisible then
+        self.StatusPanel.BackgroundTransparency = .58
+        self.StatusPanelStroke.Transparency = .72
+        self:_PlayMotion("status-fill", self.StatusPanel, .16, {BackgroundTransparency = .32})
+        self:_PlayMotion("status-border", self.StatusPanelStroke, .16, {Transparency = .22})
+    elseif not visible then
+        self:_CancelMotion("status-fill")
+        self:_CancelMotion("status-border")
+    end
+end
+
+function KeyGate:_CancelMotion(key)
+    local tween = self._visualTweens and self._visualTweens[key]
+    if tween then tween:Cancel(); self._visualTweens[key] = nil end
+end
+
+function KeyGate:_PlayMotion(key, instance, duration, goals)
+    self._visualTweens = self._visualTweens or {}
+    self:_CancelMotion(key)
+    local reduced = false
+    pcall(function() reduced = GuiService.ReducedMotionEnabled end)
+    if reduced or self.Destroyed then
+        for property, value in pairs(goals) do instance[property] = value end
+        return
+    end
+    local tween = TweenService:Create(instance, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goals)
+    self._visualTweens[key] = tween
+    local connection
+    connection = tween.Completed:Connect(function()
+        if self._visualTweens[key] == tween then self._visualTweens[key] = nil end
+        connection:Disconnect()
+    end)
+    tween:Play()
+end
+
+function KeyGate:_LayoutStatusSurface()
+    local label, surface = self.StatusLabel, self.StatusPanel
+    local anchor, position, size = label.AnchorPoint, label.Position, label.Size
+    local parentWidth = self.Card.Size.X.Offset * self.Scroll.Size.X.Scale + self.Scroll.Size.X.Offset
+    local parentHeight = self.Card.Size.Y.Offset * self.Scroll.Size.Y.Scale + self.Scroll.Size.Y.Offset
+    parentWidth = math.max(0, parentWidth * self.Content.Size.X.Scale + self.Content.Size.X.Offset)
+    parentHeight = math.max(0, parentHeight * self.Content.Size.Y.Scale + self.Content.Size.Y.Offset)
+    local labelWidth = math.max(0, parentWidth * size.X.Scale + size.X.Offset)
+    local labelHeight = math.max(0, parentHeight * size.Y.Scale + size.Y.Offset)
+    local left = position.X.Scale * parentWidth + position.X.Offset - anchor.X * labelWidth
+    local top = position.Y.Scale * parentHeight + position.Y.Offset - anchor.Y * labelHeight
+    local labelLeft = left
+    left = math.clamp(left - 26, 0, parentWidth)
+    top = math.clamp(top - 3, 0, parentHeight)
+    local right = math.clamp(position.X.Scale * parentWidth + position.X.Offset + (1 - anchor.X) * labelWidth + 6, left, parentWidth)
+    local bottom = math.clamp(position.Y.Scale * parentHeight + position.Y.Offset + (1 - anchor.Y) * labelHeight + 3, top, parentHeight)
+    local width, height = right - left, bottom - top
+    surface.AnchorPoint = anchor
+    surface.Position = UDim2.fromOffset(left + anchor.X * width, top + anchor.Y * height)
+    surface.Size = UDim2.fromOffset(width, height)
+    surface.Visible = label.Visible and label.Text ~= ""
+    self.StatusDot.Position = UDim2.fromOffset(math.max(0, labelLeft - left - 18), math.max(0, (height - 6) / 2))
+    self.StatusDot.Visible = surface.Visible and labelLeft - left >= 22 and height >= 6
 end
 
 function KeyGate:GetParts()
     if self.Destroyed then return nil end
     return {
+        Overlay = self.Backdrop,
         Card = self.Card,
+        Content = self.Content,
         ContentScroll = self.Scroll,
         Input = self.Input,
         Title = self.Title,
@@ -287,6 +369,8 @@ function KeyGate:GetParts()
         MarkText = self.MarkLabel,
         KeyIcon = self.KeyIcon,
         KeyLabel = self.KeyLabel,
+        CredentialWell = self.CredentialWell,
+        HeaderRule = self.HeaderRule,
         DiscordButton = self.DiscordButton,
         DiscordIcon = self.DiscordIcon,
         DiscordLink = self.DiscordLink,
@@ -297,6 +381,78 @@ function KeyGate:GetParts()
     }
 end
 
+local keyLayoutParts = {
+    Content = true, ContentScroll = true, Input = true, Title = true, Subtitle = true, Status = true,
+    Submit = true, Cancel = true, Mark = true, MarkImage = true, MarkText = true, KeyIcon = true,
+    KeyLabel = true, CredentialWell = true, HeaderRule = true, DiscordButton = true, DiscordIcon = true,
+    DiscordLink = true, DiscordStatus = true, GetKeyButton = true, KeyLink = true, KeyLinkStatus = true,
+}
+
+local function bounded_part_extent(part, position, size, anchor)
+    if part.Parent == nil then return true end
+    local scale = position.Y.Scale + (1 - anchor.Y) * size.Y.Scale
+    local bottomOffset = position.Y.Offset + (1 - anchor.Y) * size.Y.Offset
+    return Logic.finite(scale) and Logic.finite(bottomOffset)
+        and scale <= 1 and (scale < 1 or bottomOffset <= 0)
+end
+
+function KeyGate:_SetPartVisible(name, visible)
+    local parts = self:GetParts()
+    local part = parts and parts[name]
+    if not part then return end
+    local baseline = self._partLayoutDefaults and self._partLayoutDefaults[name]
+    if baseline and baseline.Visible ~= nil then baseline.Visible = visible end
+    local overrides = self._partLayouts and self._partLayouts[name]
+    local override = overrides and overrides.Visible
+    if override == nil then part.Visible = visible else part.Visible = override end
+end
+
+function KeyGate:_ApplyPartLayouts()
+    if self.Destroyed then return end
+    local parts = self:GetParts()
+    for name, properties in pairs(self._partLayouts or {}) do
+        local part = parts[name]
+        if part then for property, value in pairs(properties) do part[property] = value end end
+    end
+end
+
+function KeyGate:SetPartLayout(name, options)
+    assert(not self.Destroyed and not self.Completed, "Key gate is closed or completing")
+    assert(keyLayoutParts[name], "Unknown or fixed key-gate layout part")
+    assert(type(options) == "table", "Part layout must be a table")
+    local part = self:GetParts()[name]
+    local staged = table.clone(self._partLayouts[name] or {})
+    local baselines = table.clone(self._partLayoutDefaults[name] or {})
+    for key, value in pairs(options) do
+        if key == "Position" or key == "Size" then assert(finiteUDim2(value), key .. " must be a finite UDim2")
+        elseif key == "AnchorPoint" then assert(validAnchor(value), "AnchorPoint must be within 0..1")
+        elseif key == "Visible" then assert(type(value) == "boolean", "Visible must be boolean")
+        else error("Unsupported key-gate layout property: " .. tostring(key), 2) end
+        if baselines[key] == nil then baselines[key] = part[key] end
+        staged[key] = value
+    end
+    if part.Parent == self.Content then
+        assert(bounded_part_extent(part, staged.Position or part.Position, staged.Size or part.Size,
+            staged.AnchorPoint or part.AnchorPoint),
+            "Part layout cannot fit within a finite content scroll extent")
+    end
+    self._partLayouts[name] = staged
+    self._partLayoutDefaults[name] = baselines
+    self:_Layout()
+    return self
+end
+
+function KeyGate:ResetPartLayout(name)
+    assert(not self.Destroyed and not self.Completed, "Key gate is closed or completing")
+    assert(keyLayoutParts[name], "Unknown or fixed key-gate layout part")
+    local part = self:GetParts()[name]
+    for property, value in pairs(self._partLayoutDefaults[name] or {}) do part[property] = value end
+    self._partLayouts[name] = nil
+    self._partLayoutDefaults[name] = nil
+    self:_Layout()
+    return self
+end
+
 function KeyGate:_StartLogo()
     self._logoGeneration = (self._logoGeneration or 0) + 1
     local generation = self._logoGeneration
@@ -305,20 +461,20 @@ function KeyGate:_StartLogo()
     if previous and previous ~= coroutine.running() and coroutine.status(previous) ~= "dead" then pcall(task.cancel, previous) end
     local logo = self.Options.Logo
     self.MarkImage.Image = ""
-    self.MarkImage.Visible = false
-    self.MarkLabel.Visible = logo == false
+    self:_SetPartVisible("MarkImage", false)
+    self:_SetPartVisible("MarkText", logo == false)
     self.MarkLabel.TextColor3 = self.Options.Theme[logo == false and "AccentText" or "Text"]
     self.Mark.BackgroundColor3 = self.Options.Theme[logo == false and "Accent" or "Raised"]
     if logo == false then return end
-    if logo ~= "Avatar" then self.MarkImage.Image = logo; self.MarkImage.Visible = true; return end
+    if logo ~= "Avatar" then self.MarkImage.Image = logo; self:_SetPartVisible("MarkImage", true); return end
     self._avatarThread = task.defer(function()
         local ok, content = pcall(function()
             return Players:GetUserThumbnailAsync(Players.LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
         end)
         if self.Destroyed or generation ~= self._logoGeneration then return end
         self._avatarThread = nil
-        if ok then self.MarkImage.Image = content; self.MarkImage.Visible = true
-        else self.MarkLabel.Visible = true end
+        if ok then self.MarkImage.Image = content; self:_SetPartVisible("MarkImage", true)
+        else self:_SetPartVisible("MarkText", true) end
     end)
 end
 
@@ -358,10 +514,10 @@ function KeyGate:CopyDiscordLink()
     self._copyBusy = false
     if ok and result ~= false then
         self._manualLinkVisible = false
-        self.DiscordLink.Visible = false
+        self:_SetPartVisible("DiscordLink", false)
         self.DiscordStatus.Text = config.CopiedText
         self.DiscordStatus.TextColor3 = self.Options.Theme.Success
-        self.DiscordStatus.Visible = true
+        self:_SetPartVisible("DiscordStatus", true)
         self._discordCopyKind = "success"
         self:_Layout()
         return true
@@ -369,10 +525,10 @@ function KeyGate:CopyDiscordLink()
 
     self._manualLinkVisible = true
     self.DiscordLink.Text = config.Url
-    self.DiscordLink.Visible = true
+    self:_SetPartVisible("DiscordLink", true)
     self.DiscordStatus.Text = "Select and copy the link below."
     self.DiscordStatus.TextColor3 = self.Options.Theme.Muted
-    self.DiscordStatus.Visible = true
+    self:_SetPartVisible("DiscordStatus", true)
     self._discordCopyKind = "manual"
     self:_Layout()
     self:_RevealDiscordLink()
@@ -392,7 +548,7 @@ function KeyGate:GetKey()
     self.GetKeyButton.Active = false
     self.KeyLinkStatus.Text = type(config) == "function" and "Running key action..." or "Copying key link..."
     self.KeyLinkStatus.TextColor3 = self.Options.Theme.Muted
-    self.KeyLinkStatus.Visible = true
+    self:_SetPartVisible("KeyLinkStatus", true)
     self:_Layout()
     local ok, result
     local unavailable = false
@@ -412,10 +568,10 @@ function KeyGate:GetKey()
     self.GetKeyButton.Active = true
     if ok and result ~= false then
         self._manualKeyLinkVisible = false
-        self.KeyLink.Visible = false
+        self:_SetPartVisible("KeyLink", false)
         self.KeyLinkStatus.Text = type(config) == "function" and "Key action completed." or "Link copied. Open it in your browser."
         self.KeyLinkStatus.TextColor3 = self.Options.Theme.Success
-        self.KeyLinkStatus.Visible = true
+        self:_SetPartVisible("KeyLinkStatus", true)
         self._getKeyStatusKind = "success"
         self:_Layout()
         return true
@@ -424,20 +580,20 @@ function KeyGate:GetKey()
     if type(config) ~= "function" then
         self._manualKeyLinkVisible = true
         self.KeyLink.Text = config.Url
-        self.KeyLink.Visible = true
+        self:_SetPartVisible("KeyLink", true)
         self.KeyLinkStatus.Text = "Select and copy the link below."
         self._getKeyStatusKind = "manual"
         self:_Layout()
         self:_RevealKeyLink()
     else
         self._manualKeyLinkVisible = false
-        self.KeyLink.Visible = false
+        self:_SetPartVisible("KeyLink", false)
         self.KeyLinkStatus.Text = "Key action failed."
         self._getKeyStatusKind = "error"
         self:_Layout()
     end
     self.KeyLinkStatus.TextColor3 = self._getKeyStatusKind == "error" and self.Options.Theme.Danger or self.Options.Theme.Muted
-    self.KeyLinkStatus.Visible = true
+    self:_SetPartVisible("KeyLinkStatus", true)
     local reason = unavailable and "Clipboard unavailable" or (ok and "Get key callback declined" or "Get key action failed")
     return false, reason
 end
@@ -452,6 +608,7 @@ function KeyGate:Update(changes)
     if self.Busy then return false, "Validation is in progress" end
     if self.Completed then return false, "Gate has completed" end
     if type(changes) ~= "table" then return false, "Update options must be a table" end
+    if changes.Design ~= nil then return false, "Design is constructor-only; update Theme, Style or key options directly" end
 
     local merged = table.clone(self.Options)
     for key, value in pairs(changes) do
@@ -500,6 +657,8 @@ function KeyGate:Update(changes)
     end
     self.Options = valid
     self.Gui.DisplayOrder = valid.DisplayOrder
+    self.Backdrop.BackgroundTransparency = valid.BackgroundTransparency
+    self.Card.BackgroundTransparency = valid.CardTransparency
     self.Title.Text = valid.Title
     self.Subtitle.Text = valid.Subtitle
     self.Input.PlaceholderText = valid.Placeholder
@@ -517,44 +676,55 @@ function KeyGate:Update(changes)
         self._discordCopyKind = nil
         self._manualLinkVisible = false
     end
-    self.DiscordButton.Visible = type(discord) == "table"
+    self:_SetPartVisible("DiscordButton", type(discord) == "table")
     self.DiscordLabel.Text = type(discord) == "table" and discord.Text or ""
     self.DiscordButton.BackgroundColor3 = type(discord) == "table" and discord.Color or Color3.fromRGB(88, 101, 242)
     self.DiscordLink.Text = type(discord) == "table" and discord.Url or ""
-    self.DiscordLink.Visible = type(discord) == "table" and self._manualLinkVisible == true
+    self:_SetPartVisible("DiscordLink", type(discord) == "table" and self._manualLinkVisible == true)
     self.DiscordImage.Visible = type(discord) == "table" and discord.Logo ~= nil
     self.DiscordImage.Image = type(discord) == "table" and discord.Logo or ""
     self.DiscordVector.Visible = type(discord) == "table" and discord.Logo == nil
-    self.DiscordStatus.Visible = type(discord) == "table" and self.DiscordStatus.Text ~= ""
+    self:_SetPartVisible("DiscordStatus", type(discord) == "table" and self.DiscordStatus.Text ~= "")
 
     local getKey = valid.GetKey
     if not same_get_key(previousGetKey, getKey) then
         self.KeyLinkStatus.Text = ""
-        self.KeyLinkStatus.Visible = false
-        self.KeyLink.Visible = false
+        self:_SetPartVisible("KeyLinkStatus", false)
+        self:_SetPartVisible("KeyLink", false)
         self._manualKeyLinkVisible = false
         self._getKeyStatusKind = nil
     end
-    self.GetKeyButton.Visible = getKey ~= nil and getKey ~= false
-    self.GetKeyButton.Active = self.GetKeyButton.Visible
+    self:_SetPartVisible("GetKeyButton", getKey ~= nil and getKey ~= false)
+    self.GetKeyButton.Active = getKey ~= nil and getKey ~= false
     self.GetKeyLabel.Text = type(getKey) == "table" and getKey.Text or "Get key"
     self.KeyLink.Text = type(getKey) == "table" and getKey.Url or ""
-    self.KeyLink.Visible = self.GetKeyButton.Visible and self._manualKeyLinkVisible == true
-    self.KeyLinkStatus.Visible = self.GetKeyButton.Visible and self.KeyLinkStatus.Text ~= ""
+    self:_SetPartVisible("KeyLink", self.GetKeyButton.Visible and self._manualKeyLinkVisible == true)
+    self:_SetPartVisible("KeyLinkStatus", self.GetKeyButton.Visible and self.KeyLinkStatus.Text ~= "")
 
     local theme, style = valid.Theme, valid.Style
     self.Card.BackgroundColor3 = theme.Background
     self.Card:FindFirstChildOfClass("UIStroke").Color = theme.Border
     self.Edge.BackgroundColor3 = theme.Accent
+    self.EdgeGradient.Color = accent_glow(theme)
     self.Mark.BackgroundColor3 = theme[valid.Logo == false and "Accent" or "Raised"]
+    self.MarkStroke.Color = theme.Border
     self.MarkLabel.TextColor3 = theme[valid.Logo == false and "AccentText" or "Text"]
     self.Title.TextColor3 = theme.Text
     self.Subtitle.TextColor3 = theme.Muted
-    self.KeyLabel.TextColor3 = theme.Muted
+    self.KeyLabel.TextColor3 = theme.Text
     self.Input.BackgroundColor3 = theme.Raised
     self.Input.TextColor3 = theme.Text
     self.Input.PlaceholderColor3 = theme.Muted
-    self.Input:FindFirstChildOfClass("UIStroke").Color = theme.Border
+    self.HeaderRule.BackgroundColor3 = theme.Border
+    self.CredentialWell.BackgroundColor3 = theme.Surface
+    self.CredentialWell.BackgroundTransparency = .12
+    self.CredentialWellStroke.Color = theme.Border
+    self.CredentialWellStroke.Transparency = .2
+    self.StatusPanel.BackgroundColor3 = theme.Surface
+    local statusTone = theme[self._statusKind == "success" and "Success" or self._statusKind == "error" and "Danger" or "Muted"]
+    self.StatusPanelStroke.Color = self.StatusPanel.Visible and statusTone or theme.Border
+    self.StatusDot.BackgroundColor3 = statusTone
+    self:_ApplyInputFocus(UIS:GetFocusedTextBox() == self.Input)
     self.StatusLabel.TextColor3 = theme[self._statusKind == "success" and "Success" or self._statusKind == "error" and "Danger" or "Muted"]
     self.CancelButton.BackgroundColor3 = theme.Surface
     self.CancelButton.TextColor3 = theme.Text
@@ -615,6 +785,8 @@ function KeyGate:Update(changes)
     self.KeyLink.Font = style.Font
     self.KeyLink.TextSize = style.TextSize
     set_corner(self.Card, style.WindowRadius)
+    set_corner(self.CredentialWell, style.ControlRadius)
+    set_corner(self.StatusPanel, style.ControlRadius)
     for _, instance in ipairs({self.Mark, self.MarkImage, self.Input, self.CancelButton, self.SubmitButton, self.DiscordButton, self.DiscordLink, self.GetKeyButton, self.KeyLink}) do
         set_corner(instance, style.ControlRadius)
     end
@@ -630,6 +802,20 @@ function KeyGate:_Viewport()
         size = Vector2.new(size.X, math.max(1, math.min(size.Y, UIS.OnScreenKeyboardPosition.Y - origin)))
     end
     return size
+end
+
+function KeyGate:_ApplyInputFocus(focused)
+    if self.Destroyed or not self.Input or not self.InputStroke then return end
+    self._inputFocused = focused == true
+    local fill = self._inputFocused and self.Options.Theme.Surface or self.Options.Theme.Raised
+    local border = self._inputFocused and self.Options.Theme.Accent or self.Options.Theme.Border
+    local transparency = self._inputFocused and .05 or .28
+    self:_PlayMotion("input-fill", self.Input, .12, {BackgroundColor3 = fill})
+    self:_PlayMotion("input-border", self.InputStroke, .12, {
+        Color = border,
+        Transparency = transparency,
+        Thickness = self._inputFocused and 1.5 or 1,
+    })
 end
 
 function KeyGate:_RevealInput()
@@ -675,6 +861,7 @@ end
 
 function KeyGate:_Layout()
     if self.Destroyed or not self.Backdrop then return end
+    self:_ApplyPartLayouts()
     local viewport = self:_Viewport()
     local width = math.max(1, math.min(self.Options.Width, viewport.X - 24))
     local height = math.max(1, math.min(self.Options.Height, viewport.Y - 24))
@@ -713,14 +900,14 @@ function KeyGate:_Layout()
     self.SubmitButton.Position = UDim2.fromOffset(28, actionsY)
     if hasGetKey then
         self.SubmitButton.Size = UDim2.fromOffset(innerWidth, 48)
-        self.GetKeyButton.Position = UDim2.fromOffset(28, actionsY + 60)
-        self.GetKeyButton.Size = UDim2.fromOffset(math.max(1, innerWidth - cancelWidth - actionGap), 46)
+        self.GetKeyButton.Position = UDim2.fromOffset(28, actionsY + 56)
+        self.GetKeyButton.Size = UDim2.fromOffset(math.max(1, innerWidth - cancelWidth - actionGap), 44)
         self.GetKeyIcon.Position = UDim2.fromOffset(14, 14)
         self.GetKeyLabel.Position = UDim2.fromOffset(40, 0)
         self.GetKeyLabel.Size = UDim2.new(1, -48, 1, 0)
-        self.CancelButton.Position = UDim2.fromOffset(28 + self.GetKeyButton.Size.X.Offset + actionGap, actionsY + 60)
-        self.CancelButton.Size = UDim2.fromOffset(cancelWidth, 46)
-        self.KeyLinkStatus.Position = UDim2.fromOffset(28, actionsY + 114)
+        self.CancelButton.Position = UDim2.fromOffset(28 + self.GetKeyButton.Size.X.Offset + actionGap, actionsY + 56)
+        self.CancelButton.Size = UDim2.fromOffset(cancelWidth, 44)
+        self.KeyLinkStatus.Position = UDim2.fromOffset(28, actionsY + 108)
         self.KeyLinkStatus.Size = UDim2.new(1, -56, 0, 18)
         self.KeyLink.Position = UDim2.fromOffset(28, actionsY + 136)
         self.KeyLink.Size = UDim2.new(1, -56, 0, 40)
@@ -742,8 +929,14 @@ function KeyGate:_Layout()
     self.KeyIcon.Position = UDim2.fromOffset(28, 135 + layoutOffset)
     self.Input.Position = UDim2.fromOffset(28, inputY)
     self.Input.Size = UDim2.new(1, -56, 0, 48)
+    local credentialTop = math.max(122, self.KeyLabel.Position.Y.Offset - 10)
+    local credentialBottom = self.Input.Position.Y.Offset + self.Input.Size.Y.Offset + 8
+    self.CredentialWell.Position = UDim2.fromOffset(18, credentialTop)
+    self.CredentialWell.Size = UDim2.new(1, -36, 0, credentialBottom - credentialTop)
     self.StatusLabel.Position = UDim2.fromOffset(28, statusY)
     self.StatusLabel.Size = UDim2.new(1, -56, 0, 20)
+    self.StatusPanel.Position = UDim2.fromOffset(22, statusY - 3)
+    self.StatusPanel.Size = UDim2.new(1, -44, 0, 26)
     self.DiscordButton.Position = UDim2.fromOffset(28, discordY)
     self.DiscordButton.Size = UDim2.new(1, -56, 0, 46)
     self.DiscordIcon.Position = UDim2.fromOffset(14, 12)
@@ -767,8 +960,33 @@ function KeyGate:_Layout()
     contentHeight = math.max(contentHeight, requiredBottom + 28)
     self.Content.Size = UDim2.new(1, -8, 0, contentHeight)
     self.Scroll.CanvasSize = UDim2.fromOffset(0, contentHeight)
-    self.KeyIcon.Visible = self.KeyLabel.Visible
+    self:_SetPartVisible("KeyIcon", self.KeyLabel.Visible)
     if UIS:GetFocusedTextBox() == self.Input then self:_RevealInput() end
+    self:_ApplyPartLayouts()
+
+    self:_LayoutStatusSurface()
+
+    local expandedHeight = contentHeight
+    local parts = self:GetParts()
+    for name in pairs(keyLayoutParts) do
+        local part = parts[name]
+        if part and part.Parent == self.Content and part.Visible then
+            local positionY, sizeY, anchorY = part.Position.Y, part.Size.Y, part.AnchorPoint.Y
+            local scale = positionY.Scale + (1 - anchorY) * sizeY.Scale
+            local offset = positionY.Offset + (1 - anchorY) * sizeY.Offset + 28
+            if Logic.finite(scale) and Logic.finite(offset) and scale < 1 then
+                local needed = offset / (1 - scale)
+                if Logic.finite(needed) then expandedHeight = math.max(expandedHeight, math.ceil(needed)) end
+            end
+        end
+    end
+    if expandedHeight > contentHeight then
+        local contentSizeOverride = self._partLayouts.Content and self._partLayouts.Content.Size
+        if contentSizeOverride == nil then self.Content.Size = UDim2.new(1, -8, 0, expandedHeight) end
+        self.Scroll.CanvasSize = UDim2.fromOffset(0, expandedHeight)
+    end
+    self:_ApplyPartLayouts()
+    self:_LayoutStatusSurface()
 end
 
 function KeyGate:_WatchCamera()
@@ -859,7 +1077,7 @@ function KeyGate:Cancel()
         self.GetKeyButton.Active = self.GetKeyButton.Visible
         self.KeyLinkStatus.Text = "Get key action cancelled."
         self.KeyLinkStatus.TextColor3 = self.Options.Theme.Muted
-        self.KeyLinkStatus.Visible = self.GetKeyButton.Visible
+        self:_SetPartVisible("KeyLinkStatus", self.GetKeyButton.Visible)
         self._getKeyStatusKind = "manual"
     end
     local thread = self._thread
@@ -876,6 +1094,7 @@ end
 function KeyGate:Destroy()
     if self.Destroyed then return true end
     self.Destroyed = true
+    for key in pairs(self._visualTweens) do self:_CancelMotion(key) end
     self._generation += 1
     self._copyGeneration += 1
     self._copyBusy = false
@@ -899,6 +1118,7 @@ function KeyGate:Destroy()
 end
 
 function Library:CreateKeySystem(options)
+    options = resolve_design_options(options, "key")
     local automaticHeight = type(options) ~= "table" or options.Height == nil
     local valid = key_options(options)
     keyGateSerial += 1
@@ -914,6 +1134,9 @@ function Library:CreateKeySystem(options)
         _thread = nil,
         _callbackThreads = {},
         _connections = {},
+        _partLayouts = {},
+        _visualTweens = {},
+        _partLayoutDefaults = {},
         _manualLinkVisible = false,
         _discordCopyKind = nil,
         _copyGeneration = 0,
@@ -937,12 +1160,12 @@ function Library:CreateKeySystem(options)
     }, valid.Parent)
     gate.Backdrop = create("TextButton", {
         Name = "Backdrop", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(0, 0, 0),
-        BackgroundTransparency = .42, Active = true, Modal = true, Text = "", AutoButtonColor = false,
+        BackgroundTransparency = valid.BackgroundTransparency, Active = true, Modal = true, Text = "", AutoButtonColor = false,
     }, gate.Gui)
     gate.Card = create("Frame", {
         Name = "KeySystem", Size = UDim2.fromOffset(valid.Width, valid.Height),
         Position = valid.Position, AnchorPoint = valid.AnchorPoint,
-        BackgroundColor3 = theme.Background, BorderSizePixel = 0,
+        BackgroundColor3 = theme.Background, BackgroundTransparency = valid.CardTransparency, BorderSizePixel = 0,
     }, gate.Backdrop)
     corner(gate.Card, style.WindowRadius)
     gate.CardStroke = create("UIStroke", {Color = theme.Border, Thickness = 1, Transparency = .12}, gate.Card)
@@ -957,16 +1180,15 @@ function Library:CreateKeySystem(options)
     }, gate.Scroll)
     gate.Edge = create("Frame", {
         Name = "AccentEdge", Position = UDim2.fromOffset(20, 0), Size = UDim2.new(1, -40, 0, 1),
-        BackgroundColor3 = theme.Accent, BackgroundTransparency = .35,
+        BackgroundColor3 = theme.Accent, BackgroundTransparency = .5,
     }, gate.Content)
-    create("UIGradient", {
-        Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(.5, 0), NumberSequenceKeypoint.new(1, 1)}),
-    }, gate.Edge)
+    gate.EdgeGradient = create("UIGradient", {Color = accent_glow(theme), Rotation = 0}, gate.Edge)
     gate.Mark = create("Frame", {
         Name = "Mark", Position = UDim2.fromOffset(24, 24), Size = UDim2.fromOffset(42, 42),
         BackgroundColor3 = theme.Accent, BorderSizePixel = 0,
     }, gate.Content)
     corner(gate.Mark, style.ControlRadius)
+    gate.MarkStroke = create("UIStroke", {Color = theme.Border, Thickness = 1, Transparency = .18}, gate.Mark)
     gate.MarkLabel = create("TextLabel", {
         Name = "MarkText", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1),
         Text = valid.MarkText, Font = style.FontBold, TextSize = style.TitleSize,
@@ -988,13 +1210,24 @@ function Library:CreateKeySystem(options)
         TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top,
         TextWrapped = true,
     }, gate.Content)
+    gate.HeaderRule = create("Frame", {
+        Name = "HeaderRule", Position = UDim2.fromOffset(24, 120), Size = UDim2.new(1, -48, 0, 1),
+        BackgroundColor3 = theme.Border, BackgroundTransparency = .58, BorderSizePixel = 0,
+    }, gate.Content)
+    gate.CredentialWell = create("Frame", {
+        Name = "CredentialWell", Position = UDim2.fromOffset(18, 126), Size = UDim2.new(1, -36, 0, 146),
+        BackgroundColor3 = theme.Surface, BackgroundTransparency = .18, BorderSizePixel = 0,
+    }, gate.Content)
+    corner(gate.CredentialWell, style.ControlRadius)
+    gate.CredentialWell.BackgroundTransparency = .12
+    gate.CredentialWellStroke = create("UIStroke", {Color = theme.Border, Thickness = 1, Transparency = .2}, gate.CredentialWell)
     gate.KeyLabel = create("TextLabel", {
         Name = "KeyLabel", Position = UDim2.fromOffset(44, 92), Size = UDim2.new(1, -68, 0, 18),
         BackgroundTransparency = 1, Text = valid.InputLabel, Font = style.FontBold, TextSize = style.DescriptionSize,
-        TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = theme.Text, TextXAlignment = Enum.TextXAlignment.Left,
     }, gate.Content)
     gate.KeyIcon = create("Frame", {
-        Name = "KeyIcon", Position = UDim2.fromOffset(24, 95), Size = UDim2.fromOffset(14, 14),
+        Name = "KeyIcon", Position = UDim2.fromOffset(24, 94), Size = UDim2.fromOffset(16, 16),
         BackgroundTransparency = 1,
     }, gate.Content)
     local keyRing = create("Frame", {Position = UDim2.fromOffset(0, 1), Size = UDim2.fromOffset(8, 8), BackgroundTransparency = 1}, gate.KeyIcon)
@@ -1011,23 +1244,39 @@ function Library:CreateKeySystem(options)
     }, gate.Content)
     corner(gate.Input, style.ControlRadius)
     create("UIPadding", {PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12)}, gate.Input)
-    gate.InputStroke = create("UIStroke", {Color = theme.Border, Thickness = 1, Transparency = .35}, gate.Input)
+    gate.InputStroke = create("UIStroke", {Color = theme.Border, Thickness = 1, Transparency = .28}, gate.Input)
     gate.StatusLabel = create("TextLabel", {
-        Name = "Status", Position = UDim2.new(0, 24, 0, valid.Height - 82), Size = UDim2.new(1, -48, 0, 20),
+        Name = "Status", Position = UDim2.new(0, 34, 0, valid.Height - 79), Size = UDim2.new(1, -68, 0, 20),
         BackgroundTransparency = 1, Text = "", Font = style.Font, TextSize = style.DescriptionSize,
         TextColor3 = theme.Muted, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd,
     }, gate.Content)
+    gate.StatusPanel = create("Frame", {
+        Name = "StatusSurface", Position = UDim2.new(0, 28, 0, valid.Height - 82), Size = UDim2.new(1, -56, 0, 26),
+        BackgroundColor3 = theme.Surface, BackgroundTransparency = .32, BorderSizePixel = 0, Visible = false,
+    }, gate.Content)
+    corner(gate.StatusPanel, style.ControlRadius)
+    gate.StatusPanelStroke = create("UIStroke", {Color = theme.Border, Thickness = 1, Transparency = .32}, gate.StatusPanel)
+    gate.StatusDot = create("Frame", {
+        Name = "StatusIndicator", Position = UDim2.fromOffset(8, 10), Size = UDim2.fromOffset(6, 6),
+        BackgroundColor3 = theme.Muted, BorderSizePixel = 0, Visible = false,
+    }, gate.StatusPanel)
+    create("UICorner", {CornerRadius = UDim.new(1, 0)}, gate.StatusDot)
+    gate.StatusPanel.ZIndex = gate.StatusLabel.ZIndex
+    gate.StatusDot.ZIndex = gate.StatusPanel.ZIndex + 1
+    gate.StatusLabel.ZIndex = gate.StatusPanel.ZIndex + 1
     gate.CancelButton = create("TextButton", {
         Name = "Cancel", Position = UDim2.new(1, -198, 0, valid.Height - 60), Size = UDim2.fromOffset(78, 44),
         BackgroundColor3 = theme.Surface, Text = valid.CancelText, Font = style.FontBold,
-        TextSize = style.TextSize, TextColor3 = theme.Text, AutoButtonColor = false, Selectable = true,
+        TextSize = style.TextSize, TextColor3 = theme.Text, TextTruncate = Enum.TextTruncate.AtEnd,
+        AutoButtonColor = false, Selectable = true,
     }, gate.Content)
     corner(gate.CancelButton, style.ControlRadius)
     gate.CancelStroke = create("UIStroke", {Color = theme.Border, Thickness = 1, Transparency = .35}, gate.CancelButton)
     gate.SubmitButton = create("TextButton", {
         Name = "Verify", Position = UDim2.new(1, -110, 0, valid.Height - 60), Size = UDim2.fromOffset(86, 44),
         BackgroundColor3 = theme.Accent, Text = valid.SubmitText, Font = style.FontBold,
-        TextSize = style.TextSize, TextColor3 = theme.AccentText, AutoButtonColor = false, Selectable = true,
+        TextSize = style.TextSize, TextColor3 = theme.AccentText, TextTruncate = Enum.TextTruncate.AtEnd,
+        AutoButtonColor = false, Selectable = true,
     }, gate.Content)
     corner(gate.SubmitButton, style.ControlRadius)
     gate.DiscordButton = create("TextButton", {
@@ -1293,7 +1542,7 @@ function Library:CreateKeySystem(options)
         Name = "DiscordText", Position = UDim2.fromOffset(44, 0), Size = UDim2.new(1, -54, 1, 0),
         BackgroundTransparency = 1, Text = type(valid.Discord) == "table" and valid.Discord.Text or "",
         Font = style.FontBold, TextSize = style.TextSize, TextColor3 = Color3.new(1, 1, 1),
-        TextXAlignment = Enum.TextXAlignment.Center,
+        TextXAlignment = Enum.TextXAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd,
     }, gate.DiscordButton)
     gate.DiscordStatus = create("TextLabel", {
         Name = "DiscordStatus", Position = UDim2.fromOffset(24, valid.Height - 2), Size = UDim2.new(1, -48, 0, 18),
@@ -1325,7 +1574,7 @@ function Library:CreateKeySystem(options)
         Name = "GetKeyText", Position = UDim2.fromOffset(40, 0), Size = UDim2.new(1, -48, 1, 0),
         BackgroundTransparency = 1, Text = type(valid.GetKey) == "table" and valid.GetKey.Text or "Get key",
         Font = style.FontBold, TextSize = style.TextSize, TextColor3 = theme.Text,
-        TextXAlignment = Enum.TextXAlignment.Center,
+        TextXAlignment = Enum.TextXAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd,
     }, gate.GetKeyButton)
     gate.KeyLinkStatus = create("TextLabel", {
         Name = "KeyLinkStatus", Position = UDim2.fromOffset(24, valid.Height - 2), Size = UDim2.new(1, -48, 0, 18),
@@ -1365,7 +1614,11 @@ function Library:CreateKeySystem(options)
         end
     end)
     connect(gate.Input.Focused, function()
+        gate:_ApplyInputFocus(true)
         task.defer(function() if not gate.Destroyed then gate:_Layout(); gate:_RevealInput() end end)
+    end)
+    connect(gate.Input.FocusLost, function()
+        gate:_ApplyInputFocus(false)
     end)
     for _, property in ipairs({"OnScreenKeyboardVisible", "OnScreenKeyboardPosition", "OnScreenKeyboardSize"}) do
         connect(UIS:GetPropertyChangedSignal(property), function() gate:_Layout() end)

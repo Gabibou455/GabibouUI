@@ -11,8 +11,8 @@ navigation_for = function(options, base)
         assert(key == "Variant" or key == "IconVariant", "Unknown navigation option: " .. tostring(key))
         result[key] = value
     end
-    assert(result.Variant == "Classic" or result.Variant == "Soft" or result.Variant == "Pill",
-        "Navigation Variant must be Classic, Soft or Pill")
+    assert(result.Variant == "Classic" or result.Variant == "Soft" or result.Variant == "Pill" or result.Variant == "Rail",
+        "Navigation Variant must be Classic, Soft, Pill or Rail")
     assert(result.IconVariant == "Outline" or result.IconVariant == "Soft" or result.IconVariant == "Duotone",
         "Navigation IconVariant must be Outline, Soft or Duotone")
     return result
@@ -21,13 +21,17 @@ end
 local function navigationTween(window, instance, property, token, immediate)
     local previous = instance[property]
     local target = window.Theme[token]
+    local record = window._animationRecords and window._animationRecords[instance]
+    local activeGoal = record and record.Goals[property]
     window:_Color(instance, property, token)
+    instance[property] = previous
     if immediate then
-        if previous ~= target then window:_CancelAnimation(instance) end
+        if activeGoal ~= nil or previous ~= target then window:_CancelAnimation(instance) end
         instance[property] = target
     elseif previous ~= target then
-        instance[property] = previous
-        window:_Tween(instance, {[property] = target})
+        if activeGoal ~= target then window:_Tween(instance, {[property] = target}) end
+    elseif activeGoal ~= nil and activeGoal ~= target then
+        window:_CancelAnimation(instance)
     end
 end
 
@@ -35,34 +39,50 @@ local function navigationButtonState(window, button, token, transparency, immedi
     local previousColor = button.BackgroundColor3
     local previousTransparency = button.BackgroundTransparency
     local targetColor = window.Theme[token]
+    local record = window._animationRecords and window._animationRecords[button]
+    local activeColor = record and record.Goals.BackgroundColor3
+    local activeTransparency = record and record.Goals.BackgroundTransparency
 
     window:_Color(button, "BackgroundColor3", token)
+    button.BackgroundColor3 = previousColor
     if immediate then
-        if previousColor ~= targetColor or previousTransparency ~= transparency then
-            window:_CancelAnimation(button)
-        end
+        if record then window:_CancelAnimation(button) end
         button.BackgroundColor3 = targetColor
         button.BackgroundTransparency = transparency
-    elseif previousColor ~= targetColor or previousTransparency ~= transparency then
-        -- The window permits one active tween per instance. Animate both visual
-        -- properties together so a later alpha update cannot cancel the color.
-        button.BackgroundColor3 = previousColor
-        button.BackgroundTransparency = previousTransparency
-        window:_Tween(button, {
-            BackgroundColor3 = targetColor,
-            BackgroundTransparency = transparency,
-        })
+    else
+        local needsTween = previousColor ~= targetColor or previousTransparency ~= transparency
+        local conflictingGoal = record ~= nil and (
+            (activeColor ~= nil and activeColor ~= targetColor)
+            or (activeTransparency ~= nil and activeTransparency ~= transparency)
+        )
+        local colorSettled = previousColor == targetColor or activeColor == targetColor
+        local transparencySettled = previousTransparency == transparency or activeTransparency == transparency
+        if record and not conflictingGoal and colorSettled and transparencySettled then return end
+        if record and (needsTween or conflictingGoal) then window:_CancelAnimation(button) end
+        if needsTween then
+            -- The window permits one active tween per instance. Retarget both
+            -- properties together so neither can retain a stale destination.
+            button.BackgroundTransparency = previousTransparency
+            window:_Tween(button, {
+                BackgroundColor3 = targetColor,
+                BackgroundTransparency = transparency,
+            })
+        end
     end
 end
 
 local function navigationAlpha(window, instance, property, target, immediate)
     local previous = instance[property]
-    if previous == target then return end
+    local record = window._animationRecords and window._animationRecords[instance]
+    local activeGoal = record and record.Goals[property]
     if immediate then
-        window:_CancelAnimation(instance)
+        if record then window:_CancelAnimation(instance) end
         instance[property] = target
-    else
+    elseif previous ~= target and activeGoal ~= target then
+        if record then window:_CancelAnimation(instance) end
         window:_Tween(instance, {[property] = target})
+    elseif previous == target and activeGoal ~= nil and activeGoal ~= target then
+        window:_CancelAnimation(instance)
     end
 end
 
@@ -86,14 +106,35 @@ function Window:_MakeTabButton(tab, options)
     local stroke = self:_Stroke(button, "Border", 0.48)
     stroke.Enabled = false
 
+    local iconTile = create("Frame", {
+        Name = "IconTile",
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Size = UDim2.fromOffset(32, 32),
+        Position = UDim2.fromOffset(8, 6),
+    }, button)
+    self:_Rounded(iconTile, "ControlRadius")
+
+    local labelSurface = create("Frame", {
+        Name = "LabelSurface",
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, -56, 1, -8),
+        Position = UDim2.fromOffset(48, 4),
+    }, button)
+    self:_Rounded(labelSurface, "ControlRadius")
+
     -- Store the canonical name once; ID-based tabs then remain rebuildable if
     -- the registry later changes their numeric aliases.
     local iconName = Library:GetIconName(options.Icon)
     tab._iconVariantOverride = options.IconVariant
     local icon
     if iconName and Library._icons and type(Library._icons[iconName]) == "function" then
-        icon = Library:Icon(button, iconName, {
-            Size = 20,
+        icon = Library:Icon(iconTile, iconName, {
+            Size = 16,
+            Thickness = 1.5,
+            Position = UDim2.fromScale(0.5, 0.5),
+            AnchorPoint = Vector2.new(0.5, 0.5),
             Window = self,
             Token = "Muted",
             Variant = tab._iconVariantOverride or self.Navigation.IconVariant,
@@ -123,8 +164,39 @@ function Window:_MakeTabButton(tab, options)
     tab._indicator = indicator
     tab._stroke = stroke
     tab._icon = icon
+    tab._iconTile = iconTile
+    tab._labelSurface = labelSurface
     tab._iconName = iconName
     tab._hovered = false
+    tab._focused = false
+    tab._pressed = false
+    tab._pressedInput = nil
+
+    local function setPressed(value)
+        value = value == true
+        if tab.Destroyed or self.Destroyed or tab._pressed == value then return end
+        tab._pressed = value
+        self:_RefreshNavigation(false)
+    end
+
+    self:_Connect(button.InputBegan, function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            tab._pressedInput = input
+            setPressed(true)
+        end
+    end, tab)
+    self:_Connect(UIS.InputEnded, function(input)
+        local pressedInput = tab._pressedInput
+        if pressedInput and (input == pressedInput or
+            (pressedInput.UserInputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseButton1)) then
+            tab._pressedInput = nil
+            setPressed(false)
+        end
+    end, tab)
+    self:_Connect(UIS.WindowFocusReleased, function()
+        tab._pressedInput = nil
+        setPressed(false)
+    end, tab)
 
     self:_Connect(button.MouseEnter, function()
         tab._hovered = true
@@ -135,11 +207,11 @@ function Window:_MakeTabButton(tab, options)
         self:_RefreshNavigation(false)
     end, tab)
     self:_Connect(button.SelectionGained, function()
-        tab._hovered = true
+        tab._focused = true
         self:_RefreshNavigation(false)
     end, tab)
     self:_Connect(button.SelectionLost, function()
-        tab._hovered = false
+        tab._focused = false
         self:_RefreshNavigation(false)
     end, tab)
 
@@ -180,7 +252,10 @@ function Window:SetNavigation(options)
                 and (not tab._icon or tab._icon:GetAttribute("GabibouIconVariant") ~= desiredVariant) then
                 local icon = Library:Icon(stageRoot, tab._iconName, {
                     Name = "Icon",
-                    Size = 20,
+                    Size = 16,
+                    Thickness = 1.5,
+                    Position = UDim2.fromScale(0.5, 0.5),
+                    AnchorPoint = Vector2.new(0.5, 0.5),
                     Window = self,
                     Token = "Muted",
                     Variant = desiredVariant,
@@ -211,7 +286,7 @@ function Window:SetNavigation(options)
             self:_ForgetTree(previous)
             previous:Destroy()
         end
-        entry.Icon.Parent = tab._button
+        entry.Icon.Parent = tab._iconTile
         entry.Icon.Visible = true
         tab._icon = entry.Icon
     end
@@ -233,31 +308,85 @@ function Window:_LayoutNavigation(mobile)
         local button, label, icon, indicator = tab._button, tab._label, tab._icon, tab._indicator
         if button and button.Parent then
             local iconSize=tab.Layout.IconSize or self.Layout.TabIconSize
-            local iconWidth = icon and iconSize or 0
-            local labelLeft = icon and iconSize+24 or 14
+            local rail = self.Navigation and self.Navigation.Variant == "Rail"
             local buttonHeight=math.max(touchHeight,tab.Layout.Height or 0)
             local titleLength = utf8.len(tab.Title) or #tab.Title
+            -- A small, quiet track keeps the glyph secondary to its label.
+            -- Layout.IconSize remains the source of truth for custom sizes.
+            local tileSize=rail and math.clamp(buttonHeight-16,24,28) or 24
+            local iconWidth=icon and (rail and math.clamp(iconSize,12,tileSize-8) or iconSize) or 0
+            local labelLeft=icon and (rail and tileSize+20 or iconSize+20) or 14
+            local surfaceLeft=rail and math.max(6,labelLeft-8) or labelLeft-4
+            local surfaceRight=rail and 20 or 8
 
             if mobile then
                 local measuredTextWidth = titleLength * 8
-                local desiredWidth = labelLeft + measuredTextWidth + 12
-                local buttonWidth = tab.Layout.Width or math.clamp(desiredWidth,self.Layout.TabWidth,math.max(self.Layout.TabWidth,200))
-                local labelWidth = math.max(0, buttonWidth - labelLeft - 12)
+                local desiredWidth = labelLeft + measuredTextWidth + surfaceRight
+                local buttonWidth = tab.Layout.Width or math.clamp(desiredWidth,self.Layout.TabWidth,math.max(self.Layout.TabWidth,220))
+                local labelWidth = math.max(0, buttonWidth - labelLeft - surfaceRight)
                 button.Size = UDim2.fromOffset(buttonWidth, buttonHeight)
-                if icon then icon.Position = UDim2.new(0, 14, 0.5, -iconSize/2) end
+                if icon then
+                    tab._iconTile.Position = UDim2.new(0, 8, 0.5, -tileSize/2)
+                    tab._iconTile.Size = UDim2.fromOffset(tileSize, tileSize)
+                    if rail then
+                        icon.Position = UDim2.fromScale(0.5, 0.5)
+                        icon.AnchorPoint = Vector2.new(0.5, 0.5)
+                    else
+                        icon.Position = UDim2.new(0, 6, 0, tileSize/2-iconWidth/2)
+                        icon.AnchorPoint = Vector2.zero
+                    end
+                end
+                if rail then
+                    tab._labelSurface.Position = UDim2.new(0, surfaceLeft, 0, 4)
+                    tab._labelSurface.Size = UDim2.new(1, -surfaceLeft-8, 1, -8)
+                end
                 label.Position = UDim2.new(0, labelLeft, 0, 0)
                 label.Size = UDim2.new(0, labelWidth, 1, 0)
                 label.TextXAlignment = Enum.TextXAlignment.Left
-                indicator.Position = UDim2.new(0.5, -12, 1, -4)
-                indicator.Size = UDim2.fromOffset(24, 3)
+                if rail then
+                    if self.TabPlacement == "Bottom" then
+                        indicator.Position = UDim2.new(0.5, -10, 0, 2)
+                    else
+                        indicator.Position = UDim2.new(0.5, -10, 1, -2)
+                    end
+                    indicator.Size = UDim2.fromOffset(20, 2)
+                else
+                    indicator.Position = UDim2.new(0.5, -10, 1, -2)
+                    indicator.Size = UDim2.fromOffset(20, 2)
+                end
             else
-                button.Size = UDim2.new(1, -4, 0, buttonHeight)
-                if icon then icon.Position = UDim2.new(0, 14, 0.5, -iconSize/2) end
+                -- Keep a deliberate gutter around the rail instead of letting
+                -- every selected page read as a full-width card.
+                button.Size = UDim2.new(1, -12, 0, buttonHeight)
+                if icon then
+                    tab._iconTile.Position = UDim2.new(0, 8, 0.5, -tileSize/2)
+                    tab._iconTile.Size = UDim2.fromOffset(tileSize, tileSize)
+                    if rail then
+                        icon.Position = UDim2.fromScale(0.5, 0.5)
+                        icon.AnchorPoint = Vector2.new(0.5, 0.5)
+                    else
+                        icon.Position = UDim2.new(0, 6, 0, tileSize/2-iconWidth/2)
+                        icon.AnchorPoint = Vector2.zero
+                    end
+                end
+                if rail then
+                    tab._labelSurface.Position = UDim2.new(0, surfaceLeft, 0, 4)
+                    tab._labelSurface.Size = UDim2.new(1, -surfaceLeft-8, 1, -8)
+                end
                 label.Position = UDim2.new(0, labelLeft, 0, 0)
-                label.Size = UDim2.new(1, -labelLeft - 12, 1, 0)
+                label.Size = UDim2.new(1, -labelLeft - surfaceRight, 1, 0)
                 label.TextXAlignment = Enum.TextXAlignment.Left
-                indicator.Position = UDim2.new(0, 2, 0.5, -10)
-                indicator.Size = UDim2.fromOffset(3, 20)
+                if rail then
+                    if self.TabPlacement == "Right" then
+                        indicator.Position = UDim2.new(0, 3, 0.5, -7)
+                    else
+                        indicator.Position = UDim2.new(1, -15, 0.5, -7)
+                    end
+                    indicator.Size = UDim2.fromOffset(2, 14)
+                else
+                    indicator.Position = UDim2.new(0, 3, 0.5, -9)
+                    indicator.Size = UDim2.fromOffset(2, 18)
+                end
             end
 
             if icon then icon.Size = UDim2.fromOffset(iconWidth, iconWidth) end
@@ -279,26 +408,50 @@ function Window:_RefreshNavigation(immediate)
         if button and button.Parent then
             local variant = self.Navigation and self.Navigation.Variant or "Classic"
             local selected = tab == self.CurrentTab
-            local hovered = tab._hovered == true and not selected
-            local pillSelected = variant == "Pill" and selected
-            local backgroundToken = pillSelected and "Accent" or (selected and "Raised" or (hovered and "Hover" or "Surface"))
-            local textToken = pillSelected and "AccentText" or ((selected or hovered) and "Text" or "Muted")
+            local hovered = (tab._hovered == true or tab._focused == true) and not selected
+            local railPressed = variant == "Rail" and tab._pressed == true
+            local contrastSelected = selected and variant == "Pill"
+            local backgroundToken = contrastSelected and "Accent" or (selected and "Raised" or (hovered and "Hover" or "Surface"))
+            local textToken = contrastSelected and "AccentText" or ((selected or hovered or railPressed) and "Text" or "Muted")
+            local iconToken = variant == "Rail" and (selected or railPressed) and "Text" or textToken
             -- Keep the rail quiet at rest. Selection remains easy to find from
             -- the raised surface, label weight, icon tint, and slim indicator.
-            local alpha = selected and 0 or (variant == "Soft" and (hovered and 0.48 or 0.84) or (hovered and 0 or 1))
+            local alpha = variant == "Rail" and 1 or (variant == "Pill" and 0 or
+                ((selected or hovered) and (selected and 0.46 or 0.78) or 1))
 
             navigationButtonState(self, button, backgroundToken, alpha, immediate)
+            local labelSurfaceToken = (selected or railPressed) and "Raised" or (hovered and "Hover" or "Surface")
+            local labelSurfaceAlpha = railPressed and 0.34 or (selected and 0.58 or (hovered and 0.78 or 1))
+            navigationButtonState(self, tab._labelSurface, labelSurfaceToken,
+                variant == "Rail" and labelSurfaceAlpha or 1, immediate)
+            local iconTileToken = (selected or railPressed or hovered) and "Raised" or "Surface"
+            local iconTileAlpha = not tab._icon and 1 or (selected and 0.58 or (railPressed and 0.34 or (hovered and 0.72 or 1)))
+            navigationButtonState(self, tab._iconTile, iconTileToken,
+                variant == "Rail" and iconTileAlpha or 1, immediate)
             navigationTween(self, tab._label, "TextColor3", textToken, immediate)
             self:_Style(tab._label, "Font", (selected or hovered) and "FontBold" or "Font")
             self:_Style(tab._label, "TextSize", "TextSize")
 
-            tab._stroke.Enabled = variant == "Soft" and (selected or hovered) or variant == "Classic" and selected
-            tab._stroke.Transparency = selected and 0.42 or (hovered and 0.55 or 0.68)
+            tab._stroke.Enabled = variant == "Soft" and (hovered or selected) or variant == "Classic" and selected
+            tab._stroke.Transparency = selected and 0.66 or (hovered and 0.76 or 0.84)
             tab._indicator.Visible = variant ~= "Pill"
-            local indicatorVisible = selected or (variant == "Soft" and hovered)
-            navigationAlpha(self, tab._indicator, "BackgroundTransparency", selected and 0 or (indicatorVisible and 0.42 or 1), immediate)
-            tab._indicator.Position = mobile and UDim2.new(0.5, -12, 1, -4) or UDim2.new(0, 2, 0.5, -10)
-            tab._indicator.Size = mobile and UDim2.fromOffset(24, 3) or UDim2.fromOffset(3, 20)
+            local indicatorVisible = selected or railPressed or ((variant == "Soft" or variant == "Rail") and hovered)
+            navigationAlpha(self, tab._indicator, "BackgroundTransparency", (selected or railPressed) and 0 or (indicatorVisible and 0.42 or 1), immediate)
+            self:_Color(tab._indicator, "BackgroundColor3", selected and contrastSelected and "AccentText" or "Accent")
+            if variant == "Rail" then
+                if mobile then
+                    tab._indicator.Position = self.TabPlacement == "Bottom"
+                        and UDim2.new(0.5, -10, 0, 2) or UDim2.new(0.5, -10, 1, -2)
+                    tab._indicator.Size = UDim2.fromOffset(20, 2)
+                else
+                    tab._indicator.Position = self.TabPlacement == "Right"
+                        and UDim2.new(0, 3, 0.5, -7) or UDim2.new(1, -15, 0.5, -7)
+                    tab._indicator.Size = UDim2.fromOffset(2, 14)
+                end
+            else
+                tab._indicator.Position = mobile and UDim2.new(0.5, -10, 1, -2) or UDim2.new(0, 3, 0.5, -9)
+                tab._indicator.Size = mobile and UDim2.fromOffset(20, 2) or UDim2.fromOffset(2, 18)
+            end
 
             local icon = tab._icon
             if icon then
@@ -308,11 +461,11 @@ function Window:_RefreshNavigation(immediate)
                     if descendant:GetAttribute("GabibouIconPrimitive") == true then
                         hasMarkedPrimitive = true
                         if descendant.BackgroundTransparency < 1 then
-                            navigationTween(self, descendant, "BackgroundColor3", textToken, immediate)
+                            navigationTween(self, descendant, "BackgroundColor3", iconToken, immediate)
                         end
                         for _, primitiveChild in ipairs(descendant:GetChildren()) do
                             if primitiveChild:IsA("UIStroke") then
-                                navigationTween(self, primitiveChild, "Color", textToken, immediate)
+                                navigationTween(self, primitiveChild, "Color", iconToken, immediate)
                             end
                         end
                     end
@@ -322,9 +475,9 @@ function Window:_RefreshNavigation(immediate)
                 if not hasMarkedPrimitive then
                     for _, descendant in ipairs(descendants) do
                         if descendant:IsA("UIStroke") then
-                            navigationTween(self, descendant, "Color", textToken, immediate)
+                            navigationTween(self, descendant, "Color", iconToken, immediate)
                         elseif descendant:IsA("GuiObject") and descendant.BackgroundTransparency < 1 then
-                            navigationTween(self, descendant, "BackgroundColor3", textToken, immediate)
+                            navigationTween(self, descendant, "BackgroundColor3", iconToken, immediate)
                         end
                     end
                 end

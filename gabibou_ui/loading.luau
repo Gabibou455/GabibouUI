@@ -20,8 +20,17 @@ local function merge_theme(value,base)
     end
     return theme_for(value)
 end
+local function accent_glow(theme)
+    local highlight=theme.Accent:Lerp(theme.Text,.18)
+    return ColorSequence.new({
+        ColorSequenceKeypoint.new(0,theme.Accent),
+        ColorSequenceKeypoint.new(.5,highlight),
+        ColorSequenceKeypoint.new(1,theme.Accent),
+    })
+end
 local function loader_options(options,base)
     assert(options==nil or type(options)=="table","Loading must be a table")
+    options=resolve_design_options(options,"loader")
     local result=copy_options(base)
     for key,value in pairs(options or {})do result[key]=value end
     local player=Players.LocalPlayer;assert(player,"Loader runs on a Roblox client")
@@ -39,13 +48,14 @@ local function loader_options(options,base)
     result.Position=result.Position or UDim2.fromScale(.5,.5)
     result.AnchorPoint=result.AnchorPoint or Vector2.new(.5,.5)
     result.Padding=result.Padding or 24
-    result.LogoSize=result.LogoSize or 46
+    result.LogoSize=result.LogoSize or 56
     result.ShowPercentage=result.ShowPercentage==nil and true or result.ShowPercentage
     result.ShowLogo=result.ShowLogo==nil and true or result.ShowLogo
     result.ShowActivity=result.ShowActivity==nil and true or result.ShowActivity
     result.ShowSubtitle=result.ShowSubtitle==nil and true or result.ShowSubtitle
     result.ProgressHeight=result.ProgressHeight or 4
     result.BackgroundTransparency=result.BackgroundTransparency==nil and .3 or result.BackgroundTransparency
+    result.CardTransparency=result.CardTransparency==nil and .1 or result.CardTransparency
     result.MinimumDuration=result.MinimumDuration or 0
     result.ExitDuration=result.ExitDuration==nil and .18 or result.ExitDuration
     result.DisplayOrder=result.DisplayOrder or 100
@@ -56,6 +66,7 @@ local function loader_options(options,base)
     assert(Logic.finite(result.Padding) and result.Padding>=12 and result.Padding<=40,"Padding must be 12..40")
     assert(Logic.finite(result.LogoSize) and result.LogoSize>=24 and result.LogoSize<=80,"LogoSize must be 24..80")
     assert(Logic.finite(result.BackgroundTransparency) and result.BackgroundTransparency>=0 and result.BackgroundTransparency<=1,"BackgroundTransparency must be 0..1")
+    assert(Logic.finite(result.CardTransparency) and result.CardTransparency>=0 and result.CardTransparency<=1,"CardTransparency must be 0..1")
     for _,key in ipairs({"ShowPercentage","ShowLogo","ShowActivity","ShowSubtitle"})do assert(type(result[key])=="boolean",key.." must be boolean")end
     assert(Logic.finite(result.ProgressHeight) and result.ProgressHeight>=2 and result.ProgressHeight<=12,"ProgressHeight must be 2..12")
     assert(Logic.finite(result.MinimumDuration) and result.MinimumDuration>=0 and result.MinimumDuration<=10,"MinimumDuration must be 0..10 seconds")
@@ -85,11 +96,18 @@ function Loader:_Layout()
     self.Card.AnchorPoint=anchor
     self.Card.Position=UDim2.fromOffset(left+anchor.X*width,top+anchor.Y*height)
     local p=math.min(self.Options.Padding,math.max(0,(width-80)/2));local logo=self.Options.LogoSize
-    local compact=height<math.max(180,logo+2*p+60)
-    if compact then p=math.min(p,math.max(12,(height-120)/2))end
-    local centered=self.Options.Variant=="Centered" and height>=260
     local minimal=self.Options.Variant=="Minimal"
+    local canShowMark=self.Options.ShowLogo and not minimal and width>=2*p+logo+96
+    local compact=height<math.max(180,(canShowMark and logo or 0)+2*p+60)
+    if compact then p=math.min(p,math.max(12,(height-120)/2))end
+    local footerY=math.max(p,height-p-44)
+    local centered=self.Options.Variant=="Centered" and height>=260
     local showMark=self.Options.ShowLogo and not compact and not minimal and width>=2*p+logo+96
+    if centered and showMark then
+        local candidateTextTop=p+logo+14
+        local candidateHeaderBottom=candidateTextTop+(self.Options.ShowSubtitle and 70 or 26)
+        if candidateHeaderBottom>footerY-12 then showMark=false end
+    end
     if showMark then p=math.min(p,math.max(0,(width-logo-96)/2))end
     self.Mark.Visible=showMark
     self.Mark.AnchorPoint=Vector2.zero
@@ -107,13 +125,18 @@ function Loader:_Layout()
         self.Subtitle.Size=UDim2.new(1,-2*p,0,38)
     end
     if showMark then self.Mark.Position=UDim2.fromOffset(centered and (width-logo)/2 or p,p);self.Mark.Size=UDim2.fromOffset(logo,logo) end
-    self.Edge.Position=UDim2.fromOffset(p,0);self.Edge.Size=UDim2.new(1,-2*p,0,1)
-    local statusHeight=20;local footerY=math.max(p,height-p-44)
+    local edgeWidth=centered and 56 or 36
+    self.Edge.Position=UDim2.fromOffset(centered and (width-edgeWidth)/2 or p,0);self.Edge.Size=UDim2.fromOffset(edgeWidth,2)
+    local statusHeight=20
     self.Percent.Visible=self.Options.ShowPercentage and height>=130 and width>=2*p+120
     self.StatusLabel.Visible=height>=130
-    self.StatusLabel.Position=UDim2.fromOffset(p,footerY);self.StatusLabel.Size=UDim2.new(1,-(2*p+(self.Percent.Visible and 68 or 0)),0,statusHeight)
+    self.StatusIndicator.Visible=self.StatusLabel.Visible
+    self.StatusIndicator.Position=UDim2.fromOffset(p+2,footerY+7);self.StatusIndicator.Size=UDim2.fromOffset(6,6)
+    self.StatusLabel.Position=UDim2.fromOffset(p+14,footerY);self.StatusLabel.Size=UDim2.new(1,-(2*p+14+(self.Percent.Visible and 68 or 0)),0,statusHeight)
     self.Percent.Position=UDim2.new(1,-(p+52),0,footerY);self.Percent.Size=UDim2.fromOffset(52,statusHeight)
     self.Track.Position=UDim2.new(0,p,1,-(p+self.Options.ProgressHeight));self.Track.Size=UDim2.new(1,-2*p,0,self.Options.ProgressHeight)
+    self.StatusPanel.Position=UDim2.fromOffset(p-12,footerY-8)
+    self.StatusPanel.Size=UDim2.new(1,-2*(p-12),0,60)
     local contentTop=textTop+(self.Subtitle.Visible and 76 or 34)
     self.Content.Position=UDim2.fromOffset(p,contentTop)
     self.Content.Size=UDim2.new(1,-2*p,0,math.max(0,footerY-contentTop-12))
@@ -126,10 +149,10 @@ end
 function Loader:GetParts()
     if self.Destroyed then return nil end
     return {Overlay=self.Root,Card=self.Card,Logo=self.Mark,LogoImage=self.MarkImage,LogoText=self.MarkTextLabel,
-        Title=self.Title,Subtitle=self.Subtitle,Status=self.StatusLabel,Percentage=self.Percent,Track=self.Track,
+        Title=self.Title,Subtitle=self.Subtitle,StatusPanel=self.StatusPanel,Status=self.StatusLabel,StatusIndicator=self.StatusIndicator,Percentage=self.Percent,Track=self.Track,
         Fill=self.Fill,Activity=self.Activity,Content=self.Content}
 end
-local loaderLayoutParts={Logo=true,Title=true,Subtitle=true,Status=true,Percentage=true,Track=true,Content=true}
+local loaderLayoutParts={Logo=true,Title=true,Subtitle=true,StatusPanel=true,Status=true,StatusIndicator=true,Percentage=true,Track=true,Content=true}
 function Loader:SetPartLayout(name,options)
     assert(not self.Destroyed and not self.Completed,"Loader is closed or completing")
     assert(loaderLayoutParts[name],"Unknown or fixed loader layout part")
@@ -170,6 +193,56 @@ function Loader:SetStatus(text)
     assert(not self.Destroyed and not self.Completed,"Loader is closed or completing")
     self.Status=loader_text(text,"",160);self.StatusLabel.Text=self.Status
     return self
+end
+function Loader:_CancelEntrance()
+    for _, record in ipairs(self._entranceTweens) do
+        if record.Connection then record.Connection:Disconnect() end
+        pcall(function() record.Tween:Cancel() end)
+    end
+    table.clear(self._entranceTweens)
+end
+function Loader:_FinishEntrance()
+    self:_CancelEntrance()
+    self.Border.Transparency = .15
+    self.Edge.BackgroundTransparency = .5
+    self.MarkStroke.Transparency = .18
+    self.StatusPanel.BackgroundTransparency = self.Options.Variant == "Minimal" and .34 or .14
+    self.StatusPanelStroke.Transparency = self.Options.Variant == "Minimal" and .48 or .22
+    self.Title.TextTransparency = 0
+    self.Subtitle.TextTransparency = 0
+    self.StatusLabel.TextTransparency = 0
+    self.Percent.TextTransparency = 0
+end
+function Loader:_TweenEntrance(instance, duration, goals)
+    local tween = TweenService:Create(instance, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goals)
+    local record = {Tween = tween}
+    record.Connection = tween.Completed:Connect(function()
+        if record.Connection then record.Connection:Disconnect(); record.Connection = nil end
+        for index, active in ipairs(self._entranceTweens) do
+            if active == record then table.remove(self._entranceTweens, index); break end
+        end
+    end)
+    self._entranceTweens[#self._entranceTweens + 1] = record
+    tween:Play()
+end
+function Loader:_StartEntrance()
+    if self.Options.ReducedMotion then return end
+    local reveal = {
+        {self.Border, "Transparency", .62, .15},
+        {self.Edge, "BackgroundTransparency", .88, .5},
+        {self.MarkStroke, "Transparency", .62, .18},
+        {self.StatusPanel, "BackgroundTransparency", .58, self.Options.Variant == "Minimal" and .34 or .14},
+        {self.StatusPanelStroke, "Transparency", .62, self.Options.Variant == "Minimal" and .48 or .22},
+        {self.Title, "TextTransparency", .34, 0},
+        {self.Subtitle, "TextTransparency", .42, 0},
+        {self.StatusLabel, "TextTransparency", .34, 0},
+        {self.Percent, "TextTransparency", .42, 0},
+    }
+    for _, item in ipairs(reveal) do
+        local instance, property, initial, target = item[1], item[2], item[3], item[4]
+        instance[property] = initial
+        self:_TweenEntrance(instance, .2, {[property] = target})
+    end
 end
 function Loader:SetProgress(ratio,status)
     assert(not self.Destroyed and not self.Completed,"Loader is closed or completing")
@@ -222,18 +295,22 @@ function Loader:_Apply(valid,logoChanged)
     self.Gui.DisplayOrder=valid.DisplayOrder
     if self.Gui.Parent~=valid.Parent then release_focus(valid.Parent);self.Gui.Parent=valid.Parent end
     self.Root.BackgroundTransparency=valid.BackgroundTransparency
-    self.Card.BackgroundColor3=theme.Background;self.Border.Color=theme.Border;self.Edge.BackgroundColor3=theme.Accent
-    self.Mark.BackgroundColor3=theme.Raised;self.MarkTextLabel.TextColor3=theme.Text
+    self.Card.BackgroundColor3=theme.Background;self.Card.BackgroundTransparency=valid.CardTransparency
+    self.Border.Color=theme.Border;self.Edge.BackgroundColor3=theme.Accent;self.EdgeGradient.Color=accent_glow(theme);self.StatusIndicator.BackgroundColor3=theme.Accent
+    self.Mark.BackgroundColor3=theme.Raised;self.MarkStroke.Color=theme.Border;self.MarkTextLabel.TextColor3=theme.Text
     self.MarkTextLabel.Font=style.FontBold;self.MarkTextLabel.TextSize=style.TitleSize+2
     self.Title.Text=valid.Title;self.Title.Font=style.FontBold;self.Title.TextSize=style.TitleSize+2;self.Title.TextColor3=theme.Text
     self.Subtitle.Text=valid.Subtitle;self.Subtitle.Font=style.Font;self.Subtitle.TextSize=style.DescriptionSize;self.Subtitle.TextColor3=theme.Muted
     self.StatusLabel.Font=style.Font;self.StatusLabel.TextSize=style.DescriptionSize;self.StatusLabel.TextColor3=theme.Text
     self.Percent.Font=style.Font;self.Percent.TextSize=style.DescriptionSize;self.Percent.TextColor3=theme.Muted
     self.Track.BackgroundColor3=theme.Raised;self.Fill.BackgroundColor3=theme.Accent;self.Activity.BackgroundColor3=theme.Text
+    self.StatusPanel.BackgroundColor3=theme.Surface;self.StatusPanel.BackgroundTransparency=valid.Variant=="Minimal" and .34 or .14
+    self.StatusPanelStroke.Color=theme.Border;self.StatusPanelStroke.Transparency=valid.Variant=="Minimal" and .48 or .22
     self.CardCorner.CornerRadius=UDim.new(0,style.WindowRadius)
     self.MarkCorner.CornerRadius=UDim.new(0,math.min(12,valid.LogoSize/3))
     self.MarkImageCorner.CornerRadius=self.MarkCorner.CornerRadius
     self.TrackCorner.CornerRadius=UDim.new(0,3);self.FillCorner.CornerRadius=UDim.new(0,3)
+    self.StatusPanelCorner.CornerRadius=UDim.new(0,style.ControlRadius)
     if logoChanged then self:_StartLogo() end
     self.Mark.Visible=valid.ShowLogo
     self.MarkImage.Visible=valid.ShowLogo and self.MarkImage.Image~=""
@@ -243,9 +320,11 @@ end
 function Loader:Update(options)
     assert(not self.Destroyed and not self.Completed,"Loader is closed or completing")
     assert(type(options)=="table","Update expects an options table")
+    assert(options.Design==nil,"Design is constructor-only; update Theme, Style or loader options directly")
     local previous=self.Options
     local valid=loader_options(options,previous)
     local logoChanged=valid.Logo~=previous.Logo or valid.MarkText~=previous.MarkText
+    self:_FinishEntrance()
     self:_Apply(valid,logoChanged)
     return self
 end
@@ -293,6 +372,7 @@ function Loader:Destroy()
     end
     if self._progressTween then self._progressTween:Cancel();self._progressTween=nil end
     if self._activityTween then self._activityTween:Cancel();self._activityTween=nil end
+    self:_CancelEntrance()
     for _,tween in ipairs(self._tweens)do pcall(function()tween:Cancel()end)end
     table.clear(self._tweens);disconnect(self._connections,self)
     for index=#self._owned,1,-1 do
@@ -323,6 +403,7 @@ function Loader:Complete(status)
     local function fade()
         self._finishThread=nil
         if self.Destroyed then return end
+        self:_FinishEntrance()
         local duration=self.Options.ReducedMotion and 0 or self.Options.ExitDuration
         if duration==0 then finish();return end
         for _,instance in ipairs(self.Gui:GetDescendants())do
@@ -344,33 +425,40 @@ function Loader:Complete(status)
 end
 
 function Library:CreateLoader(options)
+    options=resolve_design_options(options,"loader")
     local valid=loader_options(options)
-    local self=setmetatable({Options=valid,Progress=0,Status="Starting",Completed=false,Destroyed=false,_connections={},_tweens={},_owned={},_partLayouts={},_started=os.clock()},Loader)
+    local self=setmetatable({Options=valid,Progress=0,Status="Starting",Completed=false,Destroyed=false,_connections={},_tweens={},_entranceTweens={},_owned={},_partLayouts={},_started=os.clock()},Loader)
     local theme,style=valid.Theme,valid.Style
     release_focus(valid.Parent)
     self.Gui=create("ScreenGui",{Name="GabibouUI_Loading",ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=valid.DisplayOrder,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},valid.Parent)
     self.Root=create("TextButton",{Name="LoadingOverlay",Size=UDim2.fromScale(1,1),Text="",AutoButtonColor=false,Modal=true,Active=true,BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=valid.BackgroundTransparency},self.Gui)
-    self.Card=create("Frame",{Name="LoadingCard",Position=valid.Position,AnchorPoint=valid.AnchorPoint,BackgroundColor3=theme.Background,ClipsDescendants=true},self.Root)
+    self.Card=create("Frame",{Name="LoadingCard",Position=valid.Position,AnchorPoint=valid.AnchorPoint,BackgroundColor3=theme.Background,BackgroundTransparency=valid.CardTransparency,ClipsDescendants=true},self.Root)
     self.CardCorner=Instance.new("UICorner");self.CardCorner.CornerRadius=UDim.new(0,style.WindowRadius);self.CardCorner.Parent=self.Card
     self.Border=create("UIStroke",{Color=theme.Border,Thickness=1,Transparency=.15},self.Card)
-    self.Edge=create("Frame",{BackgroundColor3=theme.Accent,BackgroundTransparency=.65},self.Card)
-    create("UIGradient",{Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(.5,0),NumberSequenceKeypoint.new(1,1)})},self.Edge)
+    self.Edge=create("Frame",{BackgroundColor3=theme.Accent,BackgroundTransparency=.5},self.Card)
+    self.EdgeGradient=create("UIGradient",{Color=accent_glow(theme),Rotation=0},self.Edge)
     self.Content=create("Frame",{Name="CustomContent",BackgroundTransparency=1,ClipsDescendants=true},self.Card)
     self.Mark=create("Frame",{Name="Logo",BackgroundColor3=theme.Raised,ClipsDescendants=true},self.Card)
     self.MarkCorner=Instance.new("UICorner");self.MarkCorner.Parent=self.Mark
+    self.MarkStroke=create("UIStroke",{Color=theme.Border,Thickness=1,Transparency=.18},self.Mark)
     self.MarkTextLabel=create("TextLabel",{Name="Placeholder",Text=valid.MarkText,Font=style.FontBold,TextSize=20,BackgroundTransparency=1,Size=UDim2.fromScale(1,1),TextColor3=theme.Text},self.Mark)
     self.MarkImage=create("ImageLabel",{Name="Image",Image="",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ScaleType=Enum.ScaleType.Crop,Visible=false},self.Mark)
     self.MarkImageCorner=Instance.new("UICorner");self.MarkImageCorner.Parent=self.MarkImage
+    self.StatusPanel=create("Frame",{Name="ProgressStatusPanel",BackgroundColor3=theme.Surface,BackgroundTransparency=.14,BorderSizePixel=0},self.Card)
+    self.StatusPanelCorner=Instance.new("UICorner");self.StatusPanelCorner.CornerRadius=UDim.new(0,style.ControlRadius);self.StatusPanelCorner.Parent=self.StatusPanel
+    self.StatusPanelStroke=create("UIStroke",{Color=theme.Border,Thickness=1,Transparency=.22},self.StatusPanel)
     self.Title=create("TextLabel",{Text=valid.Title,Font=style.FontBold,TextSize=style.TitleSize+2,TextColor3=theme.Text,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
     self.Subtitle=create("TextLabel",{Text=valid.Subtitle,Font=style.Font,TextSize=style.DescriptionSize,TextColor3=theme.Muted,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
     self.StatusLabel=create("TextLabel",{Text=self.Status,Font=style.Font,TextSize=style.DescriptionSize,TextColor3=theme.Text,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
+    self.StatusIndicator=create("Frame",{Name="StatusIndicator",BackgroundColor3=theme.Accent,BorderSizePixel=0},self.Card)
+    create("UICorner",{CornerRadius=UDim.new(1,0)},self.StatusIndicator)
     self.Percent=create("TextLabel",{Text="0%",Font=style.Font,TextSize=style.DescriptionSize,TextColor3=theme.Muted,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Right},self.Card)
     self.Track=create("Frame",{BackgroundColor3=theme.Raised,ClipsDescendants=true},self.Card)
     self.TrackCorner=Instance.new("UICorner");self.TrackCorner.Parent=self.Track
     self.Fill=create("Frame",{Size=UDim2.fromScale(0,1),BackgroundColor3=theme.Accent},self.Track)
     self.FillCorner=Instance.new("UICorner");self.FillCorner.Parent=self.Fill
     self.Activity=create("Frame",{Size=UDim2.fromScale(.18,1),Position=UDim2.fromScale(-.18,0),BackgroundColor3=theme.Text,BackgroundTransparency=.55},self.Track)
-    self:_StartLogo();self:_Layout();self:_SetActivity()
+    self:_StartLogo();self:_Layout();self:_StartEntrance();self:_SetActivity()
     self._connections[#self._connections+1]=self.Root:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()self:_Layout()end)
     self._connections[#self._connections+1]=self.Gui.Destroying:Connect(function()self._guiDestroying=true;self:Destroy()end)
     Library.Loaders[self]=true

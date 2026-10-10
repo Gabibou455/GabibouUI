@@ -1,10 +1,10 @@
 -- ModuleScript: ReplicatedStorage.GabibouUI. Run this as a LocalScript.
 local Library=require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
-local loader=Library:CreateLoader({Title="Gabibou / Studio",Subtitle="Preparing controls and your workspace",Variant="Centered",Logo="Avatar",MinimumDuration=.8})
+local loader=Library:CreateLoader({Title="Gabibou / Atelier",Subtitle="Preparing controls and your workspace",Variant="Centered",Logo="Avatar",Design={Preset="Atelier"},MinimumDuration=.8})
 local window=Library:CreateWindow({
-    Id="GabibouDemo",Title="Gabibou / Studio",Subtitle="Interface workshop",
-    Theme="Graphite",Width=860,Height=620,
-    Navigation={Variant="Soft",IconVariant="Outline"},
+    Id="GabibouDemo",Title="Gabibou / Atelier",Subtitle="Interface workshop",
+    Design={Preset="Atelier"},Width=860,Height=620,
+    Navigation={IconVariant="Outline"},
     Responsive={Breakpoint=620,TouchTarget=44,Margin=12},
     Branding={Mode="Avatar",Placement="BothRight"},
 })
@@ -30,11 +30,11 @@ local function updateStatus()
 end
 window:On("ThemeChanged",updateStatus)
 window:Connect(window.Panel:GetPropertyChangedSignal("AbsoluteSize"),updateStatus)
-setup:Button({Title="Browse controls",Description="Values, text fields and shortcuts.",Text="Open",Callback=function()window:SelectTab(controls)end})
-setup:Button({Title="Edit appearance",Description="Theme, corners and animation speed.",Text="Open",Callback=function()window:SelectTab(appearance)end})
-setup:Button({Title="Custom components",Description="A meter built with the extension API.",Text="Open",Callback=function()window:SelectTab(extensions)end})
+setup:Button({Title="Browse controls",Description="Values, text fields and shortcuts.",Text="Open",Variant="Primary",Callback=function()window:SelectTab(controls)end})
+setup:Button({Title="Edit appearance",Description="Theme, corners and animation speed.",Text="Open",Variant="Secondary",Callback=function()window:SelectTab(appearance)end})
+setup:Button({Title="Custom components",Description="A meter built with the extension API.",Text="Open",Variant="Subtle",Callback=function()window:SelectTab(extensions)end})
 local loadingVariant=setup:Dropdown({Id="demo_loading_variant",Title="Loading layout",Options={"Centered","Compact","Minimal"},Value="Centered",Persistent=false})
-setup:Button({Title="Loading screen",Description="Preview the selected layout with your current theme.",Text="Preview",Callback=function()
+setup:Button({Title="Loading screen",Description="Preview the selected layout with your current theme.",Text="Preview",Variant="Secondary",Callback=function()
     local preview=Library:CreateLoader({Title=window.Title,Subtitle="Applying interface settings",Variant=loadingVariant:Get(),Theme=window.Theme,Style=window.Style,ReducedMotion=window.ReducedMotion,Logo="Avatar",MinimumDuration=1})
     preview:Run({
         {Title="Applying theme",Run=function()window:SetTheme(window.ThemeName=="Custom"and window.Theme or window.ThemeName)end},
@@ -42,7 +42,7 @@ setup:Button({Title="Loading screen",Description="Preview the selected layout wi
     })
     window:Own({Disconnect=function()preview:Destroy()end})
 end})
-setup:Button({Title="Access screen",Description="Interface preview. The demonstration key is demo.",Text="Preview",Callback=function()
+setup:Button({Title="Access screen",Description="Interface preview. The demonstration key is demo.",Text="Preview",Variant="Subtle",Callback=function()
     local gate=Library:CreateKeySystem({Title="Gabibou / Access",Subtitle="UI demonstration — enter demo to continue.",Theme=window.Theme,Style=window.Style,
         Discord={Url="https://discord.gg/your-server",Text="Copy example Discord link"},
         GetKey=function()window:Notify({Title="Get key preview",Content="The key for this interface preview is demo.",Kind="info"})end,
@@ -67,8 +67,8 @@ local function notify()
     window:Notify({Title="Preview",Content=message:Get(),Duration=duration:Get(),Kind=types[kind:Get()]})
 end
 fields:Keybind({Id="demo_key",Title="Send notification",Description="Click to change the key; Escape cancels.",Value="F6",Callback=notify})
-fields:Button({Title="Send notification",Text="Send",Callback=notify})
-fields:Button({Title="Confirmation dialog",Text="Open",Callback=function()
+fields:Button({Title="Send notification",Text="Send",Variant="Primary",Callback=notify})
+fields:Button({Title="Confirmation dialog",Text="Open",Variant="Secondary",Callback=function()
     window:Confirm({Title="Restore default values?",Content="The notification preview will return to its initial settings.",ConfirmText="Restore",Callback=function()
         duration:Set(4,false);kind:Set("Neutral",false);message:Set("Saved.",false)
     end})
@@ -76,23 +76,32 @@ end})
 
 loader:SetProgress(.4,"Controls ready")
 local style=appearance:Section({Title="Colors"})
-style:Dropdown({Id="demo_theme",Title="Theme",Options={"Graphite","Aurora","Ember"},Value="Graphite",Persistent=false,Callback=function(value)window:SetTheme(value)end})
-style:ColorPicker({Id="demo_accent",Title="Accent",Description="Choose a swatch or enter a hex color.",Value="#F2F4F8",Callback=function(hex)
+style:Paragraph({Title="Atelier design",Description="This demo starts with monochrome surfaces, Balanced corners, Comfortable spacing, and Rail navigation. Adjust the details below to make it your own."})
+local atelierTheme=table.clone(window.Theme)
+style:Dropdown({Id="demo_theme",Title="Palette",Options={"Atelier","Graphite","Aurora","Ember"},Value="Atelier",Persistent=false,Callback=function(value)
+    window:SetTheme(value=="Atelier" and atelierTheme or value)
+end})
+style:ColorPicker({Id="demo_accent",Title="Accent",Description="Choose a swatch or enter a hex color.",Value="#E8EBEE",Callback=function(hex)
     local color=Color3.fromHex(hex)
     local brightness=color.R*.299+color.G*.587+color.B*.114
     window:SetTheme({Accent=color,AccentText=brightness>.55 and Color3.fromRGB(19,21,25)or Color3.fromRGB(245,246,248)})
 end})
+local hierarchy=appearance:Section({Title="Button hierarchy"})
+hierarchy:Paragraph({Title="Choose emphasis",Description="Use Primary for the main step, Secondary for a supporting choice, and Subtle for a small utility."})
+hierarchy:Button({Title="Primary",Text="Apply",Variant="Primary",Callback=function()window:Notify({Title="Primary action",Content="Use this for the main next step."})end})
+hierarchy:Button({Title="Secondary",Text="Options",Variant="Secondary",Callback=function()window:Notify({Title="Supporting action",Content="Use this for an equal or optional choice."})end})
+hierarchy:Button({Title="Subtle",Text="More",Variant="Subtle",Callback=function()window:Notify({Title="Utility action",Content="Use this for a small utility action."})end})
 local motion=appearance:Section({Title="Shape and motion"})
-motion:Dropdown({Id="demo_navigation_variant",Title="Navigation style",Options={"Soft","Classic","Pill"},Value="Soft",Persistent=false,Callback=function(value)window:SetNavigation({Variant=value})end})
+motion:Dropdown({Id="demo_navigation_variant",Title="Navigation style",Options={"Rail","Soft","Classic","Pill"},Value="Rail",Persistent=false,Callback=function(value)window:SetNavigation({Variant=value})end})
 motion:Dropdown({Id="demo_navigation_icons",Title="Tab icon style",Options={"Outline","Soft","Duotone"},Value="Outline",Persistent=false,Callback=function(value)window:SetNavigation({IconVariant=value})end})
-motion:Slider({Id="demo_corners",Title="Corner radius",Min=0,Max=24,Step=1,Value=14,Persistent=false,Callback=function(value)
+motion:Slider({Id="demo_corners",Title="Corner radius",Min=0,Max=24,Step=1,Value=16,Persistent=false,Callback=function(value)
     window:SetStyle({WindowRadius=value,SectionRadius=math.max(0,value-4),ControlRadius=math.max(0,value-7)})
 end})
 motion:Dropdown({Id="demo_speed",Title="Transition speed",Options={"Instant","Quick","Soft"},Value="Quick",Persistent=false,Callback=function(value)
     window:SetMotion({Duration=value=="Instant"and 0 or(value=="Quick"and .16 or .35)})
 end})
 motion:Toggle({Id="demo_motion",Title="Reduce motion",Description="Applies final values without animated movement.",Value=window.ReducedMotion,Persistent=false,Callback=function(value)window:SetReducedMotion(value);updateStatus()end})
-motion:Button({Title="Minimize interface",Description="Reopen with OPEN or RightControl.",Text="Hide",Icon="minimize",Callback=function()window:Hide()end})
+motion:Button({Title="Minimize interface",Description="Reopen with OPEN or RightControl.",Text="Hide",Icon="minimize",Variant="Subtle",Callback=function()window:Hide()end})
 
 local branding=appearance:Section({Title="Profile picture"})
 branding:Dropdown({Id="demo_branding",Title="Picture position",Options={"Top right","Bottom right","Both right","Top left"},Value="Both right",Persistent=false,Callback=function(value)
@@ -110,26 +119,26 @@ arrangement:Slider({Id="demo_button_size",Title="Button height",Min=44,Max=80,Va
 arrangement:Slider({Id="demo_tabs_gap",Title="Tab spacing",Min=0,Max=24,Value=7,Persistent=false,Callback=function(value)window:SetLayout({TabGap=value})end})
 local alerts=appearance:Section({Title="Notifications"})
 alerts:Dropdown({Id="demo_toast_position",Title="Notification position",Options={"TopRight","BottomRight","TopLeft","BottomLeft"},Value="BottomRight",Persistent=false,Callback=function(value)window:SetNotifications({Position=value})end})
-alerts:Button({Title="Preview notification",Text="Preview",Callback=function()window:Notify({Title="Preferences saved",Content="Your layout is ready. Continue where you left off.",Kind="success",Duration=5})end})
+alerts:Button({Title="Preview notification",Text="Preview",Variant="Primary",Callback=function()window:Notify({Title="Preferences saved",Content="Your layout is ready. Continue where you left off.",Kind="success",Duration=5})end})
 loader:SetProgress(.6,"Appearance ready")
 local memoryProfile
 local saved=profiles:Paragraph({Title="Session profile",Description="No profile saved. Values are kept in memory for this session."})
 local storage=profiles:Section({Title="Saved values"})
 local restore
-storage:Button({Title="Save current values",Text="Save",Callback=function()
+storage:Button({Title="Save current values",Text="Save",Variant="Primary",Callback=function()
     memoryProfile=window:ExportConfig();restore:SetEnabled(true)
     saved:SetDescription("A profile is saved in memory. Saving again replaces it.")
 end})
-restore=storage:Button({Title="Restore saved values",Text="Restore",Disabled=true,Callback=function()
+restore=storage:Button({Title="Restore saved values",Text="Restore",Variant="Secondary",Disabled=true,Callback=function()
     if memoryProfile then local count=window:ImportConfig(memoryProfile,false);window:Notify({Title="Profile restored",Content=tostring(count).." values restored."})end
 end})
 profiles:Paragraph({Title="Permanent storage",Description="Connect your own Storage adapter to keep profiles between sessions. The library does not access files by default."})
 
 farm:Paragraph({Title="Field / Workshop",Description="A visual farm template. Connect these controls to your own planting and harvest systems."})
 local field=farm:Section({Title="Field controls"})
-field:Button({Id="demo_plant",Title="Plant seeds",Description="Prepare the next growing cycle.",Text="Plant",Icon="seed",IconVariant="Soft",Callback=function()window:Notify({Title="Plant preview",Content="Your planting button is ready to connect.",Icon="sprout"})end})
-field:Button({Id="demo_harvest",Title="Collect harvest",Description="Keep the next action easy to find.",Text="Collect",Icon="harvest",IconVariant="Duotone",Callback=function()window:Notify({Title="Harvest preview",Content="Your harvest button is ready to connect.",Icon="harvest",Kind="success"})end})
-field:Button({Id="demo_inventory",Title="Inventory",Description="Seeds, crops and equipment.",Text="Open",Icon="inventory",Callback=function()window:SelectTab(icons)end})
+field:Button({Id="demo_plant",Title="Plant seeds",Description="Prepare the next growing cycle.",Text="Plant",Icon="seed",IconVariant="Soft",Variant="Primary",Callback=function()window:Notify({Title="Plant preview",Content="Your planting button is ready to connect.",Icon="sprout"})end})
+field:Button({Id="demo_harvest",Title="Collect harvest",Description="Keep the next action easy to find.",Text="Collect",Icon="harvest",IconVariant="Duotone",Variant="Secondary",Callback=function()window:Notify({Title="Harvest preview",Content="Your harvest button is ready to connect.",Icon="harvest",Kind="success"})end})
+field:Button({Id="demo_inventory",Title="Inventory",Description="Seeds, crops and equipment.",Text="Open",Icon="inventory",Variant="Subtle",Callback=function()window:SelectTab(icons)end})
 local equipment=farm:Section({Title="Equipment"})
 equipment:Dropdown({Id="demo_crop",Title="Crop",Options={"Potatoes","Wheat","Carrots"},Value="Potatoes"})
 equipment:Slider({Id="demo_rows",Title="Rows per cycle",Min=1,Max=12,Value=4})
@@ -205,7 +214,7 @@ local example=extensions:Section({Title="Meter"})
 local meter=example:Add("Meter",{Id="demo_meter",Title="Preview",Height=52,Value=.4})
 local level=example:Slider({Id="demo_level",Title="Level",Min=0,Max=100,Step=1,Value=40,Callback=function(value)meter:Update(value/100)end})
 example:Dropdown({Id="demo_curve",Title="Animation curve",Options={"Quad","Sine","Back"},Persistent=false,Callback=function(value)window:SetMotion({Style=Enum.EasingStyle[value]})end})
-example:Button({Title="Animate to another level",Text="Play",Callback=function()
+example:Button({Title="Animate to another level",Text="Play",Variant="Primary",Callback=function()
     local nextValue=level:Get()>=50 and 25 or 85;level:Set(nextValue,true)
 end})
 window:SelectTab(overview)

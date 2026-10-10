@@ -1,6 +1,6 @@
 -- Layout presets are ordinary tables. Advanced part overrides persist across reflow.
-Library.Layout={TabPosition="Left",MobileTabPosition="Top",SidebarWidth=176,TabWidth=96,TabHeight=44,TabGap=8,TabIconSize=20,ContentPadding=16,ContentGap=20,HeaderHeight=76,FooterHeight=42,SearchHeight=44,SearchGap=12,PageTitleHeight=40,ButtonWidth=112,ButtonHeight=44,RowGap=8,SectionGap=16,ControlsPosition="Right",Draggable=true,Resizable=true,ShowSearch=true,ShowFooter=true,ShowHeader=true,ShowPageTitle=true}
-local layoutRanges={SidebarWidth={96,360},TabWidth={64,400},TabHeight={44,96},TabGap={0,32},TabIconSize={12,40},ContentPadding={4,40},ContentGap={0,48},HeaderHeight={64,160},FooterHeight={32,96},SearchHeight={44,96},SearchGap={0,40},PageTitleHeight={28,80},ButtonWidth={58,400},ButtonHeight={44,120},RowGap={0,40},SectionGap={0,48}}
+Library.Layout={TabPosition="Left",MobileTabPosition="Top",SidebarWidth=168,TabWidth=128,TabHeight=44,TabGap=7,TabIconSize=16,ContentPadding=16,ContentGap=18,HeaderHeight=76,FooterHeight=42,SearchHeight=44,SearchGap=10,PageTitleHeight=40,ButtonWidth=112,ButtonHeight=44,RowGap=8,SectionGap=16,PanelTransparency=.10,ControlsPosition="Right",Draggable=true,Resizable=true,ShowSearch=true,ShowFooter=true,ShowHeader=true,ShowPageTitle=true}
+local layoutRanges={SidebarWidth={96,360},TabWidth={64,400},TabHeight={44,96},TabGap={0,32},TabIconSize={12,40},ContentPadding={4,40},ContentGap={0,48},HeaderHeight={64,160},FooterHeight={32,96},SearchHeight={44,96},SearchGap={0,40},PageTitleHeight={28,80},ButtonWidth={58,400},ButtonHeight={44,120},RowGap={0,40},SectionGap={0,48},PanelTransparency={0,1}}
 local function finiteUDim2(value)
     return typeof(value)=="UDim2" and Logic.finite(value.X.Scale) and Logic.finite(value.Y.Scale) and Logic.finite(value.X.Offset) and Logic.finite(value.Y.Offset)
 end
@@ -81,6 +81,7 @@ function Window:_ApplyPartLayouts()
 end
 function Window:_Arrange(width,height,mobile,compact,tiny,minimal)
     local l=self.Layout
+    self.Panel.BackgroundTransparency=l.PanelTransparency
     local pad=l.ContentPadding
     local header=l.ShowHeader and not minimal and l.HeaderHeight or 0
     local footerText={}

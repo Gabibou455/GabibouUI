@@ -43,7 +43,11 @@ Responsive layout is enabled by default. `Responsive` accepts a table with `Brea
 
 ## Layout options
 
-Set defaults for new windows with `UI:SetLayout(options)`, or update one window with `window:SetLayout(options)`. Settings cover tab position, mobile tab position, sidebar width, tab dimensions and gaps, content padding and spacing, header and footer sizes, search visibility, and control alignment.
+Set defaults for new windows with `UI:SetLayout(options)`, or update one window with `window:SetLayout(options)`. Settings cover tab position, mobile tab position, sidebar width, tab dimensions and gaps, content padding and spacing, header and footer sizes, search visibility, and control alignment. `PanelTransparency` defaults to `0.1` and affects only the main window surface; `0` is opaque and `1` is transparent.
+
+```lua
+window:SetLayout({PanelTransparency = 0.12})
+```
 
 Tabs and controls accept a local `Layout` table. Tab keys include `Order`, `Width`, `Height`, and `IconSize`. Control keys include `Order`, `Width`, `Height`, and `Position` (`Left`, `Right`, `Below`). See [API reference](/reference/api) for the complete defaults and ranges.
 

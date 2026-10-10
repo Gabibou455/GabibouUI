@@ -3,63 +3,139 @@ title: Quality status
 description: Verified checks and remaining validation for this release candidate.
 ---
 
-This release candidate was validated on 2026-10-09. Passing checks describe the tested build; they do not establish that every environment or interaction is defect-free.
+## Current release candidate: rc.21
 
-## Verified
-
-- 1250 assertions across 19 runtime suites in the connected Windows Roblox client.
-- 42 isolated logic checks and 4 quick-start checks (1296 assertions total).
-- Standalone module and managed demo static analysis: zero errors and zero warnings. Official Luau compilation passed for the module and supplied examples.
-- Deterministic standalone rebuild; source hash: `888a5f4309cd90c8e50341db9181c81f931b66382892b92b9dd3efffccae1ddf`.
-- 96 original icon names and IDs; IDs 1-71 preserved. All three variants render natively.
-- 288 PNG/SVG pairs checked for valid files, dimensions, transparency, nonempty artwork and unclipped bounds. Exported geometry matches the current icon source.
-- Desktop and narrow 360 px layout assertions passed in the Roblox client. Resizing preserves the selected tab in the visible navigation area.
-- The key dialog was visually reviewed at desktop and narrow widths.
-- Native clicks exercised the Discord button with an injected copier, typed key entry and successful verification. Tests did not write to the system clipboard.
-- The key screen displays the local player's thumbnail by default and uses "Verify key". Custom images, monograms, avatar updates and pending-task cleanup passed.
-- Loading presets, persistent part overrides, custom animation ownership and external destruction were checked.
-- Short constructors for windows, tabs, sections and controls passed callback, value, input-validation and options-ownership checks. The original options-table API passed the same runtime suites.
-- Yielding Button, Changed and Connect callbacks stop when their owner is destroyed. Hide/Show preserves callbacks, and a callback that destroys its own control can finish its current invocation. Loader error handlers and restarted sequences stop on destruction. Launch does not reach Ready after its window is destroyed during construction, and cancellation after key acceptance does not call the key gate's OnCancel.
-- Get key URL/callback actions, manual-copy fallback, single-flight behavior, stale results and native clicks passed. The key layout has a 420 px default width and automatic heights of 332/394/404/462 px.
-- Mintlify configuration passed the provider's schema validator; all 21 MDX pages compiled with GFM support and valid frontmatter. Navigation and internal links passed local checks. All 48 Luau documentation blocks compiled, and the 12 blocks in the controls walkthrough ran together in the connected client. Hosted availability is checked separately after publication.
-- Remote example compiled the actual standalone source through `loadstring`, created working controls, cleaned up, and handled HTTP/compile/invalid-response errors. HTTP was supplied by a local test shim.
+The rc.21 standalone module SHA-256 is `5407c1d6a40422005d292289e55740dbb55f9982d52227206db6cdd03e57d6f5`. Ten runtime suites passed **1,132 assertions** on the connected Windows Roblox client on 2026-10-10. These results apply to this module hash; published GitHub `main` and other installed copies may differ.
 
 | Runtime suite | Assertions | Result |
 |---|---:|---|
-| engine | 51 | Passed |
-| regression | 10 | Passed |
-| extensions | 67 | Passed |
-| robustness | 15 | Passed |
-| input | 13 | Passed |
-| native_extensions | 9 | Passed |
-| loading | 47 | Passed |
-| branding | 18 | Passed |
-| navigation | 29 | Passed |
-| icons | 727 | Passed |
-| layout | 30 | Passed |
-| notifications | 21 | Passed |
-| key_system | 66 | Passed |
-| launch | 34 | Passed |
-| native_access | 4 | Passed |
-| visual | 45 | Passed |
-| native_visual | 6 | Passed |
-| remote | 8 | Passed |
-| convenience | 50 | Passed |
+| Regression | 10 | Passed |
+| Visual | 68 | Passed |
+| Native visual | 9 | Passed |
+| Layout | 34 | Passed |
+| Navigation | 64 | Passed |
+| Key system | 95 | Passed |
+| Loading | 67 | Passed |
+| Notifications | 32 | Passed |
+| Icons | 725 | Passed |
+| Design | 28 | Passed |
+| **Total** | **1,132** | **Passed** |
 
-## Session observations
+Initial failures revealed outdated test expectations and fixtures. After correcting float comparisons, mobile fixtures, notification option setup, and icon checks, the affected suites were rerun. The UI module stayed unchanged. An initial Design evaluation timed out; a bounded instrumented run later completed its 28 checks. Five original runtime screenshots now illustrate the controls, dropdown/input, key gate, loader, and notification pages.
 
-One native slider gesture failed during the preceding candidate session, followed by a passing input suite and ten passing dedicated drags. An intermittent style/animation failure was reproduced under allocation pressure: the old weak-key registry lost its target in all eight comparisons, leaving the tween running and the style unapplied. Explicit target ownership passed all eight comparisons; separate checks verify cleanup when a subtree or window is destroyed. The final suite retains detailed diagnostics. MCP transport timeouts interrupted some requests; unfinished suites were resumed.
+Physical phone/tablet touch, virtual keyboard behavior, Studio execution, and rendered long-label ellipsis on plain buttons remain unverified. Screenshots show the visible interface; they do not establish real provider authentication or clipboard integration. Check the installed `UI.Version` and matching source before applying candidate-specific APIs. See [the AI agent guide](/ai/agent-guide) for that workflow.
 
-Expected warning messages from deliberately failing hooks, cleanup callbacks and loaders are part of the tests. The final console check distinguishes these from unexpected problems.
+## Previous candidate: rc.13 (historical)
 
-A native reopen check initially failed while the preview key modal remained open above the test window. Closing that test fixture restored the passing check; this required no production change.
+The rc.13 standalone module hash `225eab5825d8ef9732af0ace9dd4c15394cf6043b145f3c114bde6308a05dcac` passed five targeted runtime suites in the connected Roblox client on 2026-10-10 (client 5160, generation 2). These 252 assertions apply to this hash only; earlier candidate results below are historical.
 
-## Remaining validation
+| Runtime suite | Assertions | Result |
+|---|---:|---|
+| Key system | 86 | Passed |
+| Loading | 57 | Passed |
+| Design | 26 | Passed |
+| Launch | 34 | Passed |
+| Visual | 49 | Passed |
+| **Total** | **252** | **Passed** |
 
+Official Luau compilation passed for the integrated module and demo at the final rc.13 hash (12 KLOC, 691 KB bytecode). Mintlify validation passed for all 25 MDX pages and navigation entries, with no broken internal links. The new key-layout example was parsed with Luau but not fully compiled. All five targeted runtime suites completed through the background job. An earlier direct evaluation timed out without a result; no cause is established. Root reviewed the final loader capture, including its 56 px mark, centered header accent, clear footer, and transparent card. No physical phone was tested.
 
-- Real phone/tablet touch gestures, virtual keyboard behavior and hardware performance.
+## Previous candidate: rc.12 (historical)
+
+The rc.12 standalone module hash `f3e3462b691995abd3644dd5166ab677417b096e9d933c89ec40f742c16c7276` passed three targeted runtime suites in the connected Roblox client on 2026-10-09 (client 5160, generation 1). These 104 assertions apply only to that hash.
+
+| Runtime suite | Assertions | Result |
+|---|---:|---|
+| Design | 26 | Passed |
+| Engine | 53 | Passed |
+| Notifications | 25 | Passed |
+| **Total** | **104** | **Passed** |
+
+The integrated module and demo compiled with the official Luau compiler. Mintlify validation passed for 25 MDX pages and navigation entries, with no broken links. The Overview screenshot showed Primary, Secondary, and Subtle action hierarchy; the final notification toast was not captured. The visual suite timed out twice and has no passing result for rc.12. No physical phone was tested.
+
+## Previous candidate: rc.11 (historical)
+
+The rc.11 standalone module hash `b8c65a8d2bcfd0ada0a9e3642366ecccc3a736db24a5c63c125a8489083c1074` passed ten targeted runtime suites in the connected Roblox client on 2026-10-09. These 440 assertions apply to that hash only and are not rc.12 results.
+
+| Runtime suite | Assertions | Result |
+|---|---:|---|
+| Design | 26 | Passed |
+| Engine | 51 | Passed |
+| Convenience | 50 | Passed |
+| Launch | 34 | Passed |
+| Navigation | 43 | Passed |
+| Layout | 34 | Passed |
+| Visual | 48 | Passed |
+| Loading | 51 | Passed |
+| Key system | 77 | Passed |
+| Branding | 26 | Passed |
+| **Total** | **440** | **Passed** |
+
+The integrated module and demo compiled with the official Luau compiler. Mintlify validation passed for all 25 MDX pages and navigation entries, with no broken links; all six Lua examples on the Design guide compiled with the official Luau compiler. An initial visual-suite attempt ended because its demo window had been destroyed before the gallery assertions; reloading the valid fixture at the same source hash made the full Visual suite pass. No physical phone was tested.
+
+## Previous candidate: rc.10 (historical)
+
+The rc.10 standalone module hash `eb2e7ef8797a203b5feca7ed3b1dee2ea919432c5a42097575898f5518c66472` passed ten targeted runtime suites in the connected Roblox client on 2026-10-09. The suites total 436 assertions. These results apply to this hash and are separate from the historical rc.9 run below.
+
+| Runtime suite | Assertions | Result |
+|---|---:|---|
+| Design | 22 | Passed |
+| Engine | 51 | Passed |
+| Convenience | 50 | Passed |
+| Launch | 34 | Passed |
+| Navigation | 43 | Passed |
+| Layout | 34 | Passed |
+| Visual | 48 | Passed |
+| Loading | 51 | Passed |
+| Key system | 77 | Passed |
+| Branding | 26 | Passed |
+| **Total** | **436** | **Passed** |
+
+The integrated module and demo compiled with the official Luau compiler. Mintlify validation passed for all 25 MDX pages and navigation entries, with no broken links; all six Lua examples on the Design guide compiled with the official Luau compiler. The primary agent reviewed the Command preset with the Soft radius in the connected Roblox client on desktop. No physical phone was tested. The final console showed only the expected warning from a deliberately failing loader test.
+
+## Previous candidate: rc.9 (historical)
+
+The rc.9 standalone module hash `a1dd4bb0f3dd9fbc99ee97b7d6d70ce2382f1ab2959df169bdb6c037fec6bdc3` passed six targeted runtime suites in the connected Roblox client on 2026-10-09. These checks total 279 assertions and do not represent a rerun of the prior 19-suite baseline.
+
+| Runtime suite | Assertions | Result |
+|---|---:|---|
+| Navigation | 43 | Passed |
+| Layout | 34 | Passed |
+| Visual | 48 | Passed |
+| Loading | 51 | Passed |
+| Key system | 77 | Passed |
+| Branding | 26 | Passed |
+| **Total** | **279** | **Passed** |
+
+The integrated module and demo compiled with the official Luau compiler. Mintlify validation passed for 24 MDX pages and 24 navigation entries, with no broken internal links. The primary agent reviewed desktop and centered simulated 360 px captures of the key gate and loader; their cards fit at 336 × 462 px and 336 × 300 px. The main-window capture at 360 × 560 px predates the final off-toggle contrast correction; that correction passed rendered-property and section-contrast checks, but no fresh pixel capture was available afterward. No physical phone was tested.
+
+## Previous candidate: rc.8 (historical)
+
+The rc.8 module (`fca235c395c48a26b9b9dd984d5405e3812796c3a4eeb4a1b97810fab8b281fa`) passed six targeted runtime suites in the connected Windows Roblox client on 2026-10-09. These checks total 275 assertions; they do not represent a rerun of the prior 19-suite baseline.
+
+| Runtime suite | Assertions | Result |
+|---|---:|---|
+| Navigation | 43 | Passed |
+| Layout | 33 | Passed |
+| Loading | 51 | Passed |
+| Key system | 77 | Passed |
+| Branding | 26 | Passed |
+| Visual | 45 | Passed |
+| **Total** | **275** | **Passed** |
+
+The integrated rc.8 module and demo compiled with the official Luau compiler. The local Mintlify validator passed the configuration schema, all 24 MDX pages and navigation entries, and all internal links. The updated appearance, loading, and key transparency examples compiled with the official Luau compiler.
+
+The primary agent visually reviewed desktop captures of the main window, key gate, and loader. The key gate and loader fit a centered, simulated 360 px viewport at 336 × 462 px and 336 × 300 px respectively; the main window was reviewed at 360 × 560 px. These are Roblox-client viewport simulations, not physical-phone tests.
+
+## Previous rc.7 baseline (historical)
+
+The earlier full run passed 1,258 assertions across 19 runtime suites. Four focused Luarmor SDK checks later passed against the final rc.7 demo. The 42 isolated logic checks and four quick-start checks were also recorded in the earlier verification. These results describe rc.7, not the rc.8 module hash above.
+
+## Remaining validation for rc.13
+
+- Physical phone/tablet touch gestures, virtual keyboard behavior, and hardware performance remain unverified.
 - Standard Studio client execution and the sample key-validation server/client flow in a project you own.
 - Network and executor compatibility beyond the tested Windows client.
-- Your review of appearance, intended target environments and the prepared MIT license.
+- Review of appearance, intended target environments, and the prepared MIT license.
 
-Keep this version marked as a pre-release until the environments you intend to support have been checked. For publishing steps, see `PUBLISHING.md` in the release package.
+The rc.13 targeted Visual suite passed in the connected client. Physical phone/tablet use and the final notification toast capture remain outstanding. Keep rc.13 marked as a pre-release until the intended environments have been checked. For publishing steps, see `PUBLISHING.md` in the release package.
