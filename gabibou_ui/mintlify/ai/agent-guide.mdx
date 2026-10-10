@@ -151,6 +151,28 @@ The repository publishes Gabibou UI under the [MIT License](https://github.com/G
 
 The optional Discord mark has a separate attribution in [`THIRD_PARTY.md`](https://github.com/Gabibou455/GabibouUI/blob/main/THIRD_PARTY.md); it is not covered by the project's MIT license. The source repository includes a 96-icon native catalogue and exported assets. Keep the project copyright/license notices when redistributing covered source, and check the applicable notices for any third-party asset you include. An open-source license for this repository does not grant rights to Roblox, Discord, provider services, or assets from another project. Gabibou UI is an independent community project and is not an official Roblox product or endorsement.
 
+## Practical advice for coding agents
+
+When you build or change an interface, use these steps:
+
+1. Check `UI.Version`, then use the matching source and documentation. Search the docs MCP for current APIs instead of guessing from memory.
+2. Match each control to its value: toggles return booleans, sliders return bounded numbers, dropdowns return one of their listed options, and buttons run actions.
+3. Prefer title-first constructors for simple menus. Use options tables when you need descriptions, layout, icons, or other settings; assign stable `Id` values to declarative controls.
+4. Start with one built-in design and adjust its spacing, typography, or navigation. Keep surfaces and visual emphasis restrained instead of inventing a separate card style for every section.
+5. Find icon names and IDs in the installed version's catalogue. A library icon ID is not a Roblox asset ID.
+6. Check the layout at a normal desktop size, a narrow width, and a short height. Keep touch targets reachable and respect reduced-motion preferences; avoid fixed desktop-only coordinates.
+7. Report loading progress only when real work completes or reaches a measured point. Do not animate a percentage that implies work the code has not done.
+8. Keep authorization and credentials on the server. A key screen is UI; the server must validate access for each protected action.
+9. Scope event connections, tweens, and other resources to their window or control owner. Clean them up on destruction, and avoid callbacks that repeatedly update the same value they observe.
+10. Compile the changed code and run relevant tests against the actual installed source. Report what passed, what was not run, and any environment limits; a parser pass is not a runtime check.
+
+| Common mistake | Better choice |
+|---|---|
+| Guess a method or read a private field | Search the matching API docs and use documented methods or named parts. |
+| Reuse a desktop-only position on every screen | Use responsive layout options and check narrow and short viewports. |
+| Treat a key-gate result as trusted access | Validate on the server and guard each protected action there. |
+| Say the feature works because it compiles | State compile, test, and runtime results separately, with untested behavior named. |
+
 ## Ask an agent to work on a project
 
 Give the agent the project context, desired behavior, constraints, and how you will verify the change. A useful hand-off is:
