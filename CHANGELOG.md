@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0-rc.22
+
+- Wait up to 8 seconds for the local player's `PlayerGui` before `CreateWindow` reports that the GUI parent is unavailable. An explicit `Parent` instance bypasses that lookup.
+- Expand the remote-loading example with a complete fetch/compile/load request, explicit failure messages, and troubleshooting for missing `loadstring`, failed `game:HttpGet`, and compile errors. Studio users are directed to the `ModuleScript` path.
+- Offline mocked checks passed 6/6 parent-resolution cases and 64 loader assertions. The parent helper was exercised from the final standalone module and matched `ui.luau` exactly. Live Roblox-client and executor compatibility checks remain pending.
+
 ## 1.5.0-rc.21
 
 - Apply ending-ellipsis truncation to custom text on action buttons with or without an icon; retain the configured `Text`, callback behavior, dimensions, and public API.

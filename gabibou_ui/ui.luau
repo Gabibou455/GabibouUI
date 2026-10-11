@@ -4,7 +4,7 @@ local TweenService=game:GetService("TweenService")
 local HttpService=game:GetService("HttpService")
 local GuiService=game:GetService("GuiService")
 local TextService=game:GetService("TextService")
-local Library={Version="1.5.0-rc.21",Windows={}}
+local Library={Version="1.5.0-rc.22",Windows={}}
 local style_for,motion_for,branding_for,layout_for,control_layout_for,tab_layout_for,notification_for,navigation_for,resolve_design_options
 Library.Themes={
     Graphite={Background=Color3.fromRGB(14,15,18),Surface=Color3.fromRGB(23,25,30),Raised=Color3.fromRGB(33,36,42),Hover=Color3.fromRGB(44,48,55),Border=Color3.fromRGB(54,59,67),Text=Color3.fromRGB(243,245,247),Muted=Color3.fromRGB(163,169,178),Accent=Color3.fromRGB(231,234,239),AccentText=Color3.fromRGB(21,23,27),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
@@ -23,6 +23,19 @@ local function create(class,properties,parent)
     instance.Parent=parent
     return instance
 end
+local PLAYER_GUI_WAIT_SECONDS=8
+local function resolve_window_parent(player,requested)
+    if requested~=nil then
+        assert(typeof(requested)=="Instance","Parent must be an Instance")
+        return requested
+    end
+    local parent=player:FindFirstChildOfClass("PlayerGui")
+    if not parent then parent=player:WaitForChild("PlayerGui",PLAYER_GUI_WAIT_SECONDS)end
+    assert(parent and typeof(parent)=="Instance","PlayerGui did not become available; pass a GUI parent or retry after the client starts")
+    return parent
+end
+-- Internal seam used by the client compatibility regression.
+Library._ResolveWindowParent=resolve_window_parent
 local function corner(instance,radius)create("UICorner",{CornerRadius=UDim.new(0,radius or 10)},instance)end
 local function padding(instance,value)
     create("UIPadding",{PaddingLeft=UDim.new(0,value),PaddingRight=UDim.new(0,value),PaddingTop=UDim.new(0,value),PaddingBottom=UDim.new(0,value)},instance)
@@ -479,8 +492,7 @@ function Library:CreateWindow(options)
     assert(options.ShowWatermark==nil or type(options.ShowWatermark)=="boolean","ShowWatermark must be boolean")
     local discordPrompt=Library:_NormalizeDiscordPrompt(options.DiscordPrompt,"CreateWindow.DiscordPrompt")
     local player=Players.LocalPlayer;assert(player,"Gabibou UI runs on a Roblox client")
-    local parent=options.Parent or player:FindFirstChildOfClass("PlayerGui")
-    assert(typeof(parent)=="Instance","Pass a GUI parent or wait for PlayerGui")
+    local parent=resolve_window_parent(player,options.Parent)
     local theme=theme_for(options.Theme or "Graphite")
     local style=style_for(options.Style,Library.Style);local motion=motion_for(options.Motion,Library.Motion)
     local branding=options.Branding~=nil and branding_for(options.Branding) or nil

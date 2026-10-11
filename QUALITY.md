@@ -1,8 +1,12 @@
-# Quality status: 1.5.0-rc.21 release candidate
+# Quality status: 1.5.0-rc.22 release candidate
+
+The rc.22 candidate waits up to 8 seconds for `PlayerGui` during default window-parent resolution; callers may pass an explicit GUI `Parent`. Its remote example now checks fetch and compilation stages and reports actionable loader errors. Offline mocked validation passed six parent-resolution cases and 64 loader assertions. The final standalone artifact contains the exact tested resolver helper, and static checks confirm `CreateWindow` resolves the parent before creating its `ScreenGui`. These checks use mocked Luau objects; live Roblox-client and executor compatibility remain pending. No rc.21 runtime suite results are attributed to rc.22.
+
+## Previous release candidate: rc.21 (historical)
 
 The rc.21 button-label change applies ending-ellipsis truncation to custom action-button text whether or not an icon is present. The configured `Text`, callback behavior, button dimensions, and public API are unchanged. The integrated module, demo, and both visual test files passed official Luau compilation (4 files; 13 KLOC, 746 KB bytecode). Module SHA-256: `5407c1d6a40422005d292289e55740dbb55f9982d52227206db6cdd03e57d6f5`.
 
-## Local validation and pending Roblox checks
+## Verified for rc.21 (historical)
 
 - Official Luau compilation passed for the integrated module, demo, and both visual test files (4 files; 13 KLOC, 746 KB bytecode).
 - On Roblox client 67516, generation 1, ten suites passed 1,132 checks: Regression 10/10, Visual 68/68, Native Visual 9/9, Layout 34/34, Navigation 64/64, Key 95/95, Loading 67/67, Notifications 32/32, Icons 725/725, and Design 28/28. These checks validate their listed assertions; they do not directly verify rendered long-label ellipsis behavior for the new plain-button case.

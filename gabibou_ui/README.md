@@ -1,8 +1,8 @@
-# Gabibou UI 1.5.0-rc.21
+# Gabibou UI 1.5.0-rc.22
 
 A Roblox interface library written in Luau. Load it in one line, create a window, and add controls using short constructors. The full options-table API remains available for layouts, animations, loading screens, key screens and other customization. Graphite is the default black, gray and white theme; the library includes 96 original icons in three variants.
 
-> This guide describes release candidate 1.5.0-rc.21. It includes named interface designs, button action variants, responsive layouts, key-gate part overrides, and the current controls and lifecycle APIs. Historical release notes identify when individual capabilities were introduced. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart), [external key-provider examples](https://gabibou-ui.mintlify.app/examples/key-providers), and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
+> This guide describes release candidate 1.5.0-rc.22. It includes named interface designs, button action variants, responsive layouts, key-gate part overrides, and the current controls and lifecycle APIs. Historical release notes identify when individual capabilities were introduced. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart), [external key-provider examples](https://gabibou-ui.mintlify.app/examples/key-providers), and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
 
 Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a complete feature map. Use [CUSTOMIZATION.md](CUSTOMIZATION.md) for advanced styling, custom controls, events, and animations.
 
@@ -19,7 +19,9 @@ tab:Button("Say hello", function()
 end)
 ```
 
-The URL follows updates on `main`; replace `main` with a reviewed release tag to keep a fixed version. This requires a client environment exposing both APIs. See [remote_example.luau](remote_example.luau) for separate fetch and compile errors. Studio uses the `ModuleScript` installation below. Repository and release instructions are in [PUBLISHING.md](../PUBLISHING.md).
+The URL follows updates on `main`; replace `main` with a reviewed release tag to keep a fixed version. This one-line loader requires both APIs. The [complete remote example](remote_example.luau) tries optional request functions if `HttpGet` fails and reports download and compile errors separately. Studio uses the `ModuleScript` installation below. Repository and release instructions are in [PUBLISHING.md](../PUBLISHING.md).
+
+If nothing appears, start with the [installation troubleshooting guide](https://gabibou-ui.mintlify.app/getting-started/installation#when-the-interface-does-not-appear). A download failure, a missing client GUI and a rejected key are different problems. Clipboard support is optional; the default window uses the player's `PlayerGui` and waits up to eight seconds for it to become available. Compatibility with an unnamed executor cannot be guaranteed without testing that environment.
 
 ## Installation and quick start
 

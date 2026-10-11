@@ -1,6 +1,6 @@
 # Gabibou UI Developer Guide
 
-- Version: `1.5.0-rc.21` (release candidate)
+- Version: `1.5.0-rc.22` (release candidate)
 - Language: Luau
 - Runtime: Roblox client
 

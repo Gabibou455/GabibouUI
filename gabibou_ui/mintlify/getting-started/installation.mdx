@@ -19,6 +19,22 @@ The `main` link follows repository changes. To pin a version, replace `main` in 
 
 Standard Roblox Studio does not provide this loading route. Use the ModuleScript steps below in Studio.
 
+## When the interface does not appear
+
+Check the first error in your environment's output. It tells you which step needs attention:
+
+| What you see | What to check |
+| --- | --- |
+| `loadstring` is missing | This environment cannot compile a downloaded source string. In Studio, use the ModuleScript steps below. |
+| Download failed or `HttpGet` is unavailable | Check the URL and network access. The [complete remote example](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/remote_example.luau) also tries optional `request`, `http_request` and `syn.request` functions. |
+| Compile failed | Use the standalone `gabibou_ui.luau` file, rather than a GitHub HTML page or an individual extension. Keep the compiler's error text when reporting the problem. |
+| `PlayerGui did not become available` | Run on the player's client after joining. The default window waits up to eight seconds for `PlayerGui`. Advanced integrations can supply their own Instance through `Parent`. |
+| The key screen opens but verification fails | Check your key provider, callback and network configuration. The UI loading step has already completed; see [key providers](/examples/key-providers). |
+
+The one-line loader above needs `HttpGet` before any library code can run. To use its download fallbacks, copy the complete remote example into your environment's editor and change its window and controls to your own. Optional clipboard functions are used for copying links; a visible manual link remains available when copying is unavailable.
+
+Support depends on the functions and Roblox client context available in your environment. When reporting a problem, include its name, the first error and whether the key screen or window appeared. These details let a developer reproduce the failing step.
+
 ## Roblox Studio: ModuleScript and LocalScript
 
 A **ModuleScript** stores reusable code that another script can load with `require`. A **LocalScript** runs on one player's client. Set them up in Studio's Explorer panel:
