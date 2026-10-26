@@ -2,7 +2,7 @@
 
 A customizable Luau interface library with a black, gray and white default theme. Build a window, add controls, then customize its appearance when needed.
 
-Release candidate `1.5.0-rc.25` includes `window:Appearance()` for an appearance editor, searchable commands and named presets. Presets stay in memory by default; developers can provide storage to keep them after relaunch. See the [changelog](CHANGELOG.md) for fixes in this candidate.
+Release candidate `1.5.0-rc.26` includes `window:Appearance()` for an appearance editor, searchable commands and named presets. Presets stay in memory by default; developers can provide storage to keep them after relaunch. See the [changelog](CHANGELOG.md) for fixes in this candidate.
 
 ## Start with one line
 

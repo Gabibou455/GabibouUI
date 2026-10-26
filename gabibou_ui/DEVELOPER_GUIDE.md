@@ -1,6 +1,6 @@
 # Gabibou UI Developer Guide
 
-- Version: `1.5.0-rc.25` (release candidate)
+- Version: `1.5.0-rc.26` (release candidate)
 - Language: Luau
 - Runtime: Roblox client
 
@@ -445,7 +445,7 @@ For reusable controls, `UI:RegisterComponent(name, builder)` registers a builder
 
 Start with the returned object and its public state: check `window:Get(id)`, `control:Get()`, the launch session's `Status` and `LastError`, or the loader's `Progress`, `Status`, and `LastError`. A failed declarative schema reports the failing path, such as `Tabs[1].Sections[2].Controls[1].Value`, before the window is created.
 
-User callbacks and custom cleanup run in protected calls so one failure does not stop the rest of the UI lifecycle. While an owner is alive, window-owned callback and cleanup errors are recorded in `window.LastError` and reported with `warn`. Destroying an owner cancels its library-managed callback tasks; a callback that destroys its own owner may finish its active call, while callbacks that finish after destruction do not create stale notifications or update `LastError`. Key validation and Launch expose generic error messages; they do not forward a submitted key or raw validation exception. A separate debug console or logging mode is not part of the public API.
+User callbacks and custom cleanup run in protected calls so one failure does not stop the rest of the UI lifecycle. While an owner is alive, window-owned callback and cleanup errors are recorded in `window.LastError` and reported with `warn`. When a control callback fails, the player also sees a short notification titled after the control, with the script path and line number removed; the full error stays in `LastError` and the output. Destroying an owner cancels its library-managed callback tasks; a callback that destroys its own owner may finish its active call, while callbacks that finish after destruction do not create stale notifications or update `LastError`. Key validation and Launch expose generic error messages; they do not forward a submitted key or raw validation exception. A separate debug console or logging mode is not part of the public API.
 
 Use the focused examples and the release's quality report when diagnosing library behavior. Do not treat a Studio preview as evidence that executor-only services such as `setclipboard`, `loadstring`, or filesystem functions exist in a standard client.
 

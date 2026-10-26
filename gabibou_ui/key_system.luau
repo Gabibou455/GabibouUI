@@ -69,18 +69,23 @@ local function make_vampauth_provider(options)
 	end
 end
 
+local KEYAUTH_INIT_TIMEOUT = 20
 local function make_keyauth_provider(options)
 	validate_provider_options(options, {Initialize = true, License = true}, "KeyAuth")
 	assert(type(options.Initialize) == "function", "KeyAuth.Initialize must be a function")
 	assert(type(options.License) == "function", "KeyAuth.License must be a function")
-	local state = {Status = "new", Context = nil}
+	local state = {Status = "new", Context = nil, Attempt = 0}
 
 	local function ensure_initialized()
 		if state.Status == "ready" then return true, state.Context end
 		if state.Status ~= "pending" then
 			state.Status = "pending"
+			state.Attempt += 1
+			local attempt = state.Attempt
 			task.spawn(function()
 				local called, initialized, context = pcall(options.Initialize)
+				-- A newer attempt replaced this one after a timeout; ignore the late result.
+				if state.Attempt ~= attempt then return end
 				if not called then
 					state.Status = "failed"
 					state.Context = nil
@@ -98,7 +103,13 @@ local function make_keyauth_provider(options)
 				state.Status = "ready"
 			end)
 		end
-		while state.Status == "pending" do task.wait(0.05) end
+		-- A KeyAuth server that never answers must not leave the key screen waiting forever.
+		local deadline = os.clock() + KEYAUTH_INIT_TIMEOUT
+		while state.Status == "pending" and os.clock() < deadline do task.wait(0.05) end
+		if state.Status == "pending" then
+			state.Status = "failed"
+			state.Attempt += 1
+		end
 		if state.Status ~= "ready" then return false, nil end
 		return true, state.Context
 	end

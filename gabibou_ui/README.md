@@ -1,8 +1,8 @@
-# Gabibou UI 1.5.0-rc.25
+# Gabibou UI 1.5.0-rc.26
 
 A Roblox interface library written in Luau. Load it in one line, create a window, and add controls using short constructors. The full options-table API remains available for layouts, animations, loading screens, key screens and other customization. Graphite is the default black, gray and white theme; the library includes 96 original icons in three variants.
 
-> This guide describes release candidate 1.5.0-rc.25. It adds an optional appearance editor, command palette and named configuration presets with optional storage. Existing design presets and control APIs remain available.
+> This guide describes release candidate 1.5.0-rc.26. It adds an optional appearance editor, command palette and named configuration presets with optional storage. Existing design presets and control APIs remain available.
 
 Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a complete feature map. Use [CUSTOMIZATION.md](CUSTOMIZATION.md) for advanced styling, custom controls, events, and animations.
 

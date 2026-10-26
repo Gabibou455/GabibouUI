@@ -87,7 +87,7 @@ local gate = UI:CreateKeySystem({
 })
 ```
 
-Initialization runs lazily once for the provider callback and shares its context across checks. If it fails, the next submission can retry. License callbacks can return `true, result`, `false, message`, or `{success = true, result = ...}` / `{success = false, message = ...}`. A table without a boolean `success` field is rejected. Do not put a KeyAuth Seller API credential or other owner-only secret in a client script. See KeyAuth's [initialization](https://docs.keyauth.cc/api/getting-started/initialization), [license login](https://docs.keyauth.cc/api/getting-started/license/license-login), and [SDK examples](https://docs.keyauth.cc/overview/examples).
+Initialization runs lazily once for the provider callback and shares its context across checks. If it fails, or does not finish within 20 seconds, the gate shows an error and the next submission retries. License callbacks can return `true, result`, `false, message`, or `{success = true, result = ...}` / `{success = false, message = ...}`. A table without a boolean `success` field is rejected. Do not put a KeyAuth Seller API credential or other owner-only secret in a client script. See KeyAuth's [initialization](https://docs.keyauth.cc/api/getting-started/initialization), [license login](https://docs.keyauth.cc/api/getting-started/license/license-login), and [SDK examples](https://docs.keyauth.cc/overview/examples).
 
 ## Custom validator
 

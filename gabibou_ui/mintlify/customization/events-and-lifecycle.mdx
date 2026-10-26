@@ -21,7 +21,7 @@ This page documents lifecycle behavior in Gabibou UI 1.5.0-rc.22. Short construc
 
 Table arguments are copies. `MotionChanged` reports changes to tween policy; reduced motion has its own event.
 
-Library-managed callbacks belong to their window or control. Destroying that owner cancels its callback tasks and disconnects its event subscriptions (including `Changed`) and `Connect` handlers. Callbacks that finish after destruction do not create stale notifications or update `LastError`. `window:Hide()` and `window:Show()` only change visibility, so they preserve subscriptions and callbacks. A callback that destroys its own owner is allowed to finish its current call. Tasks started directly by your code with `task.spawn` are not managed by the library; cancel them in your own cleanup path.
+Library-managed callbacks belong to their window or control. Destroying that owner cancels its callback tasks and disconnects its event subscriptions (including `Changed`) and `Connect` handlers. When a control callback raises an error, the player sees a short notification titled after the control (for example "Auto farm failed") with the script path and line number removed. The full message stays in `window.LastError` and the output. Callbacks that finish after destruction do not create stale notifications or update `LastError`. `window:Hide()` and `window:Show()` only change visibility, so they preserve subscriptions and callbacks. A callback that destroys its own owner is allowed to finish its current call. Tasks started directly by your code with `task.spawn` are not managed by the library; cancel them in your own cleanup path.
 
 ## Control events
 

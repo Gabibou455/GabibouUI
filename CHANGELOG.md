@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0-rc.26
+
+- Callback errors show the player a short notification named after the control ("Auto farm failed") with the script path and line number removed. The full error is still in `window.LastError` and the output.
+- KeyAuth initialization gives up after 20 seconds instead of waiting forever; the next submission starts a fresh attempt and a late reply from the old one is ignored.
+- Clearer window texts: the close dialog names the window and explains how to bring it back, and the reopen button reads "Open".
+
 ## 1.5.0-rc.25
 
 - Fix: an Input that receives invalid text now keeps its previous value and shows a notice instead of raising inside the FocusLost handler.

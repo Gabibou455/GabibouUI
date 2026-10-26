@@ -1,4 +1,4 @@
--- Gabibou UI v1.5.0-rc.25 | Original Roblox client GUI library
+-- Gabibou UI v1.5.0-rc.26 | Original Roblox client GUI library
 -- No external UI or telemetry. Optional Roblox assets and avatar thumbnails.
 local Logic=(function()
 -- Pure, engine-independent rules shared by the library and its tests.
@@ -74,7 +74,7 @@ local TweenService=game:GetService("TweenService")
 local HttpService=game:GetService("HttpService")
 local GuiService=game:GetService("GuiService")
 local TextService=game:GetService("TextService")
-local Library={Version="1.5.0-rc.25",Windows={}}
+local Library={Version="1.5.0-rc.26",Windows={}}
 local style_for,motion_for,branding_for,layout_for,control_layout_for,tab_layout_for,notification_for,navigation_for,resolve_design_options
 Library.Themes={
     Graphite={Background=Color3.fromRGB(14,15,18),Surface=Color3.fromRGB(23,25,30),Raised=Color3.fromRGB(29,31,36),Hover=Color3.fromRGB(41,44,50),Border=Color3.fromRGB(48,52,59),Text=Color3.fromRGB(243,245,247),Muted=Color3.fromRGB(163,169,178),Accent=Color3.fromRGB(231,234,239),AccentText=Color3.fromRGB(21,23,27),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
@@ -163,6 +163,14 @@ local function disconnect(connections,owner)
         end
     end
     table.clear(connections)
+end
+-- Players see the reason, not the script path and line number; the full error stays in LastError and the output.
+local function readable_error(err)
+    local message=tostring(err):match("^[^\n]*")
+    message=message:gsub("^[%w%._%-%s]+:%d+:%s*","")
+    if message=="" then message="Something went wrong. Try again." end
+    if #message>160 then message=Logic.text(message,157).."..." end
+    return message
 end
 local function release_focus(root)
     local focused=UIS:GetFocusedTextBox()
@@ -288,7 +296,7 @@ function Window:_Callback(control,...)
         if not ok and not self.Destroyed and not control.Destroyed then
             self.LastError=tostring(err)
             warn("[Gabibou UI] "..control.Id..": "..tostring(err))
-            self:Notify({Title="Callback failed",Content=tostring(err),Kind="error",Duration=6})
+            self:Notify({Title=control.Title and control.Title~="" and control.Title.." failed" or "Action failed",Content=readable_error(err),Kind="error",Duration=6})
         end
     end)
 end
@@ -673,7 +681,7 @@ function Library:CreateWindow(options)
     Library:Icon(close,"close",{Size=18,Position=UDim2.fromOffset(13,13),Window=self,Token="Muted"})
     self._windowButtons={hide,close}
     self:_Connect(hide.Activated,function()self:Hide()end)
-    self:_Connect(close.Activated,function()self:Confirm({Title="Close this interface?",Content="The window and its connections will be removed.",ConfirmText="Close",Callback=function()self:Destroy()end})end)
+    self:_Connect(close.Activated,function()self:Confirm({Title="Close "..self.Title.."?",Content="Run the script again to bring it back. Use minimize to hide it for now.",ConfirmText="Close",Callback=function()self:Destroy()end})end)
     self.Search=create("TextBox",{Name="Search",Text="",PlaceholderText="Search controls...",ClearTextOnFocus=false,Font=font,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left},self.Panel)
     self:_Rounded(self.Search,"ControlRadius");self:_Style(self.Search,"Font","Font");self:_Style(self.Search,"TextSize","TextSize");padding(self.Search,12);self.Search:FindFirstChildOfClass("UIPadding").PaddingLeft=UDim.new(0,36);self:_Color(self.Search,"BackgroundColor3","Surface");self:_Color(self.Search,"TextColor3","Text");self:_Color(self.Search,"PlaceholderColor3","Muted");self:_Stroke(self.Search,"Border",.76)
     Library:Icon(self.Search,"search",{Size=16,Position=UDim2.new(0,-25,.5,-8),Window=self,Token="Muted"})
@@ -696,7 +704,7 @@ function Library:CreateWindow(options)
     self.Footer=self:_Label(self.Panel,"",10,"Muted");self.Footer.Size=UDim2.new(1,-36,0,22);self.Footer.Position=UDim2.new(0,18,1,-32);self.Footer.AutomaticSize=Enum.AutomaticSize.None
     self._resize=self:_Button(self.Panel,"",UDim2.fromOffset(28,28));self._resize.Name="Resize";self._resize.Position=UDim2.new(1,-34,1,-34)
     Library:Icon(self._resize,"resize",{Size=16,Position=UDim2.fromOffset(6,6),Window=self,Token="Muted"})
-    self.Reopen=self:_Button(self.Canvas,"OPEN",UDim2.fromOffset(112,44));self.Reopen.Name="Reopen";self.Reopen.Position=UDim2.new(0,14,0.5,-22);self.Reopen.Visible=false
+    self.Reopen=self:_Button(self.Canvas,"Open",UDim2.fromOffset(112,44));self.Reopen.Name="Reopen";self.Reopen.Position=UDim2.new(0,14,0.5,-22);self.Reopen.Visible=false
     padding(self.Reopen,8);self.Reopen:FindFirstChildOfClass("UIPadding").PaddingLeft=UDim.new(0,32)
     Library:Icon(self.Reopen,"restore",{Size=18,Position=UDim2.new(0,-22,.5,-9),Window=self,Token="Text"})
     self:_Connect(self.Reopen.Activated,function()self:Show()end)
@@ -3958,18 +3966,23 @@ local function make_vampauth_provider(options)
 	end
 end
 
+local KEYAUTH_INIT_TIMEOUT = 20
 local function make_keyauth_provider(options)
 	validate_provider_options(options, {Initialize = true, License = true}, "KeyAuth")
 	assert(type(options.Initialize) == "function", "KeyAuth.Initialize must be a function")
 	assert(type(options.License) == "function", "KeyAuth.License must be a function")
-	local state = {Status = "new", Context = nil}
+	local state = {Status = "new", Context = nil, Attempt = 0}
 
 	local function ensure_initialized()
 		if state.Status == "ready" then return true, state.Context end
 		if state.Status ~= "pending" then
 			state.Status = "pending"
+			state.Attempt += 1
+			local attempt = state.Attempt
 			task.spawn(function()
 				local called, initialized, context = pcall(options.Initialize)
+				-- A newer attempt replaced this one after a timeout; ignore the late result.
+				if state.Attempt ~= attempt then return end
 				if not called then
 					state.Status = "failed"
 					state.Context = nil
@@ -3987,7 +4000,13 @@ local function make_keyauth_provider(options)
 				state.Status = "ready"
 			end)
 		end
-		while state.Status == "pending" do task.wait(0.05) end
+		-- A KeyAuth server that never answers must not leave the key screen waiting forever.
+		local deadline = os.clock() + KEYAUTH_INIT_TIMEOUT
+		while state.Status == "pending" and os.clock() < deadline do task.wait(0.05) end
+		if state.Status == "pending" then
+			state.Status = "failed"
+			state.Attempt += 1
+		end
 		if state.Status ~= "ready" then return false, nil end
 		return true, state.Context
 	end

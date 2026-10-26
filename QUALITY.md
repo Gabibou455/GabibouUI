@@ -1,6 +1,11 @@
-# Quality status: 1.5.0-rc.25
+# Quality status: 1.5.0-rc.26
 
-## Release candidate: rc.25
+## Release candidate: rc.26
+
+Standalone SHA-256: `341c5c013a0b84b38f76257578703e8bc7df10cf27f6f3a62969a39d482c3d77`.
+
+rc.26 changes callback error notifications, adds a 20-second KeyAuth initialization timeout and updates two window texts. The 42 logic checks passed and the standalone module compiled with official Luau. The error-message cleanup was checked with the Luau CLI on sample Roblox error strings. The Roblox runtime suites were not rerun for this build.
+## Previous release candidate: rc.25
 
 Standalone SHA-256: `6ff16c9dad4ba56c51499a86b1985b2f3b1b2c4ad197e36835327e4c3e91fcdd`.
 
