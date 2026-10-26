@@ -1,4 +1,4 @@
--- Gabibou UI v1.5.0-rc.22 | Original Roblox client GUI library
+-- Gabibou UI v1.5.0-rc.25 | Original Roblox client GUI library
 -- No external UI or telemetry. Optional Roblox assets and avatar thumbnails.
 local Logic=(function()
 -- Pure, engine-independent rules shared by the library and its tests.
@@ -74,16 +74,28 @@ local TweenService=game:GetService("TweenService")
 local HttpService=game:GetService("HttpService")
 local GuiService=game:GetService("GuiService")
 local TextService=game:GetService("TextService")
-local Library={Version="1.5.0-rc.22",Windows={}}
+local Library={Version="1.5.0-rc.25",Windows={}}
 local style_for,motion_for,branding_for,layout_for,control_layout_for,tab_layout_for,notification_for,navigation_for,resolve_design_options
 Library.Themes={
-    Graphite={Background=Color3.fromRGB(14,15,18),Surface=Color3.fromRGB(23,25,30),Raised=Color3.fromRGB(33,36,42),Hover=Color3.fromRGB(44,48,55),Border=Color3.fromRGB(54,59,67),Text=Color3.fromRGB(243,245,247),Muted=Color3.fromRGB(163,169,178),Accent=Color3.fromRGB(231,234,239),AccentText=Color3.fromRGB(21,23,27),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
+    Graphite={Background=Color3.fromRGB(14,15,18),Surface=Color3.fromRGB(23,25,30),Raised=Color3.fromRGB(29,31,36),Hover=Color3.fromRGB(41,44,50),Border=Color3.fromRGB(48,52,59),Text=Color3.fromRGB(243,245,247),Muted=Color3.fromRGB(163,169,178),Accent=Color3.fromRGB(231,234,239),AccentText=Color3.fromRGB(21,23,27),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
     Aurora={Background=Color3.fromRGB(13,14,23),Surface=Color3.fromRGB(22,24,38),Raised=Color3.fromRGB(32,35,53),Hover=Color3.fromRGB(43,47,69),Border=Color3.fromRGB(62,67,91),Text=Color3.fromRGB(243,244,255),Muted=Color3.fromRGB(158,163,190),Accent=Color3.fromRGB(161,143,255),AccentText=Color3.fromRGB(18,15,30),Success=Color3.fromRGB(119,221,181),Danger=Color3.fromRGB(247,142,164)},
     Ember={Background=Color3.fromRGB(21,15,15),Surface=Color3.fromRGB(32,24,24),Raised=Color3.fromRGB(45,32,30),Hover=Color3.fromRGB(58,40,36),Border=Color3.fromRGB(82,59,52),Text=Color3.fromRGB(255,244,237),Muted=Color3.fromRGB(190,165,155),Accent=Color3.fromRGB(255,166,113),AccentText=Color3.fromRGB(33,20,14),Success=Color3.fromRGB(169,208,158),Danger=Color3.fromRGB(255,128,128)}
 }
 local Window={};Window.__index=Window
 local Container={};Container.__index=Container
 local Control={};Control.__index=Control
+local function window_drag_position(position,viewport,size,margin,mobile,grip)
+    local minX=mobile and -margin or 0
+    local minY=0
+    local maxX=mobile and math.max(minX,viewport.X-margin-grip.X) or math.max(0,viewport.X-size.X)
+    local maxY=mobile and math.max(0,viewport.Y-grip.Y) or math.max(0,viewport.Y-size.Y)
+    return Vector2.new(math.clamp(position.X,minX,maxX),math.clamp(position.Y,minY,maxY))
+end
+local function gesture_input_matches(gesture,input)
+    return gesture~=nil and (input==gesture.input
+        or (gesture.input.UserInputType==Enum.UserInputType.MouseButton1
+            and input.UserInputType==Enum.UserInputType.MouseMovement))
+end
 local font=Enum.Font.Gotham
 local bold=Enum.Font.GothamBold
 local function create(class,properties,parent)
@@ -176,6 +188,34 @@ function Window:_Connect(signal,callback,owner)
     bucket[#bucket+1]=connection
     return connection
 end
+function Window:_BeginPointerGesture(kind,input)
+    if self.Destroyed or self.Closed or (input.UserInputType~=Enum.UserInputType.MouseButton1 and input.UserInputType~=Enum.UserInputType.Touch) then return false end
+    if self._gesture then return false end
+    if kind=="drag" and not self.Layout.Draggable or kind=="resize" and not self.Layout.Resizable then return false end
+    self._gesture={kind=kind,input=input,origin=Vector2.new(input.Position.X,input.Position.Y),position=self._position,size=self._desiredSize}
+    return true
+end
+function Window:_UpdatePointerGesture(input)
+    if self.Destroyed then self._gesture=nil;return false end
+    local g=self._gesture
+    if not g then return false end
+    if input==g.input and input.UserInputState==Enum.UserInputState.Cancel then self._gesture=nil;return false end
+    if not gesture_input_matches(g,input) then return false end
+    local position=Vector2.new(input.Position.X,input.Position.Y)
+    if g.kind=="drag" then
+        local delta=position-g.origin
+        if not g.moved and delta.Magnitude<3 then return false end
+        if not g.moved then g.moved=true;self._positionSpec=nil end
+        self._position=g.position+delta;self:_Layout()
+    elseif g.kind=="resize" then self:SetSize(g.size.X+position.X-g.origin.X,g.size.Y+position.Y-g.origin.Y)
+    elseif g.kind=="slider" and not g.control.Destroyed then g.control:_Pointer(position.X)
+    else return false end
+    return true
+end
+function Window:_EndPointerGesture(input)
+    if self._gesture and input==self._gesture.input then self._gesture=nil;return true end
+    return false
+end
 function Window:_TrackBindingTarget(instance)
     if self._bindingConnections[instance] then return end
     self._bindingConnections[instance]=instance.Destroying:Connect(function()
@@ -212,8 +252,8 @@ function Window:_Label(parent,text,size,token)
     self:_Color(label,"TextColor3",token or "Text");self:_Style(label,"Font","Font");return label
 end
 function Window:_Button(parent,text,size,owner)
-    local button=create("TextButton",{Text=tostring(text),Font=bold,TextSize=13,Size=size or UDim2.fromOffset(120,36),AutoButtonColor=false,Selectable=true},parent)
-    self:_Rounded(button,"ControlRadius");self:_Style(button,"Font","FontBold");self:_Style(button,"TextSize","TextSize");self:_Color(button,"BackgroundColor3","Raised");self:_Color(button,"TextColor3","Text");self:_Stroke(button,"Border",.3)
+    local button=create("TextButton",{Text=tostring(text),Font=bold,TextSize=13,Size=size or UDim2.fromOffset(120,44),AutoButtonColor=false,Selectable=true},parent)
+    self:_Rounded(button,"ControlRadius");self:_Style(button,"Font","FontBold");self:_Style(button,"TextSize","TextSize");self:_Color(button,"BackgroundColor3","Raised");self:_Color(button,"TextColor3","Text");self:_Stroke(button,"Border",.72)
     local highlight=create("Frame",{Name="SurfaceHighlight",Position=UDim2.new(0,8,0,1),Size=UDim2.new(1,-16,0,1),BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.94,BorderSizePixel=0,Active=false,Selectable=false,ZIndex=button.ZIndex+1},button)
     corner(highlight,1)
     self:_Connect(button:GetPropertyChangedSignal("ZIndex"),function()highlight.ZIndex=button.ZIndex+1 end,owner)
@@ -327,9 +367,11 @@ function Window:_Layout()
         local p,a=self._positionSpec,self._anchorPoint
         position=Vector2.new(viewport.X*p.X.Scale+p.X.Offset-width*a.X,viewport.Y*p.Y.Scale+p.Y.Offset-height*a.Y)
     end
-    local x=math.clamp(position.X,0,math.max(0,viewport.X-width))
-    local y=math.clamp(position.Y,0,math.max(0,viewport.Y-height))
-    self._position=Vector2.new(x,y);self.Root.Position=UDim2.fromOffset(x,y);self.Root.Size=self.Panel.Size
+    -- Keep mouse-first desktop windows fully visible. On touch screens, retain a reachable
+    -- header grip while allowing the rest of a viewport-filling window to move offscreen.
+    local grip=Vector2.new(math.min(width,72),math.min(height,72))
+    self._position=window_drag_position(position,viewport,Vector2.new(width,height),margin,mobile or UIS.TouchEnabled,grip)
+    self.Root.Position=UDim2.fromOffset(self._position.X,self._position.Y);self.Root.Size=self.Panel.Size
     self:_Arrange(width,height,mobile,compact,tiny,minimal)
     self._headerWash.Visible=self.Layout.ShowHeader and not minimal
     if self._headerDivider then self._headerDivider.Visible=self._headerWash.Visible end
@@ -343,7 +385,10 @@ function Window:_Layout()
     self.ToastHost.Size=UDim2.new(0,math.min(300,math.max(1,viewport.X-36)),1,-36)
     self:_LayoutNotifications()
     self:_ApplyPartLayouts()
-    self:_CloseDropdown()
+    -- An open menu stays anchored to its input unless the window itself moved or resized.
+    local last=self._lastGeometry
+    if not last or last.Size~=self._size or last.Position~=self._position then self:_CloseDropdown()end
+    self._lastGeometry={Size=self._size,Position=self._position}
     task.defer(function()
         if self.Destroyed then return end
         local focused=UIS:GetFocusedTextBox()
@@ -428,8 +473,18 @@ function Window:SelectTab(tab)
     if previous~=tab then self:_Emit(self,"TabChanged",tab,previous)end
     return tab
 end
+-- Building many controls in one frame refreshes search visibility once, not per control.
+function Window:_QueueSearch()
+    if self._searchQueued or self.Destroyed then return end
+    self._searchQueued=true
+    task.defer(function()
+        if not self._searchQueued or self.Destroyed then return end
+        self:SearchFor(self.Query)
+    end)
+end
 function Window:SearchFor(query)
     assert(type(query)=="string","Search needs a string")
+    self._searchQueued=false
     self.Query=query
     local first
     for _,tab in ipairs(self.Tabs) do
@@ -534,6 +589,8 @@ function Window:Destroy()
     if self.Categories then table.clear(self.Categories)end
     if self._categoryEntries then table.clear(self._categoryEntries)end
     for instance in pairs(table.clone(self._tweens)) do self:_CancelAnimation(instance) end
+    for instance in pairs(table.clone(self._animationWatchers)) do self:_ReleaseAnimationWatcher(instance) end
+    table.clear(self._pressedButtons)
     for _,connection in pairs(self._bindingConnections)do connection:Disconnect()end
     table.clear(self._bindingConnections)
     table.clear(self.Controls);table.clear(self._themeTargets);table.clear(self._styleTargets)
@@ -586,14 +643,14 @@ function Library:CreateWindow(options)
     if options.ReducedMotion~=nil then assert(type(options.ReducedMotion)=="boolean","ReducedMotion must be boolean");reduced=options.ReducedMotion end
     if self.Windows[id] then self.Windows[id]:Destroy() end
     local self=setmetatable({Id=id,Title=tostring(options.Title or "Gabibou UI"),Theme=theme,ThemeName=type(options.Theme)=="table" and "Custom" or (options.Theme or "Graphite"),Responsive=responsive,ReducedMotion=reduced,ToggleKey=key,ShowWatermark=options.ShowWatermark~=false,Destroyed=false,Closed=false,Tabs={},Controls={},Query="",Storage=options.Storage,_discordPrompt=discordPrompt,_connections={},_destroyCallbacks={},_themeTargets={},_tweens=setmetatable({},{__mode="k"}),_serial=0,_notifications={},_desiredSize=Vector2.new(math.clamp(options.Width or 800,320,1400),math.clamp(options.Height or 590,300,1000))},Window)
-    self.Style=style;self.Motion=motion;self.Layout=layout;self.Notifications=notifications;self.Navigation=navigation;self._positionSpec=initialPosition;self._anchorPoint=anchor;self._partLayouts={};self._events={};self._styleTargets={};self._bindingConnections={};self._animationRecords={}
+    self.Style=style;self.Motion=motion;self.Layout=layout;self.Notifications=notifications;self.Navigation=navigation;self._positionSpec=initialPosition;self._anchorPoint=anchor;self._partLayouts={};self._events={};self._styleTargets={};self._bindingConnections={};self._animationRecords={};self._animationWatchers={};self._pressedButtons={}
     self.Gui=create("ScreenGui",{Name="GabibouUI_"..id,ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=options.DisplayOrder or 90,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},parent)
     self.Canvas=create("Frame",{Name="SafeArea",BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},self.Gui)
     self.Root=create("Frame",{Name="Window",BackgroundTransparency=1},self.Canvas)
     local depth=create("Frame",{Name="Depth",Position=UDim2.fromOffset(-3,4),Size=UDim2.new(1,6,1,4),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.78,BorderSizePixel=0,ZIndex=1},self.Root)
     corner(depth,22)
     self.Panel=create("Frame",{Name="Panel",Size=UDim2.fromScale(1,1),BorderSizePixel=0,Active=true,ZIndex=3},self.Root)
-    self:_Rounded(self.Panel,"WindowRadius");self:_Color(self.Panel,"BackgroundColor3","Background");self:_Stroke(self.Panel,"Border",.42)
+    self:_Rounded(self.Panel,"WindowRadius");self:_Color(self.Panel,"BackgroundColor3","Background");self:_Stroke(self.Panel,"Border",.72)
     self._headerWash=create("Frame",{Name="HeaderWash",BackgroundTransparency=.82,Size=UDim2.new(1,0,0,74),ZIndex=3},self.Panel)
     self:_Rounded(self._headerWash,"WindowRadius");self:_Color(self._headerWash,"BackgroundColor3","Raised")
     local cap=create("Frame",{Name="HeaderDivider",Position=UDim2.fromOffset(18,72),Size=UDim2.new(1,-36,0,1),BackgroundTransparency=.52,BorderSizePixel=0,ZIndex=5},self.Panel)
@@ -618,12 +675,20 @@ function Library:CreateWindow(options)
     self:_Connect(hide.Activated,function()self:Hide()end)
     self:_Connect(close.Activated,function()self:Confirm({Title="Close this interface?",Content="The window and its connections will be removed.",ConfirmText="Close",Callback=function()self:Destroy()end})end)
     self.Search=create("TextBox",{Name="Search",Text="",PlaceholderText="Search controls...",ClearTextOnFocus=false,Font=font,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left},self.Panel)
-    self:_Rounded(self.Search,"ControlRadius");self:_Style(self.Search,"Font","Font");self:_Style(self.Search,"TextSize","TextSize");padding(self.Search,12);self.Search:FindFirstChildOfClass("UIPadding").PaddingLeft=UDim.new(0,36);self:_Color(self.Search,"BackgroundColor3","Surface");self:_Color(self.Search,"TextColor3","Text");self:_Color(self.Search,"PlaceholderColor3","Muted");self:_Stroke(self.Search,"Border",.4)
+    self:_Rounded(self.Search,"ControlRadius");self:_Style(self.Search,"Font","Font");self:_Style(self.Search,"TextSize","TextSize");padding(self.Search,12);self.Search:FindFirstChildOfClass("UIPadding").PaddingLeft=UDim.new(0,36);self:_Color(self.Search,"BackgroundColor3","Surface");self:_Color(self.Search,"TextColor3","Text");self:_Color(self.Search,"PlaceholderColor3","Muted");self:_Stroke(self.Search,"Border",.76)
     Library:Icon(self.Search,"search",{Size=16,Position=UDim2.new(0,-25,.5,-8),Window=self,Token="Muted"})
-    self:_Connect(self.Search:GetPropertyChangedSignal("Text"),function()self:SearchFor(self.Search.Text)end)
+    local searchGeneration=0
+    self:_Connect(self.Search:GetPropertyChangedSignal("Text"),function()
+        searchGeneration+=1
+        local generation=searchGeneration
+        task.delay(.08,function()
+            if self.Destroyed or generation~=searchGeneration then return end
+            self:SearchFor(self.Search.Text)
+        end)
+    end)
     self.Nav=create("ScrollingFrame",{Name="Tabs",BackgroundTransparency=1,BorderSizePixel=0,CanvasSize=UDim2.new(),ScrollBarThickness=2},self.Panel)
     self.Nav.BackgroundTransparency=.28
-    self:_Rounded(self.Nav,"SectionRadius");self:_Color(self.Nav,"BackgroundColor3","Raised");self:_Stroke(self.Nav,"Border",.48)
+    self:_Rounded(self.Nav,"SectionRadius");self:_Color(self.Nav,"BackgroundColor3","Raised");self.Nav.BackgroundTransparency=.18;self:_Stroke(self.Nav,"Border",.82)
     self:_Color(self.Nav,"ScrollBarImageColor3","Border");self._navLayout=list(self.Nav,7,false)
     self.PageHost=create("Frame",{Name="Pages",BackgroundTransparency=1},self.Panel)
     self.PageTitle=self:_Label(self.Panel,"",22,"Text");self:_Style(self.PageTitle,"Font","FontBold");self.PageTitle.AutomaticSize=Enum.AutomaticSize.None;self.PageTitle.TextWrapped=false;self.PageTitle.TextTruncate=Enum.TextTruncate.AtEnd
@@ -640,24 +705,32 @@ function Library:CreateWindow(options)
     local viewport=self:_Viewport();self._position=Vector2.new(math.max(0,(viewport.X-self._desiredSize.X)/2),math.max(0,(viewport.Y-self._desiredSize.Y)/2))
     local function gesture(gui,kind)
         self:_Connect(gui.InputBegan,function(input)
-            if self.Closed or (input.UserInputType~=Enum.UserInputType.MouseButton1 and input.UserInputType~=Enum.UserInputType.Touch) then return end
-            if kind=="drag" and not self.Layout.Draggable or kind=="resize" and not self.Layout.Resizable then return end
-            if kind=="drag" then self._positionSpec=nil end
-            self._gesture={kind=kind,input=input,origin=Vector2.new(input.Position.X,input.Position.Y),position=self._position,size=self._desiredSize}
+            self:_BeginPointerGesture(kind,input)
         end)
     end
-    gesture(self.Header,"drag");gesture(self._resize,"resize")
+    gesture(self.Header,"drag")
+    -- The title strip contains only passive labels. Touches on them do not bubble to
+    -- Header.InputBegan, so make those targets active and give them the same drag start.
+    for _,target in ipairs({mark,self.TitleLabel,subtitle})do
+        target.Active=true
+        gesture(target,"drag")
+    end
+    gesture(self._resize,"resize")
     self:_Connect(UIS.InputChanged,function(input)
-        local g=self._gesture
-        if not g then return end
-        if input~=g.input and not (g.input.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseMovement) then return end
-        local position=Vector2.new(input.Position.X,input.Position.Y)
-        if g.kind=="drag" then self._position=g.position+(position-g.origin);self:_Layout()
-        elseif g.kind=="resize" then self:SetSize(g.size.X+position.X-g.origin.X,g.size.Y+position.Y-g.origin.Y)
-        elseif g.kind=="slider" and not g.control.Destroyed then g.control:_Pointer(position.X) end
+        self:_UpdatePointerGesture(input)
     end)
-    self:_Connect(UIS.InputEnded,function(input)if self._gesture and input==self._gesture.input then self._gesture=nil end end)
-    self:_Connect(UIS.WindowFocusReleased,function()self._gesture=nil;if self._capture then self._capture:_Render();self._capture=nil end end)
+    self:_Connect(UIS.InputEnded,function(input)
+        self:_EndPointerGesture(input)
+        for _,release in pairs(self._pressedButtons)do release(input)end
+    end)
+    self:_Connect(UIS.WindowFocusReleased,function()
+        self._gesture=nil;if self._capture then self._capture:_Render();self._capture=nil end
+        for _,release in pairs(self._pressedButtons)do release(nil)end
+    end)
+    -- Typing into any text box ends a pending key capture instead of leaving it stuck.
+    self:_Connect(UIS.TextBoxFocused,function()
+        if self._capture then local target=self._capture;self._capture=nil;target:_Render()end
+    end)
     self:_Connect(UIS.InputBegan,function(input,processed)
         if UIS:GetFocusedTextBox() then return end
         if self._capture and not self.Closed then
@@ -731,7 +804,7 @@ function Container:Section(options)
     local section=setmetatable({Window=self.Window,Tab=self,Title=tostring(options.Title or "Section"),_children={},_visible=true,Destroyed=false},Container)
     self.Window._serial+=1
     section.Root=create("Frame",{Size=UDim2.new(1,-4,0,0),AutomaticSize=Enum.AutomaticSize.Y,LayoutOrder=self.Window._serial*2},self.Body)
-    self.Window:_Rounded(section.Root,"SectionRadius");self.Window:_Color(section.Root,"BackgroundColor3","Raised");section.Root.BackgroundTransparency=.18;self.Window:_Stroke(section.Root,"Border",.5);list(section.Root,0,false)
+    self.Window:_Rounded(section.Root,"SectionRadius");self.Window:_Color(section.Root,"BackgroundColor3","Surface");section.Root.BackgroundTransparency=.08;self.Window:_Stroke(section.Root,"Border",.84);list(section.Root,0,false)
     local header=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,48)},section.Root)
     local label=self.Window:_Label(header,section.Title,14,"Text");self.Window:_Style(label,"Font","FontBold");label.Position=UDim2.fromOffset(14,0);label.Size=UDim2.new(1,-28,1,0);label.AutomaticSize=Enum.AutomaticSize.None
     local line=create("Frame",{Size=UDim2.new(1,-28,0,1),Position=UDim2.new(0,14,1,-1),BackgroundTransparency=.58},header);self.Window:_Color(line,"BackgroundColor3","Border")
@@ -789,7 +862,7 @@ function Container:_Row(kind,options,rightWidth,persistent)
         control._separator=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,1),LayoutOrder=row.LayoutOrder-1},self.Body)
         local line=create("Frame",{Size=UDim2.new(1,-28,1,0),Position=UDim2.fromOffset(14,0),BackgroundTransparency=.72},control._separator);window:_Color(line,"BackgroundColor3","Border")
     elseif kind=="Paragraph" then row.BackgroundTransparency=1
-    else window:_Rounded(row,"SectionRadius");window:_Color(row,"BackgroundColor3","Surface");row.BackgroundTransparency=.24;window:_Stroke(row,"Border",.62)end
+    else window:_Rounded(row,"SectionRadius");window:_Color(row,"BackgroundColor3","Surface");row.BackgroundTransparency=.52;window:_Stroke(row,"Border",.86)end
     create("UISizeConstraint",{MinSize=Vector2.new(0,rightWidth and 44 or 0)},row)
     local text=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,-(rightWidth and rightWidth+14 or 0),0,0),AutomaticSize=Enum.AutomaticSize.Y},row);list(text,5,false)
     control._text=text;control._rightWidth=rightWidth
@@ -890,6 +963,7 @@ function Control:Destroy()
     if self.Destroyed then return end
     self.Destroyed=true;disconnect(self._connections,self)
     self.Window:_DisconnectEvents(self)
+    self.Window._pressedButtons[self]=nil
     if self.Window._dropdownControl==self then self.Window:_CloseDropdown() end
     if self.Window._capture==self then self.Window._capture=nil end
     if self.Window._gesture and self.Window._gesture.control==self then self.Window._gesture=nil end
@@ -901,7 +975,7 @@ function Control:Destroy()
     end
     if not self.Window.Destroyed then self.Window:SearchFor(self.Window.Query) end
 end
-function Container:Paragraph(options)local c=self:_Row("Paragraph",options,nil,false);self.Window:SearchFor(self.Window.Query);return c end
+function Container:Paragraph(options)local c=self:_Row("Paragraph",options,nil,false);self.Window:_QueueSearch();return c end
 local buttonVariants={
     Primary={Background="Accent",Text="AccentText",Stroke="Accent",StrokeTransparency=.66,Icon="AccentText",BackgroundTransparency=0},
     Secondary={Background="Raised",Text="Text",Stroke="Border",StrokeTransparency=.3,Icon="Text",BackgroundTransparency=0},
@@ -957,27 +1031,35 @@ function Container:Button(options)
         end
     end
     function control:_Render()renderPressState()end
+    -- The window owns the global InputEnded/WindowFocusReleased listeners; a button only
+    -- registers itself there while it is pressed or focused.
+    local pressedButtons=self.Window._pressedButtons
+    local function release(input)
+        if control.Destroyed then pressedButtons[control]=nil;return end
+        if input==nil then pressedInput=nil;focused=false
+        elseif pressedInput and (input==pressedInput or (pressedInput.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseButton1)) then pressedInput=nil
+        else return end
+        if not pressedInput and not focused then pressedButtons[control]=nil end
+        renderPressState()
+    end
     self.Window:_Connect(control._input.InputBegan,function(input)
         if not control.Enabled then return end
         if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-            pressedInput=input;renderPressState()
+            pressedInput=input;pressedButtons[control]=release;renderPressState()
         end
     end,control)
-    self.Window:_Connect(UIS.InputEnded,function(input)
-        if not pressedInput then return end
-        if input==pressedInput or (pressedInput.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseButton1) then
-            pressedInput=nil;renderPressState()
-        end
+    self.Window:_Connect(control._input.SelectionGained,function()focused=true;pressedButtons[control]=release;renderPressState()end,control)
+    self.Window:_Connect(control._input.SelectionLost,function()
+        focused=false
+        if not pressedInput then pressedButtons[control]=nil end
+        renderPressState()
     end,control)
-    self.Window:_Connect(control._input.SelectionGained,function()focused=true;renderPressState()end,control)
-    self.Window:_Connect(control._input.SelectionLost,function()focused=false;renderPressState()end,control)
-    self.Window:_Connect(UIS.WindowFocusReleased,function()pressedInput=nil;focused=false;renderPressState()end,control)
     if options.Icon then
         create("UIPadding",{PaddingLeft=UDim.new(0,30),PaddingRight=UDim.new(0,8)},control._input)
         control._icon=Library:Icon(control._input,options.Icon,{Size=18,Position=UDim2.new(0,-22,.5,-9),Window=self.Window,Token=visual.Icon,Variant=options.IconVariant or "Outline"})
     end
     self.Window:_Connect(control._input.Activated,function()self.Window:_Callback(control)end,control)
-    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:Toggle(options)
     options=options or {};assert(options.Value==nil or type(options.Value)=="boolean","Toggle default must be boolean")
@@ -988,7 +1070,7 @@ function Container:Toggle(options)
     self.Window:_Stroke(control._track,"Border",.18)
     control._knob=create("Frame",{Size=UDim2.fromOffset(20,20),Position=UDim2.fromOffset(4,4),BorderSizePixel=0},control._track);corner(control._knob,10)
     function control:_Render()
-        local trackColor=self.Window.Theme[self.Value and "Accent" or "Surface"]
+        local trackColor=self.Window.Theme[self.Value and "Accent" or "Raised"]
         local knobColor=self.Window.Theme[self.Value and "AccentText" or "Muted"]
         local knobPosition=UDim2.fromOffset(self.Value and 30 or 4,4)
         if not self._rendered then
@@ -1002,7 +1084,7 @@ function Container:Toggle(options)
         animateControlState(self.Window,self._knob,{BackgroundColor3=knobColor,Position=knobPosition})
     end
     self.Window:_Connect(control._input.Activated,function()if control.Enabled then control:Set(not control.Value,true) end end,control)
-    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:Slider(options)
     options=options or {}
@@ -1038,11 +1120,12 @@ function Container:Slider(options)
     self.Window:_Connect(control._input.InputBegan,function(input)
         if not control.Enabled then return end
         if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+            if self.Window._gesture then return end
             self.Window._gesture={kind="slider",control=control,input=input};control:_Pointer(input.Position.X)
         elseif input.KeyCode==Enum.KeyCode.Left or input.KeyCode==Enum.KeyCode.DPadLeft then control:Set(control.Value-control.Step,true)
         elseif input.KeyCode==Enum.KeyCode.Right or input.KeyCode==Enum.KeyCode.DPadRight then control:Set(control.Value+control.Step,true) end
     end,control)
-    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:Input(options)
     options=options or {};local maximum=options.MaxLength or 120;assert(Logic.finite(maximum) and maximum>=1 and maximum<=4096,"MaxLength must be 1..4096");maximum=math.floor(maximum)
@@ -1051,8 +1134,12 @@ function Container:Input(options)
     control._input=create("TextBox",{Text=initial,PlaceholderText=options.Placeholder or "Type here...",ClearTextOnFocus=false,Font=font,TextSize=12,Size=UDim2.fromOffset(140,36),TextTruncate=Enum.TextTruncate.AtEnd},control.Right)
     self.Window:_Style(control._input,"Font","Font");self.Window:_Style(control._input,"TextSize","TextSize");self.Window:_Rounded(control._input,"ControlRadius");padding(control._input,9);self.Window:_Color(control._input,"BackgroundColor3","Raised");self.Window:_Color(control._input,"TextColor3","Text");self.Window:_Color(control._input,"PlaceholderColor3","Muted");self.Window:_Stroke(control._input,"Border",.3)
     function control:_Render()self._input.Text=self.Value end
-    self.Window:_Connect(control._input.FocusLost,function()if control.Enabled then control:Set(control._input.Text,true) end end,control)
-    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    self.Window:_Connect(control._input.FocusLost,function()
+        if not control.Enabled then return end
+        local ok=pcall(control.Set,control,control._input.Text,true)
+        if not ok then control:_Render();self.Window:Notify({Title="Invalid text",Content="That text could not be used. The previous value was kept.",Kind="error"})end
+    end,control)
+    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:Keybind(options)
     options=options or {};local value=options.Value or "F6";if typeof(value)=="EnumItem" then value=value.Name end
@@ -1063,9 +1150,22 @@ function Container:Keybind(options)
     self.Window:_Connect(control._input.Activated,function()
         if not control.Enabled then return end
         if self.Window._capture then self.Window._capture:_Render() end
+        local typing=UIS:GetFocusedTextBox();if typing then typing:ReleaseFocus(false)end
         self.Window._capture=control;control._input.Text="Press a key..."
     end,control)
-    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
+end
+local function dropdownBounds(position,inputSize,viewport,count,touchTarget)
+    local margin=math.min(12,math.max(0,(math.min(viewport.X,viewport.Y)-1)/2))
+    local width=math.min(math.max(1,inputSize.X),math.max(1,viewport.X-margin*2))
+    local height=math.min(260,count*(touchTarget+4)+12,math.max(1,viewport.Y-margin*2))
+    local x=math.clamp(position.X+inputSize.X-width,margin,math.max(margin,viewport.X-width-margin))
+    local below=position.Y+inputSize.Y+6
+    local above=position.Y-height-6
+    local y=below
+    if below+height>viewport.Y-margin and above>=margin then y=above end
+    y=math.clamp(y,margin,math.max(margin,viewport.Y-height-margin))
+    return x,y,width,height
 end
 function Container:Dropdown(options)
     options=options or {};local choices=Logic.options(options.Options);local initial=Logic.option(options.Value or choices[1],choices)
@@ -1089,16 +1189,16 @@ function Container:Dropdown(options)
         window:_CloseDropdown()
         local shield=create("TextButton",{Name="Dropdown",Text="",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),AutoButtonColor=false,ZIndex=30},window.Canvas)
         window._dropdown=shield;window._dropdownControl=control
-        local viewport=window:_Viewport();local position=control._input.AbsolutePosition-window.Canvas.AbsolutePosition;local width=math.min(210,viewport.X-24);local height=math.min(260,#control.Options*48+16,viewport.Y-24)
-        local y=position.Y+control._input.AbsoluteSize.Y+6;if y+height>viewport.Y-12 then y=math.max(12,position.Y-height-6) end
-        local menu=create("ScrollingFrame",{Name="Options",Position=UDim2.fromOffset(math.clamp(position.X,12,math.max(12,viewport.X-width-12)),y),Size=UDim2.fromOffset(width,height),BorderSizePixel=0,AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.new(),ScrollBarThickness=3,ZIndex=31,Active=true},shield)
+        local position=control._input.AbsolutePosition-window.Canvas.AbsolutePosition
+        local x,y,width,height=dropdownBounds(position,control._input.AbsoluteSize,window:_Viewport(),#control.Options,window.Responsive.TouchTarget)
+        local menu=create("ScrollingFrame",{Name="Options",Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(width,height),BorderSizePixel=0,AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.new(),ScrollBarThickness=3,ScrollingDirection=Enum.ScrollingDirection.Y,ZIndex=31,Active=true},shield)
         corner(menu,8);padding(menu,8);list(menu,4,false);window:_Color(menu,"BackgroundColor3","Surface");window:_Stroke(menu,"Border",.2)
         local temporary={_connections={},Destroyed=false}
         menu.Destroying:Once(function()temporary.Destroyed=true;disconnect(temporary._connections)end)
         window:_Connect(shield.Activated,function()window:_CloseDropdown()end,temporary)
         for index,option in ipairs(control.Options) do
             local selected=option==control.Value
-            local button=window:_Button(menu,option,UDim2.new(1,-4,0,window.Responsive.TouchTarget),temporary)
+            local button=window:_Button(menu,option,UDim2.new(1,-16,0,window.Responsive.TouchTarget),temporary)
             button.ZIndex=32;button.LayoutOrder=index;button.TextXAlignment=Enum.TextXAlignment.Left;button.TextTruncate=Enum.TextTruncate.AtEnd
             local inset=button:FindFirstChildOfClass("UIPadding") or create("UIPadding",{},button)
             inset.PaddingLeft=UDim.new(0,12);inset.PaddingRight=UDim.new(0,34)
@@ -1111,7 +1211,7 @@ function Container:Dropdown(options)
             window:_Connect(button.Activated,function()control:Set(option,true);window:_CloseDropdown()end,temporary)
         end
     end,control)
-    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:ColorPicker(options)
     options=options or {}
@@ -1165,7 +1265,7 @@ function Container:ColorPicker(options)
         if not control.Enabled or not control._expanded then control._colorInput:ReleaseFocus(false)end
     end,control)
     self.Window:_Connect(control.Root:GetPropertyChangedSignal("AbsoluteSize"),function()control:_Layout(self.Window.Mobile)end,control)
-    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Window:Confirm(options)
     assert(not self.Destroyed,"Window is destroyed");options=options or {}
@@ -1347,9 +1447,32 @@ function Window:_CancelAnimation(instance)
     self._animationRecords[instance] = nil
     self._tweens[instance] = nil
     if record.Completed then record.Completed:Disconnect()end
-    if record.Destroying then record.Destroying:Disconnect()end
-    if record.Ancestry then record.Ancestry:Disconnect()end
     record.Tween:Cancel()
+end
+
+-- One Destroying/AncestryChanged pair per animated instance, reused by every later tween
+-- on it (hover effects retarget the same buttons constantly).
+function Window:_ReleaseAnimationWatcher(instance)
+    local watcher = self._animationWatchers[instance]
+    if not watcher then return end
+    self._animationWatchers[instance] = nil
+    watcher.Destroying:Disconnect()
+    watcher.Ancestry:Disconnect()
+end
+
+function Window:_WatchAnimationTarget(instance)
+    if self._animationWatchers[instance] then return end
+    local watcher = {}
+    watcher.Destroying = instance.Destroying:Connect(function()
+        self:_CancelAnimation(instance)
+        self:_ReleaseAnimationWatcher(instance)
+    end)
+    watcher.Ancestry = instance.AncestryChanged:Connect(function()
+        if instance:IsDescendantOf(self.Gui) then return end
+        self:_CancelAnimation(instance)
+        self:_ReleaseAnimationWatcher(instance)
+    end)
+    self._animationWatchers[instance] = watcher
 end
 
 function Window:_CancelForProperties(instance, properties)
@@ -1377,16 +1500,15 @@ function Window:Animate(instance, properties, options)
     -- TweenService validates properties before a currently playing tween is cancelled.
     local tween = TweenService:Create(instance, info, goals)
     self:_CancelAnimation(instance)
-    local record: {Tween: Tween, Goals: {[string]: any}, Completed: RBXScriptConnection?, Destroying: RBXScriptConnection?, Ancestry: RBXScriptConnection?} = {Tween = tween, Goals = goals}
+    local record: {Tween: Tween, Goals: {[string]: any}, Completed: RBXScriptConnection?} = {Tween = tween, Goals = goals}
     self._tweens[instance] = tween
     self._animationRecords[instance] = record
+    self:_WatchAnimationTarget(instance)
     local function detach()
         if self._animationRecords[instance] ~= record then return false end
         self._animationRecords[instance] = nil
         self._tweens[instance] = nil
         if record.Completed then record.Completed:Disconnect()end
-        if record.Destroying then record.Destroying:Disconnect()end
-        if record.Ancestry then record.Ancestry:Disconnect()end
         return true
     end
     record.Completed = tween.Completed:Connect(function(state)
@@ -1396,10 +1518,6 @@ function Window:Animate(instance, properties, options)
                 if instance:IsDescendantOf(self.Gui) then onComplete(instance) end
             end)
         end
-    end)
-    record.Destroying = instance.Destroying:Connect(function() self:_CancelAnimation(instance) end)
-    record.Ancestry = instance.AncestryChanged:Connect(function()
-        if not instance:IsDescendantOf(self.Gui) then self:_CancelAnimation(instance) end
     end)
     if reduced then for property, goal in pairs(goals) do instance[property] = goal end end
     tween:Play()
@@ -2527,7 +2645,7 @@ function Window:_LayoutNavigation(mobile)
             -- Layout.IconSize remains the source of truth for custom sizes.
             local tileSize=rail and math.clamp(buttonHeight-16,24,28) or 24
             local iconWidth=icon and (rail and math.clamp(iconSize,12,tileSize-8) or iconSize) or 0
-            local labelLeft=icon and (rail and tileSize+20 or iconSize+20) or 14
+            local labelLeft=icon and (rail and tileSize+16 or iconSize+20) or 14
             local surfaceLeft=rail and math.max(6,labelLeft-8) or labelLeft-4
             local surfaceRight=rail and 20 or 8
 
@@ -2623,23 +2741,19 @@ function Window:_RefreshNavigation(immediate)
             local hovered = (tab._hovered == true or tab._focused == true) and not selected
             local railPressed = variant == "Rail" and tab._pressed == true
             local contrastSelected = selected and variant == "Pill"
-            local backgroundToken = contrastSelected and "Accent" or (selected and "Raised" or (hovered and "Hover" or "Surface"))
+            local backgroundToken = contrastSelected and "Accent" or ((selected or railPressed) and "Raised" or (hovered and "Hover" or "Surface"))
             local textToken = contrastSelected and "AccentText" or ((selected or hovered or railPressed) and "Text" or "Muted")
             local iconToken = variant == "Rail" and (selected or railPressed) and "Text" or textToken
             -- Keep the rail quiet at rest. Selection remains easy to find from
             -- the raised surface, label weight, icon tint, and slim indicator.
-            local alpha = variant == "Rail" and 1 or (variant == "Pill" and 0 or
-                ((selected or hovered) and (selected and 0.46 or 0.78) or 1))
+            local alpha = variant == "Rail" and ((selected or railPressed) and 0.62 or (hovered and 0.78 or 1))
+                or (variant == "Pill" and 0 or ((selected or hovered) and (selected and 0.46 or 0.78) or 1))
 
             navigationButtonState(self, button, backgroundToken, alpha, immediate)
-            local labelSurfaceToken = (selected or railPressed) and "Raised" or (hovered and "Hover" or "Surface")
-            local labelSurfaceAlpha = railPressed and 0.34 or (selected and 0.58 or (hovered and 0.78 or 1))
-            navigationButtonState(self, tab._labelSurface, labelSurfaceToken,
-                variant == "Rail" and labelSurfaceAlpha or 1, immediate)
-            local iconTileToken = (selected or railPressed or hovered) and "Raised" or "Surface"
-            local iconTileAlpha = not tab._icon and 1 or (selected and 0.58 or (railPressed and 0.34 or (hovered and 0.72 or 1)))
-            navigationButtonState(self, tab._iconTile, iconTileToken,
-                variant == "Rail" and iconTileAlpha or 1, immediate)
+            -- Keep the glyph and title on one shared row wash. Tinting their
+            -- own tiles creates two nested boxes in the rail.
+            navigationButtonState(self, tab._labelSurface, "Surface", 1, immediate)
+            navigationButtonState(self, tab._iconTile, "Surface", 1, immediate)
             navigationTween(self, tab._label, "TextColor3", textToken, immediate)
             self:_Style(tab._label, "Font", (selected or hovered) and "FontBold" or "Font")
             self:_Style(tab._label, "TextSize", "TextSize")
@@ -2947,7 +3061,7 @@ function Window:SetBranding(options)
 end
 
 -- Layout presets are ordinary tables. Advanced part overrides persist across reflow.
-Library.Layout={TabPosition="Left",MobileTabPosition="Top",SidebarWidth=168,TabWidth=128,TabHeight=44,TabGap=7,TabIconSize=16,ContentPadding=16,ContentGap=18,HeaderHeight=76,FooterHeight=42,SearchHeight=44,SearchGap=10,PageTitleHeight=40,ButtonWidth=112,ButtonHeight=44,RowGap=8,SectionGap=16,PanelTransparency=.10,ControlsPosition="Right",Draggable=true,Resizable=true,ShowSearch=true,ShowFooter=true,ShowHeader=true,ShowPageTitle=true}
+Library.Layout={TabPosition="Left",MobileTabPosition="Top",SidebarWidth=168,TabWidth=128,TabHeight=44,TabGap=6,TabIconSize=16,ContentPadding=12,ContentGap=14,HeaderHeight=76,FooterHeight=42,SearchHeight=44,SearchGap=8,PageTitleHeight=40,ButtonWidth=112,ButtonHeight=44,RowGap=6,SectionGap=12,PanelTransparency=.06,ControlsPosition="Right",Draggable=true,Resizable=true,ShowSearch=true,ShowFooter=true,ShowHeader=true,ShowPageTitle=true}
 local layoutRanges={SidebarWidth={96,360},TabWidth={64,400},TabHeight={44,96},TabGap={0,32},TabIconSize={12,40},ContentPadding={4,40},ContentGap={0,48},HeaderHeight={64,160},FooterHeight={32,96},SearchHeight={44,96},SearchGap={0,40},PageTitleHeight={28,80},ButtonWidth={58,400},ButtonHeight={44,120},RowGap={0,40},SectionGap={0,48},PanelTransparency={0,1}}
 local function finiteUDim2(value)
     return typeof(value)=="UDim2" and Logic.finite(value.X.Scale) and Logic.finite(value.Y.Scale) and Logic.finite(value.X.Offset) and Logic.finite(value.Y.Offset)
@@ -3319,6 +3433,12 @@ local function accent_glow(theme)
         ColorSequenceKeypoint.new(1,theme.Accent),
     })
 end
+local function status_panel_transparency(variant)
+    return variant=="Minimal" and .58 or .38
+end
+local function status_stroke_transparency(variant)
+    return variant=="Minimal" and .65 or .46
+end
 local function loader_options(options,base)
     assert(options==nil or type(options)=="table","Loading must be a table")
     options=resolve_design_options(options,"loader")
@@ -3497,8 +3617,8 @@ function Loader:_FinishEntrance()
     self.Border.Transparency = .15
     self.Edge.BackgroundTransparency = .5
     self.MarkStroke.Transparency = .18
-    self.StatusPanel.BackgroundTransparency = self.Options.Variant == "Minimal" and .34 or .14
-    self.StatusPanelStroke.Transparency = self.Options.Variant == "Minimal" and .48 or .22
+    self.StatusPanel.BackgroundTransparency = status_panel_transparency(self.Options.Variant)
+    self.StatusPanelStroke.Transparency = status_stroke_transparency(self.Options.Variant)
     self.Title.TextTransparency = 0
     self.Subtitle.TextTransparency = 0
     self.StatusLabel.TextTransparency = 0
@@ -3506,7 +3626,7 @@ function Loader:_FinishEntrance()
 end
 function Loader:_TweenEntrance(instance, duration, goals)
     local tween = TweenService:Create(instance, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goals)
-    local record = {Tween = tween}
+    local record: {Tween: Tween, Connection: RBXScriptConnection?} = {Tween = tween}
     record.Connection = tween.Completed:Connect(function()
         if record.Connection then record.Connection:Disconnect(); record.Connection = nil end
         for index, active in ipairs(self._entranceTweens) do
@@ -3522,8 +3642,8 @@ function Loader:_StartEntrance()
         {self.Border, "Transparency", .62, .15},
         {self.Edge, "BackgroundTransparency", .88, .5},
         {self.MarkStroke, "Transparency", .62, .18},
-        {self.StatusPanel, "BackgroundTransparency", .58, self.Options.Variant == "Minimal" and .34 or .14},
-        {self.StatusPanelStroke, "Transparency", .62, self.Options.Variant == "Minimal" and .48 or .22},
+        {self.StatusPanel, "BackgroundTransparency", .68, status_panel_transparency(self.Options.Variant)},
+        {self.StatusPanelStroke, "Transparency", .72, status_stroke_transparency(self.Options.Variant)},
         {self.Title, "TextTransparency", .34, 0},
         {self.Subtitle, "TextTransparency", .42, 0},
         {self.StatusLabel, "TextTransparency", .34, 0},
@@ -3549,14 +3669,25 @@ function Loader:SetProgress(ratio,status)
     end
     return self
 end
+function Loader:_StopActivity()
+    if self._activityConnection then self._activityConnection:Disconnect();self._activityConnection=nil end
+    if self._activityTween then pcall(function()self._activityTween:Cancel()end);self._activityTween=nil end
+end
 function Loader:_SetActivity()
-    if self._activityTween then self._activityTween:Cancel();self._activityTween=nil end
+    self:_StopActivity()
     local enabled=self.Options.ShowActivity and not self.Options.ReducedMotion and not self.Completed and not self.Destroyed
     self.Activity.Visible=enabled
     if enabled then
         self.Activity.Position=UDim2.fromScale(-.18,0)
-        self._activityTween=TweenService:Create(self.Activity,TweenInfo.new(1.4,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,-1),{Position=UDim2.fromScale(1.18,0)})
-        self._activityTween:Play()
+        local tween=TweenService:Create(self.Activity,TweenInfo.new(.9,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromScale(1.18,0)})
+        self._activityTween=tween
+        self._activityConnection=tween.Completed:Connect(function()
+            if self._activityTween~=tween then return end
+            if self._activityConnection then self._activityConnection:Disconnect();self._activityConnection=nil end
+            self._activityTween=nil
+            self.Activity.Visible=false
+        end)
+        tween:Play()
     end
 end
 function Loader:_StartLogo()
@@ -3590,13 +3721,13 @@ function Loader:_Apply(valid,logoChanged)
     self.Border.Color=theme.Border;self.Edge.BackgroundColor3=theme.Accent;self.EdgeGradient.Color=accent_glow(theme);self.StatusIndicator.BackgroundColor3=theme.Accent
     self.Mark.BackgroundColor3=theme.Raised;self.MarkStroke.Color=theme.Border;self.MarkTextLabel.TextColor3=theme.Text
     self.MarkTextLabel.Font=style.FontBold;self.MarkTextLabel.TextSize=style.TitleSize+2
-    self.Title.Text=valid.Title;self.Title.Font=style.FontBold;self.Title.TextSize=style.TitleSize+2;self.Title.TextColor3=theme.Text
+    self.Title.Text=valid.Title;self.Title.Font=style.FontBold;self.Title.TextSize=style.TitleSize+3;self.Title.TextColor3=theme.Text
     self.Subtitle.Text=valid.Subtitle;self.Subtitle.Font=style.Font;self.Subtitle.TextSize=style.DescriptionSize;self.Subtitle.TextColor3=theme.Muted
     self.StatusLabel.Font=style.Font;self.StatusLabel.TextSize=style.DescriptionSize;self.StatusLabel.TextColor3=theme.Text
     self.Percent.Font=style.Font;self.Percent.TextSize=style.DescriptionSize;self.Percent.TextColor3=theme.Muted
     self.Track.BackgroundColor3=theme.Raised;self.Fill.BackgroundColor3=theme.Accent;self.Activity.BackgroundColor3=theme.Text
-    self.StatusPanel.BackgroundColor3=theme.Surface;self.StatusPanel.BackgroundTransparency=valid.Variant=="Minimal" and .34 or .14
-    self.StatusPanelStroke.Color=theme.Border;self.StatusPanelStroke.Transparency=valid.Variant=="Minimal" and .48 or .22
+    self.StatusPanel.BackgroundColor3=theme.Surface;self.StatusPanel.BackgroundTransparency=status_panel_transparency(valid.Variant)
+    self.StatusPanelStroke.Color=theme.Border;self.StatusPanelStroke.Transparency=status_stroke_transparency(valid.Variant)
     self.CardCorner.CornerRadius=UDim.new(0,style.WindowRadius)
     self.MarkCorner.CornerRadius=UDim.new(0,math.min(12,valid.LogoSize/3))
     self.MarkImageCorner.CornerRadius=self.MarkCorner.CornerRadius
@@ -3662,7 +3793,7 @@ function Loader:Destroy()
         if thread and thread~=coroutine.running() and coroutine.status(thread)~="dead"then task.cancel(thread)end
     end
     if self._progressTween then self._progressTween:Cancel();self._progressTween=nil end
-    if self._activityTween then self._activityTween:Cancel();self._activityTween=nil end
+    self:_StopActivity()
     self:_CancelEntrance()
     for _,tween in ipairs(self._tweens)do pcall(function()tween:Cancel()end)end
     table.clear(self._tweens);disconnect(self._connections,self)
@@ -3680,7 +3811,7 @@ function Loader:Complete(status)
     if self._runThread and self._runThread~=coroutine.running()then task.cancel(self._runThread);self._runThread=nil end
     if self._progressTween then self._progressTween:Cancel();self._progressTween=nil end
     self.Fill.Size=UDim2.fromScale(1,1);self.Activity.Visible=false
-    if self._activityTween then self._activityTween:Cancel();self._activityTween=nil end
+    self:_StopActivity()
     local function finish()
         self._finishThread=nil
         if self.Destroyed then return end
@@ -3735,10 +3866,10 @@ function Library:CreateLoader(options)
     self.MarkTextLabel=create("TextLabel",{Name="Placeholder",Text=valid.MarkText,Font=style.FontBold,TextSize=20,BackgroundTransparency=1,Size=UDim2.fromScale(1,1),TextColor3=theme.Text},self.Mark)
     self.MarkImage=create("ImageLabel",{Name="Image",Image="",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ScaleType=Enum.ScaleType.Crop,Visible=false},self.Mark)
     self.MarkImageCorner=Instance.new("UICorner");self.MarkImageCorner.Parent=self.MarkImage
-    self.StatusPanel=create("Frame",{Name="ProgressStatusPanel",BackgroundColor3=theme.Surface,BackgroundTransparency=.14,BorderSizePixel=0},self.Card)
+    self.StatusPanel=create("Frame",{Name="ProgressStatusPanel",BackgroundColor3=theme.Surface,BackgroundTransparency=status_panel_transparency(valid.Variant),BorderSizePixel=0},self.Card)
     self.StatusPanelCorner=Instance.new("UICorner");self.StatusPanelCorner.CornerRadius=UDim.new(0,style.ControlRadius);self.StatusPanelCorner.Parent=self.StatusPanel
-    self.StatusPanelStroke=create("UIStroke",{Color=theme.Border,Thickness=1,Transparency=.22},self.StatusPanel)
-    self.Title=create("TextLabel",{Text=valid.Title,Font=style.FontBold,TextSize=style.TitleSize+2,TextColor3=theme.Text,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
+    self.StatusPanelStroke=create("UIStroke",{Color=theme.Border,Thickness=1,Transparency=status_stroke_transparency(valid.Variant)},self.StatusPanel)
+    self.Title=create("TextLabel",{Text=valid.Title,Font=style.FontBold,TextSize=style.TitleSize+3,TextColor3=theme.Text,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
     self.Subtitle=create("TextLabel",{Text=valid.Subtitle,Font=style.Font,TextSize=style.DescriptionSize,TextColor3=theme.Muted,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
     self.StatusLabel=create("TextLabel",{Text=self.Status,Font=style.Font,TextSize=style.DescriptionSize,TextColor3=theme.Text,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
     self.StatusIndicator=create("Frame",{Name="StatusIndicator",BackgroundColor3=theme.Accent,BorderSizePixel=0},self.Card)
@@ -3900,7 +4031,7 @@ local function key_text(value, fallback, limit, label)
     return valid
 end
 
-local function accent_glow(theme)
+local function key_accent_glow(theme)
     local highlight = theme.Accent:Lerp(theme.Text, .18)
     return ColorSequence.new({
         ColorSequenceKeypoint.new(0, theme.Accent),
@@ -4013,10 +4144,10 @@ local function key_options(options)
     assert(Logic.finite(options.MaxLength) and options.MaxLength % 1 == 0 and options.MaxLength >= 1 and options.MaxLength <= 4096, "MaxLength must be an integer in 1..4096")
     options.DisplayOrder = options.DisplayOrder == nil and 120 or options.DisplayOrder
     assert(Logic.finite(options.DisplayOrder) and options.DisplayOrder % 1 == 0, "DisplayOrder must be an integer")
-    options.BackgroundTransparency = options.BackgroundTransparency == nil and .42 or options.BackgroundTransparency
+    options.BackgroundTransparency = options.BackgroundTransparency == nil and .28 or options.BackgroundTransparency
     assert(Logic.finite(options.BackgroundTransparency) and options.BackgroundTransparency >= 0 and options.BackgroundTransparency <= 1,
         "BackgroundTransparency must be 0..1")
-    options.CardTransparency = options.CardTransparency == nil and .1 or options.CardTransparency
+    options.CardTransparency = options.CardTransparency == nil and .06 or options.CardTransparency
     assert(Logic.finite(options.CardTransparency) and options.CardTransparency >= 0 and options.CardTransparency <= 1,
         "CardTransparency must be 0..1")
     local player = Players.LocalPlayer
@@ -4050,9 +4181,9 @@ function KeyGate:_Status(text, kind)
     self.StatusPanelStroke.Color = visible and self.Options.Theme[token] or self.Options.Theme.Border
     self:_LayoutStatusSurface()
     if visible and not wasVisible then
-        self.StatusPanel.BackgroundTransparency = .58
+        self.StatusPanel.BackgroundTransparency = .34
         self.StatusPanelStroke.Transparency = .72
-        self:_PlayMotion("status-fill", self.StatusPanel, .16, {BackgroundTransparency = .32})
+        self:_PlayMotion("status-fill", self.StatusPanel, .16, {BackgroundTransparency = .14})
         self:_PlayMotion("status-border", self.StatusPanelStroke, .16, {Transparency = .22})
     elseif not visible then
         self:_CancelMotion("status-fill")
@@ -4463,7 +4594,7 @@ function KeyGate:Update(changes)
     self.Card.BackgroundColor3 = theme.Background
     self.Card:FindFirstChildOfClass("UIStroke").Color = theme.Border
     self.Edge.BackgroundColor3 = theme.Accent
-    self.EdgeGradient.Color = accent_glow(theme)
+    self.EdgeGradient.Color = key_accent_glow(theme)
     self.Mark.BackgroundColor3 = theme[valid.Logo == false and "Accent" or "Raised"]
     self.MarkStroke.Color = theme.Border
     self.MarkLabel.TextColor3 = theme[valid.Logo == false and "AccentText" or "Text"]
@@ -4475,7 +4606,7 @@ function KeyGate:Update(changes)
     self.Input.PlaceholderColor3 = theme.Muted
     self.HeaderRule.BackgroundColor3 = theme.Border
     self.CredentialWell.BackgroundColor3 = theme.Surface
-    self.CredentialWell.BackgroundTransparency = .12
+    self.CredentialWell.BackgroundTransparency = .06
     self.CredentialWellStroke.Color = theme.Border
     self.CredentialWellStroke.Transparency = .2
     self.StatusPanel.BackgroundColor3 = theme.Surface
@@ -4642,19 +4773,19 @@ function KeyGate:_Layout()
     local contentHeight = math.max(height, baseline)
     local layoutOffset = math.max(0, (contentHeight - baseline) / 2)
     local compactOffset = height < 280 and -8 or 0
-    self.Mark.Position = UDim2.fromOffset(28, 28 + layoutOffset + compactOffset)
-    self.Mark.Size = UDim2.fromOffset(44, 44)
-    self.Title.Position = UDim2.fromOffset(88, 32 + layoutOffset + compactOffset)
-    self.Title.Size = UDim2.new(1, -116, 0, 25)
-    self.Subtitle.Position = UDim2.fromOffset(28, 84 + layoutOffset + compactOffset)
-    self.Subtitle.Size = UDim2.new(1, -56, 0, 32)
+    self.Mark.Position = UDim2.fromOffset(24, 24 + layoutOffset + compactOffset)
+    self.Mark.Size = UDim2.fromOffset(42, 42)
+    self.Title.Position = UDim2.fromOffset(78, 24 + layoutOffset + compactOffset)
+    self.Title.Size = UDim2.new(1, -102, 0, 24)
+    self.Subtitle.Position = UDim2.fromOffset(78, 52 + layoutOffset + compactOffset)
+    self.Subtitle.Size = UDim2.new(1, -102, 0, 34)
 
-    local actionsY = 220 + layoutOffset
-    local innerWidth = math.max(1, width - 64)
+    local actionsY = 204 + layoutOffset
+    local innerWidth = math.max(1, width - 56)
     local cancelWidth = math.min(84, innerWidth * .38)
     local actionGap = 8
-    local statusY = actionsY + (hasGetKey and 136 or 64) + (manualKeyLink and 52 or 0)
-    local discordY = actionsY + (hasGetKey and 168 or 100) + (manualKeyLink and 52 or 0)
+    local statusY = actionsY + (hasGetKey and (manualKeyLink and 182 or 134) or 56)
+    local discordY = statusY + 36
     self.SubmitButton.Position = UDim2.fromOffset(28, actionsY)
     if hasGetKey then
         self.SubmitButton.Size = UDim2.fromOffset(innerWidth, 48)
@@ -4667,11 +4798,11 @@ function KeyGate:_Layout()
         self.CancelButton.Size = UDim2.fromOffset(cancelWidth, 44)
         self.KeyLinkStatus.Position = UDim2.fromOffset(28, actionsY + 108)
         self.KeyLinkStatus.Size = UDim2.new(1, -56, 0, 18)
-        self.KeyLink.Position = UDim2.fromOffset(28, actionsY + 136)
+        self.KeyLink.Position = UDim2.fromOffset(28, actionsY + 134)
         self.KeyLink.Size = UDim2.new(1, -56, 0, 40)
     else
-        self.SubmitButton.Size = UDim2.fromOffset(math.max(1, innerWidth - cancelWidth - actionGap), 48)
-        self.CancelButton.Position = UDim2.fromOffset(28 + self.SubmitButton.Size.X.Offset + actionGap, actionsY)
+        self.SubmitButton.Size = UDim2.fromOffset(innerWidth - cancelWidth - actionGap, 48)
+        self.CancelButton.Position = UDim2.fromOffset(28 + innerWidth - cancelWidth, actionsY)
         self.CancelButton.Size = UDim2.fromOffset(cancelWidth, 48)
         self.GetKeyButton.Position = UDim2.fromOffset(28, actionsY)
         self.GetKeyButton.Size = UDim2.fromOffset(1, 44)
@@ -4681,22 +4812,23 @@ function KeyGate:_Layout()
         self.KeyLink.Size = UDim2.new(1, -56, 0, 40)
     end
 
-    local inputY = 156 + layoutOffset
-    self.KeyLabel.Position = UDim2.fromOffset(48, 132 + layoutOffset)
+    local inputY = 142 + layoutOffset
+    self.HeaderRule.Position = UDim2.fromOffset(24, 100 + layoutOffset + compactOffset)
+    self.KeyLabel.Position = UDim2.fromOffset(48, 118 + layoutOffset)
     self.KeyLabel.Size = UDim2.new(1, -76, 0, 18)
-    self.KeyIcon.Position = UDim2.fromOffset(28, 135 + layoutOffset)
+    self.KeyIcon.Position = UDim2.fromOffset(28, 121 + layoutOffset)
     self.Input.Position = UDim2.fromOffset(28, inputY)
-    self.Input.Size = UDim2.new(1, -56, 0, 48)
-    local credentialTop = math.max(122, self.KeyLabel.Position.Y.Offset - 10)
+    self.Input.Size = UDim2.new(1, -56, 0, 46)
+    local credentialTop = math.max(108, self.KeyLabel.Position.Y.Offset - 10)
     local credentialBottom = self.Input.Position.Y.Offset + self.Input.Size.Y.Offset + 8
     self.CredentialWell.Position = UDim2.fromOffset(18, credentialTop)
     self.CredentialWell.Size = UDim2.new(1, -36, 0, credentialBottom - credentialTop)
     self.StatusLabel.Position = UDim2.fromOffset(28, statusY)
-    self.StatusLabel.Size = UDim2.new(1, -56, 0, 20)
+    self.StatusLabel.Size = UDim2.new(1, -56, 0, 22)
     self.StatusPanel.Position = UDim2.fromOffset(22, statusY - 3)
     self.StatusPanel.Size = UDim2.new(1, -44, 0, 26)
     self.DiscordButton.Position = UDim2.fromOffset(28, discordY)
-    self.DiscordButton.Size = UDim2.new(1, -56, 0, 46)
+    self.DiscordButton.Size = UDim2.new(1, -56, 0, 44)
     self.DiscordIcon.Position = UDim2.fromOffset(14, 12)
     self.DiscordLabel.Size = UDim2.new(1, -54, 1, 0)
     self.DiscordLabel.Position = UDim2.fromOffset(44, 0)
@@ -4940,7 +5072,7 @@ function Library:CreateKeySystem(options)
         Name = "AccentEdge", Position = UDim2.fromOffset(20, 0), Size = UDim2.new(1, -40, 0, 1),
         BackgroundColor3 = theme.Accent, BackgroundTransparency = .5,
     }, gate.Content)
-    gate.EdgeGradient = create("UIGradient", {Color = accent_glow(theme), Rotation = 0}, gate.Edge)
+    gate.EdgeGradient = create("UIGradient", {Color = key_accent_glow(theme), Rotation = 0}, gate.Edge)
     gate.Mark = create("Frame", {
         Name = "Mark", Position = UDim2.fromOffset(24, 24), Size = UDim2.fromOffset(42, 42),
         BackgroundColor3 = theme.Accent, BorderSizePixel = 0,
@@ -4977,7 +5109,7 @@ function Library:CreateKeySystem(options)
         BackgroundColor3 = theme.Surface, BackgroundTransparency = .18, BorderSizePixel = 0,
     }, gate.Content)
     corner(gate.CredentialWell, style.ControlRadius)
-    gate.CredentialWell.BackgroundTransparency = .12
+    gate.CredentialWell.BackgroundTransparency = .06
     gate.CredentialWellStroke = create("UIStroke", {Color = theme.Border, Thickness = 1, Transparency = .2}, gate.CredentialWell)
     gate.KeyLabel = create("TextLabel", {
         Name = "KeyLabel", Position = UDim2.fromOffset(44, 92), Size = UDim2.new(1, -68, 0, 18),
@@ -5397,8 +5529,8 @@ end
 Library._discordPromptShown = Library._discordPromptShown or {}
 
 local discordPromptDefaults = {
-	Title = "Join the community",
-	Content = "Join the Gabibou UI community for updates and help.",
+	Title = "Gabibou community",
+	Content = "Join the Discord for updates, help, and community news.",
 	JoinText = "Copy invite",
 	ContinueText = "Not now",
 	OncePerSession = true,
@@ -5492,7 +5624,7 @@ function Window:PromptDiscord(value)
 		ConfirmText = options.JoinText,
 		CancelText = options.ContinueText,
 		LinkText = url,
-		FooterText = "Gabibou UI · by Gabibou",
+		FooterText = "Discord invite",
 		BeforeConfirm = explicit_action,
 	})
 	if not opened then return false, "A dialog is already open" end
@@ -6377,6 +6509,805 @@ function TabCategory:Destroy()
     for index=#window.Categories,1,-1 do if window.Categories[index]==self then table.remove(window.Categories,index)end end
     for index=#window._categoryEntries,1,-1 do if window._categoryEntries[index].Category==self then table.remove(window._categoryEntries,index)end end
     window:_LayoutCategories()
+end
+
+-- Optional appearance editor, injected into ui.luau's shared lexical scope.
+local function appearance_accent_text(accent)
+    local function linear(channel)
+        return channel <= .04045 and channel / 12.92 or ((channel + .055) / 1.055) ^ 2.4
+    end
+    local function luminance(color)
+        return .2126 * linear(color.R) + .7152 * linear(color.G) + .0722 * linear(color.B)
+    end
+    local dark, light = Color3.fromRGB(19, 21, 25), Color3.fromRGB(245, 246, 248)
+    local background = luminance(accent)
+    local function contrast(foreground)
+        local value = luminance(foreground)
+        return (math.max(background, value) + .05) / (math.min(background, value) + .05)
+    end
+    return contrast(dark) >= contrast(light) and dark or light
+end
+
+local appearance_fields = {Title = true, Icon = true, Id = true}
+local appearance_control_suffixes = {"theme", "accent", "opacity", "navigation", "tabs", "reduced_motion", "duration"}
+
+function Window:Appearance(options)
+    assert(not self.Destroyed, "Window is destroyed")
+    assert(options == nil or type(options) == "table", "Appearance options must be a table")
+    options = options or {}
+    for key in pairs(options) do
+        assert(appearance_fields[key], "Unknown Appearance option: " .. tostring(key))
+    end
+    local title = options.Title == nil and "Appearance" or options.Title
+    assert(type(title) == "string" and utf8.len(title) and utf8.len(title) >= 1 and utf8.len(title) <= 80 and not title:find("[%c]"),
+        "Appearance.Title must contain 1..80 characters without control characters")
+    if options.Icon ~= nil then
+        assert(Library:GetIconName(options.Icon) ~= nil, "Unknown appearance tab icon: " .. tostring(options.Icon))
+    end
+    local base = options.Id or "appearance"
+    assert(type(base) == "string" and #base >= 1 and #base <= 64 and base:match("^[%w_-]+$"),
+        "Appearance.Id must contain 1..64 letters, digits, underscores or hyphens")
+
+    local function ids_available(prefix)
+        for _, suffix in ipairs(appearance_control_suffixes) do
+            if self.Controls[prefix .. "_" .. suffix] ~= nil then return false end
+        end
+        return true
+    end
+    if options.Id == nil then
+        local root = base
+        local serial = 1
+        while not ids_available(base) do
+            serial += 1
+            base = root .. "_" .. tostring(serial)
+            assert(#base <= 64, "Unable to allocate unique appearance control IDs")
+        end
+    else
+        assert(ids_available(base), "Appearance control ID prefix is already in use: " .. base)
+    end
+
+    local window = self
+    local initial_theme = table.clone(self.Theme)
+    local initial_theme_name = self.ThemeName
+    local initial_builtin = initial_theme_name == "Graphite" or initial_theme_name == "Aurora" or initial_theme_name == "Ember"
+    local theme_choices = {"Graphite", "Aurora", "Ember", "Custom"}
+    local theme_value = initial_builtin and initial_theme_name or "Custom"
+    local starting_duration = self.Motion.Duration
+    local duration_max = math.max(1, math.ceil(starting_duration))
+    local tab
+    local ok, result = pcall(function()
+        tab = window:Tab({Title = title, Icon = options.Icon or "palette"})
+        local theme_section = tab:Section({Title = "Color"})
+        local theme_control, accent_control
+        theme_control = theme_section:Dropdown({
+            Id = base .. "_theme", Title = "Theme", Description = "Choose a built-in palette or restore this editor's starting colors.",
+            Options = theme_choices, Value = theme_value, Persistent = false,
+            Callback = function(value)
+                if window.Destroyed or tab.Destroyed then return end
+                local selected = value == "Custom" and initial_theme or value
+                window:SetTheme(selected)
+                accent_control:Set("#" .. window.Theme.Accent:ToHex(), false)
+            end,
+        })
+        accent_control = theme_section:ColorPicker({
+            Id = base .. "_accent", Title = "Accent color", Description = "Updates accent fills and their readable text color.",
+            Value = "#" .. self.Theme.Accent:ToHex(), Persistent = false,
+            Callback = function(value)
+                if window.Destroyed or tab.Destroyed then return end
+                local theme = table.clone(window.Theme)
+                theme.Accent = Color3.fromHex(value)
+                theme.AccentText = appearance_accent_text(theme.Accent)
+                window:SetTheme(theme)
+                if theme_control.Value ~= "Custom" then theme_control:Set("Custom", false) end
+            end,
+        })
+
+        local layout_section = tab:Section({Title = "Layout & motion"})
+        layout_section:Slider({
+            Id = base .. "_opacity", Title = "Panel transparency", Description = "0 is opaque; 1 is fully transparent.",
+            Min = 0, Max = 1, Step = .01, Value = self.Layout.PanelTransparency, Persistent = false,
+            Callback = function(value)
+                if not window.Destroyed and not tab.Destroyed then window:SetLayout({PanelTransparency = value}) end
+            end,
+        })
+        layout_section:Dropdown({
+            Id = base .. "_navigation", Title = "Navigation style", Options = {"Classic", "Soft", "Pill", "Rail"},
+            Value = self.Navigation.Variant, Persistent = false,
+            Callback = function(value)
+                if not window.Destroyed and not tab.Destroyed then window:SetNavigation({Variant = value}) end
+            end,
+        })
+        layout_section:Dropdown({
+            Id = base .. "_tabs", Title = "Tab placement", Options = {"Left", "Right", "Top", "Bottom"},
+            Value = self.Layout.TabPosition, Persistent = false,
+            Callback = function(value)
+                if not window.Destroyed and not tab.Destroyed then window:SetLayout({TabPosition = value}) end
+            end,
+        })
+        layout_section:Toggle({
+            Id = base .. "_reduced_motion", Title = "Reduce motion", Description = "Finish animated changes immediately.",
+            Value = self.ReducedMotion, Persistent = false,
+            Callback = function(value)
+                if not window.Destroyed and not tab.Destroyed then window:SetReducedMotion(value) end
+            end,
+        })
+        layout_section:Slider({
+            Id = base .. "_duration", Title = "Animation duration", Description = "Used by future animations; 0 disables tween duration.",
+            Min = 0, Max = duration_max, Step = .01, Value = starting_duration, Persistent = false,
+            Callback = function(value)
+                if not window.Destroyed and not tab.Destroyed then window:SetMotion({Duration = value}) end
+            end,
+        })
+        return tab
+    end)
+    if not ok then
+        if tab and not tab.Destroyed then pcall(function() tab:Destroy() end) end
+        error(result, 2)
+    end
+    return result
+end
+
+-- Window-scoped command registry and search palette; injected into ui.luau's shared scope.
+local command_option_keys = {Id = true, Title = true, Description = true, Keywords = true, Icon = true, Callback = true}
+local command_limit = 256
+local command_result_limit = 50
+local command_query_limit = 256
+local command_active_window
+local command_order = 0
+
+local function command_mark_active(window)
+    if window and not window.Destroyed and not window.Closed and window._commandCount and window._commandCount > 0 then
+        command_active_window = window
+    elseif command_active_window == window then
+        command_active_window = nil
+    end
+end
+
+local function command_find_window_at(position)
+    local winner, winner_order, winner_display
+    for _, candidate in pairs(Library.Windows) do
+        if candidate._commands and not candidate.Destroyed and not candidate.Closed and candidate.Root.Visible then
+            local origin, size = candidate.Root.AbsolutePosition, candidate.Root.AbsoluteSize
+            if position.X >= origin.X and position.Y >= origin.Y and position.X <= origin.X + size.X and position.Y <= origin.Y + size.Y then
+                local display = candidate.Gui.DisplayOrder
+                local order = candidate._commandWindowOrder or 0
+                if not winner or display > winner_display or display == winner_display and order > winner_order then
+                    winner, winner_order, winner_display = candidate, order, display
+                end
+            end
+        end
+    end
+    command_active_window = winner
+end
+
+local function command_reselect_active(excluded)
+    local winner, winner_order, winner_display
+    for _, candidate in pairs(Library.Windows) do
+        if candidate ~= excluded and candidate._commands and candidate._commandCount > 0
+            and not candidate.Destroyed and not candidate.Closed and candidate.Root.Visible then
+            local display, order = candidate.Gui.DisplayOrder, candidate._commandWindowOrder or 0
+            if not winner or display > winner_display or display == winner_display and order > winner_order then
+                winner, winner_order, winner_display = candidate, order, display
+            end
+        end
+    end
+    command_active_window = winner
+end
+
+local function command_text(value, field, maximum, required)
+    if value == nil and not required then return "" end
+    assert(type(value) == "string", "Command." .. field .. " must be a string")
+    local length = utf8.len(value)
+    assert(length ~= nil and (not required or length >= 1) and length <= maximum and not value:find("[%c]"),
+        "Command." .. field .. " must be valid UTF-8 with " .. (required and "1.." or "0..") .. tostring(maximum) .. " characters and no control characters")
+    return value
+end
+
+local function command_keywords(value)
+    if value == nil then return {} end
+    assert(type(value) == "table", "Command.Keywords must be an array")
+    local count, maximum = 0, 0
+    for key in pairs(value) do
+        assert(type(key) == "number" and key % 1 == 0 and key >= 1, "Command.Keywords must be a dense array")
+        count += 1
+        maximum = math.max(maximum, key)
+    end
+    assert(count == maximum and count <= 20, "Command.Keywords must contain at most 20 entries without holes")
+    local result, seen = {}, {}
+    for index = 1, count do
+        local keyword = command_text(value[index], "Keywords[" .. tostring(index) .. "]", 48, true)
+        local normalized = string.lower(keyword)
+        assert(not seen[normalized], "Command.Keywords must be unique")
+        seen[normalized] = true
+        result[index] = keyword
+    end
+    return result
+end
+
+local function command_matches(command, query)
+    local haystack = string.lower(command.Title .. " " .. command.Description .. " " .. table.concat(command.Keywords, " "))
+    for word in string.lower(query):gmatch("%S+") do
+        if not string.find(haystack, word, 1, true) then return false end
+    end
+    return true
+end
+
+local function command_close_palette(window)
+    local palette = window._commandPalette
+    if not palette then return false end
+    window._commandPalette = nil
+    palette.Destroyed = true
+    if palette.Search and UIS:GetFocusedTextBox() == palette.Search then
+        pcall(function() palette.Search:ReleaseFocus(false) end)
+    end
+    for _, owner in ipairs(palette.RowOwners or {}) do
+        owner.Destroyed = true
+        disconnect(owner._connections, owner)
+    end
+    if palette.RowOwners then table.clear(palette.RowOwners) end
+    disconnect(palette._connections, palette)
+    if palette.Root and palette.Root.Parent then
+        window:_ForgetTree(palette.Root)
+        palette.Root:Destroy()
+    end
+    return true
+end
+
+local function command_activate(window, command, palette)
+    if window.Destroyed or window.Closed or command.Destroyed or window._commands[command.Id] ~= command
+        or palette and window._commandPalette ~= palette then return false end
+    command_close_palette(window)
+    window:_RunUser(command, function() command.Callback(command) end)
+    return true
+end
+
+local function command_palette_bounds(window, palette)
+    local width, height = window.Canvas.AbsoluteSize.X, window.Canvas.AbsoluteSize.Y
+    local dialog_width = math.max(1, math.min(560, width - 32))
+    local dialog_height = math.max(1, math.min(480, height - 32))
+    palette.Dialog.Size = UDim2.fromOffset(dialog_width, dialog_height)
+    palette.Dialog.Position = UDim2.fromScale(.5, .5)
+end
+
+local function command_render(window, palette)
+    if window.Destroyed or palette.Destroyed or window._commandPalette ~= palette then return end
+    local query = palette.Search.Text
+    local valid_query = Logic.text(query, command_query_limit)
+    if valid_query ~= query then
+        palette.Search.Text = valid_query
+        return
+    end
+    palette.Query = valid_query
+    for _, row in ipairs(palette.Rows) do
+        local owner = palette.RowOwners[#palette.RowOwners]
+        if owner then owner.Destroyed = true;disconnect(owner._connections, owner) end
+        table.remove(palette.RowOwners)
+        window:_ForgetTree(row)
+        row:Destroy()
+    end
+    table.clear(palette.Rows)
+    table.clear(palette.RowOwners)
+    palette.Matches = {}
+    for _, command in ipairs(window._commandOrder) do
+        if not command.Destroyed and window._commands[command.Id] == command and command_matches(command, valid_query) then
+            palette.Matches[#palette.Matches + 1] = command
+            if #palette.Matches >= command_result_limit then break end
+        end
+    end
+    local empty = #palette.Matches == 0
+    palette.Empty.Visible = empty
+    palette.List.Visible = not empty
+    palette.List.CanvasSize = UDim2.fromOffset(0, #palette.Matches * 48)
+    palette.Selected = empty and 0 or 1
+    for index, command in ipairs(palette.Matches) do
+        local row = create("TextButton", {
+            Name = "Command_" .. tostring(index), Text = "", AutoButtonColor = false, Selectable = true,
+            Size = UDim2.new(1, -8, 0, 44), Position = UDim2.fromOffset(4, (index - 1) * 48),
+            LayoutOrder = index, ZIndex = 33,
+        }, palette.List)
+        window:_Rounded(row, "ControlRadius")
+        window:_Color(row, "BackgroundColor3", index == palette.Selected and "Hover" or "Raised")
+        window:_Stroke(row, "Border", .82)
+        local title = window:_Label(row, command.Title, 13, "Text")
+        title.Name = "CommandTitle";title.Position = UDim2.fromOffset(command.Icon and 48 or 14, 5)
+        title.Size = UDim2.new(1, command.Icon and -60 or -28, 0, command.Description ~= "" and 18 or 32)
+        title.TextWrapped = false;title.TextTruncate = Enum.TextTruncate.AtEnd;title.ZIndex = 34
+        window:_Style(title, "Font", "FontBold")
+        if command.Description ~= "" then
+            local description = window:_Label(row, command.Description, 11, "Muted")
+            description.Name = "CommandDescription";description.Position = UDim2.fromOffset(command.Icon and 48 or 14, 24)
+            description.Size = UDim2.new(1, command.Icon and -60 or -28, 0, 15)
+            description.TextWrapped = false;description.TextTruncate = Enum.TextTruncate.AtEnd;description.ZIndex = 34
+        end
+        if command.Icon then
+            Library:Icon(row, command.Icon, {Size = 18, Position = UDim2.fromOffset(14, 13), Window = window, Token = "Muted"})
+        end
+        palette.Rows[#palette.Rows + 1] = row
+        local owner = {Destroyed = false, _connections = {}}
+        palette.RowOwners[#palette.RowOwners + 1] = owner
+        window:_Connect(row.Activated, function() command_activate(window, command, palette) end, owner)
+        window:_Connect(row.MouseEnter, function()
+            if owner.Destroyed or palette.Destroyed then return end
+            for item_index, item in ipairs(palette.Matches) do
+                local item_row = palette.Rows[item_index]
+                if item_row then window:_Color(item_row, "BackgroundColor3", item == command and "Hover" or "Raised") end
+            end
+            palette.Selected = index
+        end, owner)
+    end
+end
+
+local function command_move_selection(window, palette, delta)
+    if #palette.Matches == 0 then return end
+    palette.Selected = ((palette.Selected - 1 + delta) % #palette.Matches) + 1
+    for index, row in ipairs(palette.Rows) do
+        window:_Color(row, "BackgroundColor3", index == palette.Selected and "Hover" or "Raised")
+    end
+    local selected = palette.Rows[palette.Selected]
+    if selected then
+        local top = selected.Position.Y.Offset
+        local bottom = top + selected.AbsoluteSize.Y
+        local current = palette.List.CanvasPosition.Y
+        if top < current then palette.List.CanvasPosition = Vector2.new(0, top)
+        elseif bottom > current + palette.List.AbsoluteWindowSize.Y then
+            palette.List.CanvasPosition = Vector2.new(0, bottom - palette.List.AbsoluteWindowSize.Y)
+        end
+    end
+end
+
+function Window:Command(options)
+    assert(not self.Destroyed, "Window is destroyed")
+    assert(type(options) == "table", "Command options must be a table")
+    for key in pairs(options) do assert(command_option_keys[key], "Unknown Command option: " .. tostring(key)) end
+    local id = command_text(options.Id, "Id", 64, true)
+    assert(id:match("^[%w_-]+$"), "Command.Id must use letters, digits, underscores or hyphens")
+    local title = command_text(options.Title, "Title", 80, true)
+    local description = command_text(options.Description, "Description", 160, false)
+    local keywords = command_keywords(options.Keywords)
+    assert(options.Icon == nil or Library:GetIconName(options.Icon) ~= nil, "Unknown command Icon")
+    assert(type(options.Callback) == "function", "Command.Callback must be a function")
+    assert(self._commands == nil or self._commands[id] == nil, "Duplicate command ID: " .. id)
+    assert(self._commandCount == nil or self._commandCount < command_limit, "A window supports at most 256 commands")
+
+    if not self._commands then self._commands = {};self._commandOrder = {};self._commandCount = 0 end
+    local command = {Window = self, Id = id, Title = title, Description = description, Keywords = keywords, Icon = options.Icon, Callback = options.Callback, Destroyed = false, _connections = {}}
+    function command:Remove()
+        if self.Destroyed then return false end
+        return self.Window:RemoveCommand(self.Id)
+    end
+    self._commands[id] = command
+    self._commandOrder[#self._commandOrder + 1] = command
+    self._commandCount += 1
+    command_order += 1
+    self._commandWindowOrder = command_order
+    command_mark_active(self)
+    if self._commandPalette then command_render(self, self._commandPalette) end
+
+    if not self._commandHotkey then
+        self._commandHotkey = self:_Connect(UIS.InputBegan, function(input, processed)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                command_find_window_at(Vector2.new(input.Position.X, input.Position.Y))
+            end
+            if processed or self.Destroyed or self.Closed or not self.Root.Visible or self._modal then return end
+            if command_active_window ~= self then return end
+            if UIS:GetFocusedTextBox() then return end
+            if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.K
+                and (UIS:IsKeyDown(Enum.KeyCode.LeftControl) or UIS:IsKeyDown(Enum.KeyCode.RightControl)) then
+                self:OpenCommands()
+            end
+        end)
+    end
+    return command
+end
+
+function Window:RemoveCommand(id)
+    assert(not self.Destroyed, "Window is destroyed")
+    assert(type(id) == "string", "Command ID must be a string")
+    local command = self._commands and self._commands[id]
+    if not command then return false end
+    self._commands[id] = nil
+    self._commandCount -= 1
+    if self._commandCount == 0 and command_active_window == self then command_reselect_active(self) end
+    command.Destroyed = true
+    disconnect(command._connections, command)
+    command.Callback = nil
+    for index, entry in ipairs(self._commandOrder) do
+        if entry == command then table.remove(self._commandOrder, index);break end
+    end
+    if self._commandPalette then command_render(self, self._commandPalette) end
+    return true
+end
+
+function Window:OpenCommands()
+    assert(not self.Destroyed, "Window is destroyed")
+    if self.Closed or not self.Root.Visible or self._modal then return false end
+    command_mark_active(self)
+    if self._commandPalette then
+        self._commandPalette.Search:CaptureFocus()
+        return true
+    end
+    local palette = {Destroyed = false, _connections = {}, Rows = {}, RowOwners = {}, Matches = {}, Selected = 0}
+    self._commandPalette = palette
+    local root = create("Frame", {Name = "CommandPalette", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 30}, self.Canvas)
+    palette.Root = root
+    local shade = create("TextButton", {Name = "Backdrop", Text = "", AutoButtonColor = false, BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = .42, Size = UDim2.fromScale(1, 1), ZIndex = 30}, root)
+    palette.Shade = shade
+    local dialog = create("Frame", {Name = "Dialog", AnchorPoint = Vector2.new(.5, .5), BackgroundTransparency = .04, ZIndex = 31}, root)
+    palette.Dialog = dialog
+    self:_Rounded(dialog, "WindowRadius");self:_Color(dialog, "BackgroundColor3", "Surface");self:_Stroke(dialog, "Border", .28);padding(dialog, 14)
+    local search = create("TextBox", {Name = "Search", Text = "", PlaceholderText = "Search commands...", ClearTextOnFocus = false, Font = Enum.Font.Gotham, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, Size = UDim2.new(1, 0, 0, 44), ZIndex = 32}, dialog)
+    palette.Search = search
+    self:_Rounded(search, "ControlRadius");padding(search, 12);self:_Color(search, "BackgroundColor3", "Raised");self:_Color(search, "TextColor3", "Text");self:_Color(search, "PlaceholderColor3", "Muted");self:_Stroke(search, "Border", .48)
+    local list = create("ScrollingFrame", {Name = "Results", Position = UDim2.fromOffset(0, 56), Size = UDim2.new(1, 0, 1, -56), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(), ScrollBarThickness = 3, ScrollingDirection = Enum.ScrollingDirection.Y, ZIndex = 32}, dialog)
+    palette.List = list
+    local empty = self:_Label(dialog, "No commands found", 13, "Muted")
+    empty.Name = "EmptyState";empty.AnchorPoint = Vector2.new(.5, .5);empty.Position = UDim2.new(.5, 0, .5, 14);empty.Size = UDim2.new(1, -24, 0, 44);empty.TextXAlignment = Enum.TextXAlignment.Center;empty.ZIndex = 33
+    palette.Empty = empty
+    command_palette_bounds(self, palette)
+    command_render(self, palette)
+    self:_Connect(shade.Activated, function() self:CloseCommands() end, palette)
+    self:_Connect(search:GetPropertyChangedSignal("Text"), function() command_render(self, palette) end, palette)
+    self:_Connect(search.FocusLost, function(enterPressed)
+        if not enterPressed or palette.Destroyed or self._commandPalette ~= palette then return end
+        local command = palette.Matches[palette.Selected]
+        if command then command_activate(self, command, palette) end
+    end, palette)
+    self:_Connect(self.Canvas:GetPropertyChangedSignal("AbsoluteSize"), function() command_palette_bounds(self, palette) end, palette)
+    palette.HandleKey = function(input)
+        if palette.Destroyed or self._commandPalette ~= palette then return end
+        if input.KeyCode == Enum.KeyCode.Escape then self:CloseCommands();return end
+        if UIS:GetFocusedTextBox() ~= search then return end
+        if input.KeyCode == Enum.KeyCode.Up then command_move_selection(self, palette, -1)
+        elseif input.KeyCode == Enum.KeyCode.Down then command_move_selection(self, palette, 1)
+        elseif input.KeyCode == Enum.KeyCode.Return or input.KeyCode == Enum.KeyCode.KeypadEnter then
+            local command = palette.Matches[palette.Selected]
+            if command then command_activate(self, command, palette) end
+        end
+    end
+    self:_Connect(UIS.InputBegan, palette.HandleKey, palette)
+    search:CaptureFocus()
+    return true
+end
+
+function Window:CloseCommands()
+    return command_close_palette(self)
+end
+
+local command_original_hide = Window.Hide
+Window.Hide = function(self, ...)
+    self:CloseCommands()
+    local result = command_original_hide(self, ...)
+    if command_active_window == self then command_reselect_active(self) end
+    return result
+end
+local command_original_select_tab = Window.SelectTab
+Window.SelectTab = function(self, ...)
+    local selected = command_original_select_tab(self, ...)
+    self:CloseCommands()
+    return selected
+end
+local command_original_destroy = Window.Destroy
+Window.Destroy = function(self, ...)
+    self:CloseCommands()
+    if command_active_window == self then command_reselect_active(self) end
+    if self._commandOrder then
+        for _, command in ipairs(self._commandOrder) do
+            command.Destroyed = true
+            disconnect(command._connections, command)
+            command.Callback = nil
+            command.Window = nil
+        end
+        table.clear(self._commands)
+        table.clear(self._commandOrder)
+        self._commandCount = 0
+    end
+    return command_original_destroy(self, ...)
+end
+
+-- Optional, window-scoped configuration presets, injected into ui.luau's shared lexical scope.
+local preset_limit = 50
+local preset_blob_limit = 262144
+local preset_envelope_limit = 1048576
+local preset_suffixes = {"name", "profile", "save", "load", "delete"}
+local preset_fields = {Title = true, Icon = true, Id = true, StorageKey = true}
+
+local function preset_name(value)
+    return type(value) == "string" and #value >= 1 and #value <= 48 and value:match("^[%w_-]+$") ~= nil
+end
+
+local function validate_snapshot(window, snapshot)
+    assert(type(snapshot) == "string" and #snapshot <= preset_blob_limit, "Preset snapshot exceeds 256 KiB")
+    local document = HttpService:JSONDecode(snapshot)
+    Logic.profile(document, window.Controls)
+    if document.theme ~= nil then
+        assert(type(document.theme) == "string" and Library.Themes[document.theme], "Invalid preset theme")
+    end
+end
+
+local function encode_envelope(profiles)
+    local encoded = HttpService:JSONEncode({version = 1, profiles = profiles})
+    assert(#encoded <= preset_envelope_limit, "Preset collection exceeds 1 MiB")
+    return encoded
+end
+
+local function restore_storage(window, state, key)
+    assert(preset_name(key), "Presets.StorageKey must use 1–48 letters, digits, underscores or hyphens")
+    assert(type(window.Storage) == "table" and type(window.Storage.Read) == "function" and type(window.Storage.Write) == "function",
+        "Presets.StorageKey requires Window.Storage.Read and Window.Storage.Write")
+    if state.StorageKey then
+        assert(state.StorageKey == key, "Presets storage key is already configured")
+        return true
+    end
+    assert(not state.StorageAttempted and next(state.Profiles) == nil, "Presets storage must be configured before session presets are created")
+    state.StorageAttempted = true
+    state.Busy = true
+    local generation = state.Generation
+    local ok, data, readError = pcall(window.Storage.Read, key .. ".json")
+    state.Busy = false
+    if window.Destroyed or state.Generation ~= generation then return false end
+    if not ok then state.StorageError = "Could not read preset storage"; return false end
+    if data == nil then
+        if readError ~= nil then state.StorageError = "Could not read preset storage: " .. tostring(readError); return false end
+        state.StorageKey = key
+        return true
+    end
+    if type(data) ~= "string" or #data > preset_envelope_limit then
+        state.StorageError = "Preset storage is invalid or exceeds 1 MiB"; return false
+    end
+    local decodedOk, envelope = pcall(function() return HttpService:JSONDecode(data) end)
+    if not decodedOk or type(envelope) ~= "table" or envelope.version ~= 1 or type(envelope.profiles) ~= "table" then
+        state.StorageError = "Preset storage is corrupt; it was left unchanged"; return false
+    end
+    local profiles, count = {}, 0
+    for name, snapshot in pairs(envelope.profiles) do
+        if not preset_name(name) then state.StorageError = "Preset storage contains an invalid name"; return false end
+        count += 1
+        if count > preset_limit then state.StorageError = "Preset storage contains more than 50 profiles"; return false end
+        local valid, problem = pcall(validate_snapshot, window, snapshot)
+        if not valid then state.StorageError = "Preset storage contains an invalid profile: " .. tostring(problem); return false end
+        profiles[name] = snapshot
+    end
+    state.Profiles = profiles
+    state.StorageKey = key
+    return true
+end
+
+local function persist_candidate(window, state, profiles)
+    if not state.StorageKey then return true end
+    if state.StorageError then return false, state.StorageError end
+    if state.Busy then return false, "Preset storage operation is already in progress" end
+    local ok, encoded = pcall(encode_envelope, profiles)
+    if not ok then return false, tostring(encoded) end
+    state.Busy = true
+    local generation = state.Generation
+    local wrote, result, writeError = pcall(window.Storage.Write, state.StorageKey .. ".json", encoded)
+    state.Busy = false
+    if not wrote or result == false or writeError ~= nil then return false, "Could not write preset storage: " .. tostring(writeError or result) end
+    if window.Destroyed or state.Generation ~= generation then return false, "Window was destroyed during preset storage" end
+    return true
+end
+
+local function preset_state(window)
+    assert(not window.Destroyed, "Window is destroyed")
+    if window._presetState then return window._presetState end
+    local state = {Profiles = {}, Views = {}, Generation = 0, StorageAttempted = false, Busy = false}
+    window._presetState = state
+    window:OnDestroy(function()
+        state.Generation += 1
+        state.Busy = false
+        table.clear(state.Profiles)
+        table.clear(state.Views)
+        if window._presetState == state then window._presetState = nil end
+    end)
+    return state
+end
+
+local function refresh_preset_views(window, state, selected)
+    if window.Destroyed then return end
+    for tab, view in pairs(state.Views) do
+        if tab.Destroyed then
+            state.Views[tab] = nil
+        else
+            view.Refresh(selected)
+        end
+    end
+end
+
+function Window:GetPresetNames()
+    assert(not self.Destroyed, "Window is destroyed")
+    local state = self._presetState
+    local names = {}
+    if not state then return names end
+    if state.StorageError then return names, state.StorageError end
+    for name in pairs(state.Profiles) do names[#names + 1] = name end
+    table.sort(names)
+    return names
+end
+
+function Window:SavePreset(name)
+    if self.Destroyed then return false, "Window is destroyed" end
+    if not preset_name(name) then return false, "Preset names must be 1–48 letters, digits, underscores or hyphens" end
+    local state = preset_state(self)
+    if state.Busy then return false, "Preset storage operation is already in progress" end
+    if state.StorageError then return false, state.StorageError end
+    if state.Profiles[name] == nil then
+        local count = 0
+        for _ in pairs(state.Profiles) do count += 1 end
+        if count >= preset_limit then return false, "This window already has 50 presets" end
+    end
+    local ok, snapshot = pcall(function() return self:ExportConfig() end)
+    if not ok then return false, "Could not export the current configuration" end
+    if #snapshot > preset_blob_limit then return false, "Configuration exceeds the 256 KiB preset limit" end
+    local candidate = table.clone(state.Profiles)
+    candidate[name] = snapshot
+    local persisted, persistError = persist_candidate(self, state, candidate)
+    if not persisted then return false, persistError end
+    state.Profiles = candidate
+    refresh_preset_views(self, state, name)
+    return true
+end
+
+function Window:LoadPreset(name, fireCallbacks)
+    if self.Destroyed then return false, "Window is destroyed" end
+    if not preset_name(name) then return false, "Preset names must be 1–48 letters, digits, underscores or hyphens" end
+    if fireCallbacks ~= nil and type(fireCallbacks) ~= "boolean" then return false, "fireCallbacks must be boolean" end
+    local state = preset_state(self)
+    if state.Busy then return false, "Preset storage operation is already in progress" end
+    if state.StorageError then return false, state.StorageError end
+    local snapshot = state.Profiles[name]
+    if snapshot == nil then return false, "No preset named " .. name end
+    local ok, count = pcall(self.ImportConfig, self, snapshot, fireCallbacks == true)
+    if not ok then return false, "Preset could not be loaded: " .. tostring(count) end
+    refresh_preset_views(self, state, name)
+    return true, count
+end
+
+function Window:DeletePreset(name)
+    if self.Destroyed then return false, "Window is destroyed" end
+    if not preset_name(name) then return false, "Preset names must be 1–48 letters, digits, underscores or hyphens" end
+    local state = preset_state(self)
+    if state.Busy then return false, "Preset storage operation is already in progress" end
+    if state.StorageError then return false, state.StorageError end
+    if state.Profiles[name] == nil then return false, "No preset named " .. name end
+    local candidate = table.clone(state.Profiles)
+    candidate[name] = nil
+    local persisted, persistError = persist_candidate(self, state, candidate)
+    if not persisted then return false, persistError end
+    state.Profiles = candidate
+    refresh_preset_views(self, state, nil)
+    return true
+end
+
+function Window:Presets(options)
+    assert(not self.Destroyed, "Window is destroyed")
+    assert(options == nil or type(options) == "table", "Presets options must be a table")
+    options = options or {}
+    for key in pairs(options) do assert(preset_fields[key], "Unknown Presets option: " .. tostring(key)) end
+    local title = options.Title or "Presets"
+    assert(type(title) == "string" and utf8.len(title) and utf8.len(title) >= 1 and utf8.len(title) <= 80 and not title:find("[%c]"),
+        "Presets.Title must contain 1..80 characters without control characters")
+    if options.Icon ~= nil then assert(Library:GetIconName(options.Icon) ~= nil, "Unknown presets tab icon: " .. tostring(options.Icon)) end
+    local base = options.Id or "presets"
+    assert(type(base) == "string" and #base >= 1 and #base <= 64 and base:match("^[%w_-]+$"),
+        "Presets.Id must contain 1..64 letters, digits, underscores or hyphens")
+    if options.StorageKey ~= nil then assert(preset_name(options.StorageKey), "Presets.StorageKey must use 1–48 letters, digits, underscores or hyphens") end
+
+    local function ids_available(prefix)
+        for _, suffix in ipairs(preset_suffixes) do
+            if self.Controls[prefix .. "_" .. suffix] ~= nil then return false end
+        end
+        return true
+    end
+    if options.Id == nil then
+        local root = base
+        local serial = 1
+        while not ids_available(base) do
+            serial += 1
+            base = root .. "_" .. tostring(serial)
+            assert(#base <= 64, "Unable to allocate unique preset control IDs")
+        end
+    else
+        assert(ids_available(base), "Preset control ID prefix is already in use: " .. base)
+    end
+
+    local window = self
+    local state = preset_state(window)
+    if options.StorageKey then
+        local restored = restore_storage(window, state, options.StorageKey)
+        if restored and not window.Destroyed then refresh_preset_views(window, state, nil) end
+    end
+    local tab
+    local ok, result = pcall(function()
+        tab = window:Tab({Title = title, Icon = options.Icon or "save"})
+        local section = tab:Section({Title = "Configuration profiles"})
+        local persistenceDescription = state.StorageKey and ("Saved with configured storage: " .. state.StorageKey .. ".")
+            or state.StorageError and ("Storage unavailable: " .. state.StorageError)
+            or "Session only unless you configure a storage key."
+        section:Paragraph({Title = "Configuration presets", Description = persistenceDescription .. " They include persistent control values and a built-in theme; custom theme, layout, motion and window geometry are not included."})
+        local names = window:GetPresetNames()
+        local selectedName = names[1]
+        local nameInput = section:Input({
+            Id = base .. "_name", Title = "Preset name", Description = "Letters, digits, _ and -; up to 48 characters.",
+            Placeholder = "e.g. evening_setup", MaxLength = 48, Value = "", Persistent = false,
+        })
+        local profileDropdown = section:Dropdown({
+            Id = base .. "_profile", Title = "Saved preset", Description = "Choose a session preset to load or delete.",
+            Options = #names > 0 and names or {"No saved presets"}, Value = selectedName or "No saved presets", Persistent = false,
+            Callback = function(value)
+                if window.Destroyed or tab.Destroyed then return end
+                selectedName = value ~= "No saved presets" and value or nil
+            end,
+        })
+        local function notify(kind, heading, detail)
+            if window.Destroyed or tab.Destroyed then return end
+            window:Notify({Title = heading, Content = detail, Kind = kind, Duration = 5})
+        end
+        local function refresh(selection)
+            if window.Destroyed or tab.Destroyed then return end
+            names = window:GetPresetNames()
+            selectedName = selection
+            if not selectedName or not table.find(names, selectedName) then selectedName = names[1] end
+            profileDropdown:SetOptions(#names > 0 and names or {"No saved presets"}, selectedName or "No saved presets")
+        end
+        state.Views[tab] = {Refresh = refresh}
+        local weakTab = setmetatable({tab}, {__mode = "v"})
+        local teardownConnection
+        teardownConnection = window:Connect(tab.Page.Destroying, function()
+            local destroyedTab = weakTab[1]
+            if destroyedTab then state.Views[destroyedTab] = nil end
+            teardownConnection:Disconnect()
+            for index = #window._connections, 1, -1 do
+                if window._connections[index] == teardownConnection then table.remove(window._connections, index); break end
+            end
+        end)
+
+        section:Button({
+            Id = base .. "_save", Title = "Save preset", Text = "Save", Variant = "Primary",
+            Description = "Saves or replaces this name" .. (state.StorageKey and " in configured storage." or " for this window session."),
+            Callback = function()
+                if window.Destroyed or tab.Destroyed then return end
+                local name = nameInput:Get()
+                local saved, reason = window:SavePreset(name)
+                if not saved then notify("error", "Preset not saved", reason); return end
+                refresh(name)
+                notify("success", "Preset saved", name .. (state.StorageKey and " is saved in configured storage." or " is available for this window session."))
+            end,
+        })
+        section:Button({
+            Id = base .. "_load", Title = "Load preset", Text = "Load", Variant = "Secondary",
+            Callback = function()
+                if window.Destroyed or tab.Destroyed then return end
+                if not selectedName then notify("error", "Choose a preset", "Save a preset before loading one."); return end
+                local loaded, count = window:LoadPreset(selectedName, false)
+                if not loaded then notify("error", "Preset not loaded", count); return end
+                notify("success", "Preset loaded", tostring(count) .. " values restored.")
+            end,
+        })
+        section:Button({
+            Id = base .. "_delete", Title = "Delete preset", Text = "Delete", Variant = "Subtle",
+            Callback = function()
+                if window.Destroyed or tab.Destroyed then return end
+                if not selectedName then notify("error", "Choose a preset", "Select a saved preset to delete."); return end
+                local deleting = selectedName
+                window:Confirm({
+                    Title = "Delete preset?", Content = "Delete " .. deleting .. (state.StorageKey and " from configured storage?" or " from this window session?"),
+                    ConfirmText = "Delete", Callback = function()
+                        if window.Destroyed or tab.Destroyed then return end
+                        local deleted, reason = window:DeletePreset(deleting)
+                        if not deleted then notify("error", "Preset not deleted", reason); return end
+                        refresh(nil)
+                        notify("success", "Preset deleted", deleting .. (state.StorageKey and " was removed from configured storage." or " was removed from this window session."))
+                    end,
+                })
+            end,
+        })
+        return tab
+    end)
+    if not ok then
+        if tab and not tab.Destroyed then tab:Destroy() end
+        error(result, 2)
+    end
+    return result
 end
 
 return Library

@@ -28,6 +28,12 @@ local function accent_glow(theme)
         ColorSequenceKeypoint.new(1,theme.Accent),
     })
 end
+local function status_panel_transparency(variant)
+    return variant=="Minimal" and .58 or .38
+end
+local function status_stroke_transparency(variant)
+    return variant=="Minimal" and .65 or .46
+end
 local function loader_options(options,base)
     assert(options==nil or type(options)=="table","Loading must be a table")
     options=resolve_design_options(options,"loader")
@@ -206,8 +212,8 @@ function Loader:_FinishEntrance()
     self.Border.Transparency = .15
     self.Edge.BackgroundTransparency = .5
     self.MarkStroke.Transparency = .18
-    self.StatusPanel.BackgroundTransparency = self.Options.Variant == "Minimal" and .34 or .14
-    self.StatusPanelStroke.Transparency = self.Options.Variant == "Minimal" and .48 or .22
+    self.StatusPanel.BackgroundTransparency = status_panel_transparency(self.Options.Variant)
+    self.StatusPanelStroke.Transparency = status_stroke_transparency(self.Options.Variant)
     self.Title.TextTransparency = 0
     self.Subtitle.TextTransparency = 0
     self.StatusLabel.TextTransparency = 0
@@ -215,7 +221,7 @@ function Loader:_FinishEntrance()
 end
 function Loader:_TweenEntrance(instance, duration, goals)
     local tween = TweenService:Create(instance, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), goals)
-    local record = {Tween = tween}
+    local record: {Tween: Tween, Connection: RBXScriptConnection?} = {Tween = tween}
     record.Connection = tween.Completed:Connect(function()
         if record.Connection then record.Connection:Disconnect(); record.Connection = nil end
         for index, active in ipairs(self._entranceTweens) do
@@ -231,8 +237,8 @@ function Loader:_StartEntrance()
         {self.Border, "Transparency", .62, .15},
         {self.Edge, "BackgroundTransparency", .88, .5},
         {self.MarkStroke, "Transparency", .62, .18},
-        {self.StatusPanel, "BackgroundTransparency", .58, self.Options.Variant == "Minimal" and .34 or .14},
-        {self.StatusPanelStroke, "Transparency", .62, self.Options.Variant == "Minimal" and .48 or .22},
+        {self.StatusPanel, "BackgroundTransparency", .68, status_panel_transparency(self.Options.Variant)},
+        {self.StatusPanelStroke, "Transparency", .72, status_stroke_transparency(self.Options.Variant)},
         {self.Title, "TextTransparency", .34, 0},
         {self.Subtitle, "TextTransparency", .42, 0},
         {self.StatusLabel, "TextTransparency", .34, 0},
@@ -258,14 +264,25 @@ function Loader:SetProgress(ratio,status)
     end
     return self
 end
+function Loader:_StopActivity()
+    if self._activityConnection then self._activityConnection:Disconnect();self._activityConnection=nil end
+    if self._activityTween then pcall(function()self._activityTween:Cancel()end);self._activityTween=nil end
+end
 function Loader:_SetActivity()
-    if self._activityTween then self._activityTween:Cancel();self._activityTween=nil end
+    self:_StopActivity()
     local enabled=self.Options.ShowActivity and not self.Options.ReducedMotion and not self.Completed and not self.Destroyed
     self.Activity.Visible=enabled
     if enabled then
         self.Activity.Position=UDim2.fromScale(-.18,0)
-        self._activityTween=TweenService:Create(self.Activity,TweenInfo.new(1.4,Enum.EasingStyle.Linear,Enum.EasingDirection.InOut,-1),{Position=UDim2.fromScale(1.18,0)})
-        self._activityTween:Play()
+        local tween=TweenService:Create(self.Activity,TweenInfo.new(.9,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.fromScale(1.18,0)})
+        self._activityTween=tween
+        self._activityConnection=tween.Completed:Connect(function()
+            if self._activityTween~=tween then return end
+            if self._activityConnection then self._activityConnection:Disconnect();self._activityConnection=nil end
+            self._activityTween=nil
+            self.Activity.Visible=false
+        end)
+        tween:Play()
     end
 end
 function Loader:_StartLogo()
@@ -299,13 +316,13 @@ function Loader:_Apply(valid,logoChanged)
     self.Border.Color=theme.Border;self.Edge.BackgroundColor3=theme.Accent;self.EdgeGradient.Color=accent_glow(theme);self.StatusIndicator.BackgroundColor3=theme.Accent
     self.Mark.BackgroundColor3=theme.Raised;self.MarkStroke.Color=theme.Border;self.MarkTextLabel.TextColor3=theme.Text
     self.MarkTextLabel.Font=style.FontBold;self.MarkTextLabel.TextSize=style.TitleSize+2
-    self.Title.Text=valid.Title;self.Title.Font=style.FontBold;self.Title.TextSize=style.TitleSize+2;self.Title.TextColor3=theme.Text
+    self.Title.Text=valid.Title;self.Title.Font=style.FontBold;self.Title.TextSize=style.TitleSize+3;self.Title.TextColor3=theme.Text
     self.Subtitle.Text=valid.Subtitle;self.Subtitle.Font=style.Font;self.Subtitle.TextSize=style.DescriptionSize;self.Subtitle.TextColor3=theme.Muted
     self.StatusLabel.Font=style.Font;self.StatusLabel.TextSize=style.DescriptionSize;self.StatusLabel.TextColor3=theme.Text
     self.Percent.Font=style.Font;self.Percent.TextSize=style.DescriptionSize;self.Percent.TextColor3=theme.Muted
     self.Track.BackgroundColor3=theme.Raised;self.Fill.BackgroundColor3=theme.Accent;self.Activity.BackgroundColor3=theme.Text
-    self.StatusPanel.BackgroundColor3=theme.Surface;self.StatusPanel.BackgroundTransparency=valid.Variant=="Minimal" and .34 or .14
-    self.StatusPanelStroke.Color=theme.Border;self.StatusPanelStroke.Transparency=valid.Variant=="Minimal" and .48 or .22
+    self.StatusPanel.BackgroundColor3=theme.Surface;self.StatusPanel.BackgroundTransparency=status_panel_transparency(valid.Variant)
+    self.StatusPanelStroke.Color=theme.Border;self.StatusPanelStroke.Transparency=status_stroke_transparency(valid.Variant)
     self.CardCorner.CornerRadius=UDim.new(0,style.WindowRadius)
     self.MarkCorner.CornerRadius=UDim.new(0,math.min(12,valid.LogoSize/3))
     self.MarkImageCorner.CornerRadius=self.MarkCorner.CornerRadius
@@ -371,7 +388,7 @@ function Loader:Destroy()
         if thread and thread~=coroutine.running() and coroutine.status(thread)~="dead"then task.cancel(thread)end
     end
     if self._progressTween then self._progressTween:Cancel();self._progressTween=nil end
-    if self._activityTween then self._activityTween:Cancel();self._activityTween=nil end
+    self:_StopActivity()
     self:_CancelEntrance()
     for _,tween in ipairs(self._tweens)do pcall(function()tween:Cancel()end)end
     table.clear(self._tweens);disconnect(self._connections,self)
@@ -389,7 +406,7 @@ function Loader:Complete(status)
     if self._runThread and self._runThread~=coroutine.running()then task.cancel(self._runThread);self._runThread=nil end
     if self._progressTween then self._progressTween:Cancel();self._progressTween=nil end
     self.Fill.Size=UDim2.fromScale(1,1);self.Activity.Visible=false
-    if self._activityTween then self._activityTween:Cancel();self._activityTween=nil end
+    self:_StopActivity()
     local function finish()
         self._finishThread=nil
         if self.Destroyed then return end
@@ -444,10 +461,10 @@ function Library:CreateLoader(options)
     self.MarkTextLabel=create("TextLabel",{Name="Placeholder",Text=valid.MarkText,Font=style.FontBold,TextSize=20,BackgroundTransparency=1,Size=UDim2.fromScale(1,1),TextColor3=theme.Text},self.Mark)
     self.MarkImage=create("ImageLabel",{Name="Image",Image="",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ScaleType=Enum.ScaleType.Crop,Visible=false},self.Mark)
     self.MarkImageCorner=Instance.new("UICorner");self.MarkImageCorner.Parent=self.MarkImage
-    self.StatusPanel=create("Frame",{Name="ProgressStatusPanel",BackgroundColor3=theme.Surface,BackgroundTransparency=.14,BorderSizePixel=0},self.Card)
+    self.StatusPanel=create("Frame",{Name="ProgressStatusPanel",BackgroundColor3=theme.Surface,BackgroundTransparency=status_panel_transparency(valid.Variant),BorderSizePixel=0},self.Card)
     self.StatusPanelCorner=Instance.new("UICorner");self.StatusPanelCorner.CornerRadius=UDim.new(0,style.ControlRadius);self.StatusPanelCorner.Parent=self.StatusPanel
-    self.StatusPanelStroke=create("UIStroke",{Color=theme.Border,Thickness=1,Transparency=.22},self.StatusPanel)
-    self.Title=create("TextLabel",{Text=valid.Title,Font=style.FontBold,TextSize=style.TitleSize+2,TextColor3=theme.Text,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
+    self.StatusPanelStroke=create("UIStroke",{Color=theme.Border,Thickness=1,Transparency=status_stroke_transparency(valid.Variant)},self.StatusPanel)
+    self.Title=create("TextLabel",{Text=valid.Title,Font=style.FontBold,TextSize=style.TitleSize+3,TextColor3=theme.Text,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
     self.Subtitle=create("TextLabel",{Text=valid.Subtitle,Font=style.Font,TextSize=style.DescriptionSize,TextColor3=theme.Muted,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top,TextWrapped=true,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
     self.StatusLabel=create("TextLabel",{Text=self.Status,Font=style.Font,TextSize=style.DescriptionSize,TextColor3=theme.Text,BackgroundTransparency=1,TextXAlignment=Enum.TextXAlignment.Left,TextTruncate=Enum.TextTruncate.AtEnd},self.Card)
     self.StatusIndicator=create("Frame",{Name="StatusIndicator",BackgroundColor3=theme.Accent,BorderSizePixel=0},self.Card)

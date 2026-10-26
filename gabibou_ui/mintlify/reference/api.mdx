@@ -50,6 +50,9 @@ Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (cl
 |---|---|
 | `Tab(title, iconOrOptions?)` / `Tab(options)`, `SelectTab(tab)` | Add or select a tab. |
 | `Category(titleOrOptions)` | Get or create a named tab category. A category options table accepts `Title`; repeated calls for the same title return the same category. |
+| `Appearance(options?)` | Add an optional editor tab for theme, accent, transparency, navigation and motion. Accepts `Title`, an icon name or ID in `Icon`, and an optional control-ID prefix in `Id`. Returns the tab; its controls are nonpersistent. See [the design guide](/customization/design-your-interface). |
+| `Command(options)`, `RemoveCommand(id)`, `OpenCommands()`, `CloseCommands()` | Register actions and open or close a searchable palette. Registration returns a removable handle. See [Commands and presets](/customization/commands-and-presets). |
+| `Presets(options?)`, `SavePreset(name)`, `LoadPreset(name, fireCallbacks?)`, `DeletePreset(name)`, `GetPresetNames()` | Add a profiles editor or manage snapshots in code. Session memory is the default; `StorageKey` opts into the window's configured Read/Write adapter. |
 | `SearchFor(query)` | Apply a search query to controls. |
 | `Get(id)`, `GetValues()`, `SetValues(values, fireCallbacks)` | Read controls and persistent values. |
 | `Hide()`, `Show()`, `Toggle()` | Change window visibility. |

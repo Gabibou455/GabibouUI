@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.5.0-rc.25
+
+- Fix: an Input that receives invalid text now keeps its previous value and shows a notice instead of raising inside the FocusLost handler.
+- Fix: an open dropdown no longer closes when the on-screen keyboard or canvas size changes; it closes only when the window itself moves or resizes.
+- Fix: a Keybind waiting for a key is cancelled when a text box gains focus, and starting a capture releases the focused text box.
+- Faster startup: controls created in the same frame refresh search visibility once instead of once per control. The search box waits 80 ms after the last keystroke.
+- Buttons share one window-level InputEnded/WindowFocusReleased listener instead of two global connections each.
+- Animations reuse one Destroying/AncestryChanged pair per instance instead of creating two new connections for every tween.
+- Rename the key screen's `accent_glow` helper to avoid a duplicate local function in the standalone module.
+- Move phone windows by dragging the title strip, including its title, subtitle and logo area.
+- Keep a usable header area on screen while allowing a nearly full-screen mobile window to move farther than its outer margin.
+- Preserve pointer ownership across multi-touch gestures and clear a gesture when it ends or is cancelled.
+- Mouse-only desktop windows continue to stay inside the available viewport; touch-enabled landscape screens use the reachable-header bounds. Physical-device validation remains pending.
+
+## 1.5.0-rc.24 — local candidate
+
+- Keep every open preset editor synchronized with programmatic saves, loads, deletes and a later storage restore; release editor refresh hooks when its tab is removed.
+
+- Add a window-scoped command palette with searchable titles, descriptions and keywords, keyboard selection, a developer-provided touch entry point, and owned cleanup.
+- Add named configuration presets through `window:Presets()` and programmatic save/load/delete/list methods. Optional `StorageKey` uses the window's Read/Write adapter to restore names across launches; session-only remains the default.
+- Protect preset storage from corrupt reads, concurrent operations, failed writes and post-destruction in-memory commits. Preserve nonpersistent editor fields and the existing profile schema.
+- Include portable commands/session examples and a separate filesystem-adapter example. This candidate is local and has not been published.
+
+## 1.5.0-rc.23 — local candidate
+
+- Refine Graphite surfaces, spacing and labeled Rail selection with one quiet row surface. Preserve the existing four design presets and all built-in icon IDs.
+- Reorganize the key form around an avatar header, primary Verify action, Get Key/Cancel row and optional blue Discord action.
+- Replace the loader's repeating activity animation with one finite sweep. Reduced motion suppresses it and owned resources are released on completion or destruction.
+- Simplify the English design guide and include a UI-only design showcase using the existing customization API.
+- Add the optional `window:Appearance()` editor: seven standard controls for theme, accent, panel transparency, navigation, tab placement and motion. Editor controls are excluded from application value profiles.
+- Validation evidence for this local candidate is recorded separately from historical releases; publication is pending.
+
 ## 1.5.0-rc.22
 
 - Wait up to 8 seconds for the local player's `PlayerGui` before `CreateWindow` reports that the GUI parent is unavailable. An explicit `Parent` instance bypasses that lookup.

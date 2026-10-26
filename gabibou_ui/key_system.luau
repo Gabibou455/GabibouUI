@@ -142,7 +142,7 @@ local function key_text(value, fallback, limit, label)
     return valid
 end
 
-local function accent_glow(theme)
+local function key_accent_glow(theme)
     local highlight = theme.Accent:Lerp(theme.Text, .18)
     return ColorSequence.new({
         ColorSequenceKeypoint.new(0, theme.Accent),
@@ -255,10 +255,10 @@ local function key_options(options)
     assert(Logic.finite(options.MaxLength) and options.MaxLength % 1 == 0 and options.MaxLength >= 1 and options.MaxLength <= 4096, "MaxLength must be an integer in 1..4096")
     options.DisplayOrder = options.DisplayOrder == nil and 120 or options.DisplayOrder
     assert(Logic.finite(options.DisplayOrder) and options.DisplayOrder % 1 == 0, "DisplayOrder must be an integer")
-    options.BackgroundTransparency = options.BackgroundTransparency == nil and .42 or options.BackgroundTransparency
+    options.BackgroundTransparency = options.BackgroundTransparency == nil and .28 or options.BackgroundTransparency
     assert(Logic.finite(options.BackgroundTransparency) and options.BackgroundTransparency >= 0 and options.BackgroundTransparency <= 1,
         "BackgroundTransparency must be 0..1")
-    options.CardTransparency = options.CardTransparency == nil and .1 or options.CardTransparency
+    options.CardTransparency = options.CardTransparency == nil and .06 or options.CardTransparency
     assert(Logic.finite(options.CardTransparency) and options.CardTransparency >= 0 and options.CardTransparency <= 1,
         "CardTransparency must be 0..1")
     local player = Players.LocalPlayer
@@ -292,9 +292,9 @@ function KeyGate:_Status(text, kind)
     self.StatusPanelStroke.Color = visible and self.Options.Theme[token] or self.Options.Theme.Border
     self:_LayoutStatusSurface()
     if visible and not wasVisible then
-        self.StatusPanel.BackgroundTransparency = .58
+        self.StatusPanel.BackgroundTransparency = .34
         self.StatusPanelStroke.Transparency = .72
-        self:_PlayMotion("status-fill", self.StatusPanel, .16, {BackgroundTransparency = .32})
+        self:_PlayMotion("status-fill", self.StatusPanel, .16, {BackgroundTransparency = .14})
         self:_PlayMotion("status-border", self.StatusPanelStroke, .16, {Transparency = .22})
     elseif not visible then
         self:_CancelMotion("status-fill")
@@ -705,7 +705,7 @@ function KeyGate:Update(changes)
     self.Card.BackgroundColor3 = theme.Background
     self.Card:FindFirstChildOfClass("UIStroke").Color = theme.Border
     self.Edge.BackgroundColor3 = theme.Accent
-    self.EdgeGradient.Color = accent_glow(theme)
+    self.EdgeGradient.Color = key_accent_glow(theme)
     self.Mark.BackgroundColor3 = theme[valid.Logo == false and "Accent" or "Raised"]
     self.MarkStroke.Color = theme.Border
     self.MarkLabel.TextColor3 = theme[valid.Logo == false and "AccentText" or "Text"]
@@ -717,7 +717,7 @@ function KeyGate:Update(changes)
     self.Input.PlaceholderColor3 = theme.Muted
     self.HeaderRule.BackgroundColor3 = theme.Border
     self.CredentialWell.BackgroundColor3 = theme.Surface
-    self.CredentialWell.BackgroundTransparency = .12
+    self.CredentialWell.BackgroundTransparency = .06
     self.CredentialWellStroke.Color = theme.Border
     self.CredentialWellStroke.Transparency = .2
     self.StatusPanel.BackgroundColor3 = theme.Surface
@@ -884,19 +884,19 @@ function KeyGate:_Layout()
     local contentHeight = math.max(height, baseline)
     local layoutOffset = math.max(0, (contentHeight - baseline) / 2)
     local compactOffset = height < 280 and -8 or 0
-    self.Mark.Position = UDim2.fromOffset(28, 28 + layoutOffset + compactOffset)
-    self.Mark.Size = UDim2.fromOffset(44, 44)
-    self.Title.Position = UDim2.fromOffset(88, 32 + layoutOffset + compactOffset)
-    self.Title.Size = UDim2.new(1, -116, 0, 25)
-    self.Subtitle.Position = UDim2.fromOffset(28, 84 + layoutOffset + compactOffset)
-    self.Subtitle.Size = UDim2.new(1, -56, 0, 32)
+    self.Mark.Position = UDim2.fromOffset(24, 24 + layoutOffset + compactOffset)
+    self.Mark.Size = UDim2.fromOffset(42, 42)
+    self.Title.Position = UDim2.fromOffset(78, 24 + layoutOffset + compactOffset)
+    self.Title.Size = UDim2.new(1, -102, 0, 24)
+    self.Subtitle.Position = UDim2.fromOffset(78, 52 + layoutOffset + compactOffset)
+    self.Subtitle.Size = UDim2.new(1, -102, 0, 34)
 
-    local actionsY = 220 + layoutOffset
-    local innerWidth = math.max(1, width - 64)
+    local actionsY = 204 + layoutOffset
+    local innerWidth = math.max(1, width - 56)
     local cancelWidth = math.min(84, innerWidth * .38)
     local actionGap = 8
-    local statusY = actionsY + (hasGetKey and 136 or 64) + (manualKeyLink and 52 or 0)
-    local discordY = actionsY + (hasGetKey and 168 or 100) + (manualKeyLink and 52 or 0)
+    local statusY = actionsY + (hasGetKey and (manualKeyLink and 182 or 134) or 56)
+    local discordY = statusY + 36
     self.SubmitButton.Position = UDim2.fromOffset(28, actionsY)
     if hasGetKey then
         self.SubmitButton.Size = UDim2.fromOffset(innerWidth, 48)
@@ -909,11 +909,11 @@ function KeyGate:_Layout()
         self.CancelButton.Size = UDim2.fromOffset(cancelWidth, 44)
         self.KeyLinkStatus.Position = UDim2.fromOffset(28, actionsY + 108)
         self.KeyLinkStatus.Size = UDim2.new(1, -56, 0, 18)
-        self.KeyLink.Position = UDim2.fromOffset(28, actionsY + 136)
+        self.KeyLink.Position = UDim2.fromOffset(28, actionsY + 134)
         self.KeyLink.Size = UDim2.new(1, -56, 0, 40)
     else
-        self.SubmitButton.Size = UDim2.fromOffset(math.max(1, innerWidth - cancelWidth - actionGap), 48)
-        self.CancelButton.Position = UDim2.fromOffset(28 + self.SubmitButton.Size.X.Offset + actionGap, actionsY)
+        self.SubmitButton.Size = UDim2.fromOffset(innerWidth - cancelWidth - actionGap, 48)
+        self.CancelButton.Position = UDim2.fromOffset(28 + innerWidth - cancelWidth, actionsY)
         self.CancelButton.Size = UDim2.fromOffset(cancelWidth, 48)
         self.GetKeyButton.Position = UDim2.fromOffset(28, actionsY)
         self.GetKeyButton.Size = UDim2.fromOffset(1, 44)
@@ -923,22 +923,23 @@ function KeyGate:_Layout()
         self.KeyLink.Size = UDim2.new(1, -56, 0, 40)
     end
 
-    local inputY = 156 + layoutOffset
-    self.KeyLabel.Position = UDim2.fromOffset(48, 132 + layoutOffset)
+    local inputY = 142 + layoutOffset
+    self.HeaderRule.Position = UDim2.fromOffset(24, 100 + layoutOffset + compactOffset)
+    self.KeyLabel.Position = UDim2.fromOffset(48, 118 + layoutOffset)
     self.KeyLabel.Size = UDim2.new(1, -76, 0, 18)
-    self.KeyIcon.Position = UDim2.fromOffset(28, 135 + layoutOffset)
+    self.KeyIcon.Position = UDim2.fromOffset(28, 121 + layoutOffset)
     self.Input.Position = UDim2.fromOffset(28, inputY)
-    self.Input.Size = UDim2.new(1, -56, 0, 48)
-    local credentialTop = math.max(122, self.KeyLabel.Position.Y.Offset - 10)
+    self.Input.Size = UDim2.new(1, -56, 0, 46)
+    local credentialTop = math.max(108, self.KeyLabel.Position.Y.Offset - 10)
     local credentialBottom = self.Input.Position.Y.Offset + self.Input.Size.Y.Offset + 8
     self.CredentialWell.Position = UDim2.fromOffset(18, credentialTop)
     self.CredentialWell.Size = UDim2.new(1, -36, 0, credentialBottom - credentialTop)
     self.StatusLabel.Position = UDim2.fromOffset(28, statusY)
-    self.StatusLabel.Size = UDim2.new(1, -56, 0, 20)
+    self.StatusLabel.Size = UDim2.new(1, -56, 0, 22)
     self.StatusPanel.Position = UDim2.fromOffset(22, statusY - 3)
     self.StatusPanel.Size = UDim2.new(1, -44, 0, 26)
     self.DiscordButton.Position = UDim2.fromOffset(28, discordY)
-    self.DiscordButton.Size = UDim2.new(1, -56, 0, 46)
+    self.DiscordButton.Size = UDim2.new(1, -56, 0, 44)
     self.DiscordIcon.Position = UDim2.fromOffset(14, 12)
     self.DiscordLabel.Size = UDim2.new(1, -54, 1, 0)
     self.DiscordLabel.Position = UDim2.fromOffset(44, 0)
@@ -1182,7 +1183,7 @@ function Library:CreateKeySystem(options)
         Name = "AccentEdge", Position = UDim2.fromOffset(20, 0), Size = UDim2.new(1, -40, 0, 1),
         BackgroundColor3 = theme.Accent, BackgroundTransparency = .5,
     }, gate.Content)
-    gate.EdgeGradient = create("UIGradient", {Color = accent_glow(theme), Rotation = 0}, gate.Edge)
+    gate.EdgeGradient = create("UIGradient", {Color = key_accent_glow(theme), Rotation = 0}, gate.Edge)
     gate.Mark = create("Frame", {
         Name = "Mark", Position = UDim2.fromOffset(24, 24), Size = UDim2.fromOffset(42, 42),
         BackgroundColor3 = theme.Accent, BorderSizePixel = 0,
@@ -1219,7 +1220,7 @@ function Library:CreateKeySystem(options)
         BackgroundColor3 = theme.Surface, BackgroundTransparency = .18, BorderSizePixel = 0,
     }, gate.Content)
     corner(gate.CredentialWell, style.ControlRadius)
-    gate.CredentialWell.BackgroundTransparency = .12
+    gate.CredentialWell.BackgroundTransparency = .06
     gate.CredentialWellStroke = create("UIStroke", {Color = theme.Border, Thickness = 1, Transparency = .2}, gate.CredentialWell)
     gate.KeyLabel = create("TextLabel", {
         Name = "KeyLabel", Position = UDim2.fromOffset(44, 92), Size = UDim2.new(1, -68, 0, 18),

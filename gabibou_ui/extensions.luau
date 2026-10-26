@@ -113,9 +113,32 @@ function Window:_CancelAnimation(instance)
     self._animationRecords[instance] = nil
     self._tweens[instance] = nil
     if record.Completed then record.Completed:Disconnect()end
-    if record.Destroying then record.Destroying:Disconnect()end
-    if record.Ancestry then record.Ancestry:Disconnect()end
     record.Tween:Cancel()
+end
+
+-- One Destroying/AncestryChanged pair per animated instance, reused by every later tween
+-- on it (hover effects retarget the same buttons constantly).
+function Window:_ReleaseAnimationWatcher(instance)
+    local watcher = self._animationWatchers[instance]
+    if not watcher then return end
+    self._animationWatchers[instance] = nil
+    watcher.Destroying:Disconnect()
+    watcher.Ancestry:Disconnect()
+end
+
+function Window:_WatchAnimationTarget(instance)
+    if self._animationWatchers[instance] then return end
+    local watcher = {}
+    watcher.Destroying = instance.Destroying:Connect(function()
+        self:_CancelAnimation(instance)
+        self:_ReleaseAnimationWatcher(instance)
+    end)
+    watcher.Ancestry = instance.AncestryChanged:Connect(function()
+        if instance:IsDescendantOf(self.Gui) then return end
+        self:_CancelAnimation(instance)
+        self:_ReleaseAnimationWatcher(instance)
+    end)
+    self._animationWatchers[instance] = watcher
 end
 
 function Window:_CancelForProperties(instance, properties)
@@ -143,16 +166,15 @@ function Window:Animate(instance, properties, options)
     -- TweenService validates properties before a currently playing tween is cancelled.
     local tween = TweenService:Create(instance, info, goals)
     self:_CancelAnimation(instance)
-    local record: {Tween: Tween, Goals: {[string]: any}, Completed: RBXScriptConnection?, Destroying: RBXScriptConnection?, Ancestry: RBXScriptConnection?} = {Tween = tween, Goals = goals}
+    local record: {Tween: Tween, Goals: {[string]: any}, Completed: RBXScriptConnection?} = {Tween = tween, Goals = goals}
     self._tweens[instance] = tween
     self._animationRecords[instance] = record
+    self:_WatchAnimationTarget(instance)
     local function detach()
         if self._animationRecords[instance] ~= record then return false end
         self._animationRecords[instance] = nil
         self._tweens[instance] = nil
         if record.Completed then record.Completed:Disconnect()end
-        if record.Destroying then record.Destroying:Disconnect()end
-        if record.Ancestry then record.Ancestry:Disconnect()end
         return true
     end
     record.Completed = tween.Completed:Connect(function(state)
@@ -162,10 +184,6 @@ function Window:Animate(instance, properties, options)
                 if instance:IsDescendantOf(self.Gui) then onComplete(instance) end
             end)
         end
-    end)
-    record.Destroying = instance.Destroying:Connect(function() self:_CancelAnimation(instance) end)
-    record.Ancestry = instance.AncestryChanged:Connect(function()
-        if not instance:IsDescendantOf(self.Gui) then self:_CancelAnimation(instance) end
     end)
     if reduced then for property, goal in pairs(goals) do instance[property] = goal end end
     tween:Play()

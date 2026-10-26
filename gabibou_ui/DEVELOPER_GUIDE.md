@@ -1,6 +1,6 @@
 # Gabibou UI Developer Guide
 
-- Version: `1.5.0-rc.22` (release candidate)
+- Version: `1.5.0-rc.25` (release candidate)
 - Language: Luau
 - Runtime: Roblox client
 
@@ -465,7 +465,7 @@ See [`PUBLISHING.md`](../PUBLISHING.md) for the repository's release procedure a
 | Object | Methods |
 |---|---|
 | Library | `Create`, `CreateWindow`, `Launch`, `CreateLoader`, `CreateKeySystem`, `DestroyAll`, `SetLayout`, `SetStyle`, `SetMotion`, `SetNotifications`, `RegisterComponent`, `GetComponentNames`, `UnregisterComponent`, `GetIconNames`, `GetIconId`, `GetIconName`, `GetIconCatalogue`, `GetIconVariants`, `RegisterIcon`, `UnregisterIcon`, `Icon` |
-| Window | `Tab`, `Get`, `GetValues`, `SetValues`, `SelectTab`, `SearchFor`, `Hide`, `Show`, `Toggle`, `SetSize`, `SetPosition`, `SetTheme`, `SetStyle`, `SetMotion`, `SetReducedMotion`, `SetLayout`, `SetNavigation`, `SetBranding`, `SetNotifications`, `Notify`, `Confirm`, config methods, `GetParts`, `SetPartLayout`, `ResetPartLayout`, `Animate`, `BindColor`, `On`, `Connect`, `Own`, `OnDestroy`, `Destroy` |
+| Window | `Tab`, `Appearance`, `Command`, `RemoveCommand`, `OpenCommands`, `CloseCommands`, `Presets`, `SavePreset`, `LoadPreset`, `DeletePreset`, `GetPresetNames`, `Get`, `GetValues`, `SetValues`, `SelectTab`, `SearchFor`, `Hide`, `Show`, `Toggle`, `SetSize`, `SetPosition`, `SetTheme`, `SetStyle`, `SetMotion`, `SetReducedMotion`, `SetLayout`, `SetNavigation`, `SetBranding`, `SetNotifications`, `Notify`, `Confirm`, config methods, `GetParts`, `SetPartLayout`, `ResetPartLayout`, `Animate`, `BindColor`, `On`, `Connect`, `Own`, `OnDestroy`, `Destroy` |
 | Control | `Get`, `Set`, `SetTitle`, `SetDescription`, `SetVisible`, `SetEnabled`, `SetLayout`, `SetOrder`, `SetHeight` for custom controls, `GetParts`, `Animate`, `On`, `Connect`, `Own`, `Destroy` |
 | Loader | `SetProgress`, `SetStatus`, `Update`, `Run`, `GetParts`, `SetPartLayout`, `ResetPartLayout`, `Own`, `Complete`, `Destroy` |
 | Key gate | `Submit`, `GetKey`, `Cancel`, `Destroy`, `Update`, `GetParts`, `CopyDiscordLink` |

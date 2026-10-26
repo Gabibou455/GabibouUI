@@ -4,16 +4,28 @@ local TweenService=game:GetService("TweenService")
 local HttpService=game:GetService("HttpService")
 local GuiService=game:GetService("GuiService")
 local TextService=game:GetService("TextService")
-local Library={Version="1.5.0-rc.22",Windows={}}
+local Library={Version="1.5.0-rc.25",Windows={}}
 local style_for,motion_for,branding_for,layout_for,control_layout_for,tab_layout_for,notification_for,navigation_for,resolve_design_options
 Library.Themes={
-    Graphite={Background=Color3.fromRGB(14,15,18),Surface=Color3.fromRGB(23,25,30),Raised=Color3.fromRGB(33,36,42),Hover=Color3.fromRGB(44,48,55),Border=Color3.fromRGB(54,59,67),Text=Color3.fromRGB(243,245,247),Muted=Color3.fromRGB(163,169,178),Accent=Color3.fromRGB(231,234,239),AccentText=Color3.fromRGB(21,23,27),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
+    Graphite={Background=Color3.fromRGB(14,15,18),Surface=Color3.fromRGB(23,25,30),Raised=Color3.fromRGB(29,31,36),Hover=Color3.fromRGB(41,44,50),Border=Color3.fromRGB(48,52,59),Text=Color3.fromRGB(243,245,247),Muted=Color3.fromRGB(163,169,178),Accent=Color3.fromRGB(231,234,239),AccentText=Color3.fromRGB(21,23,27),Success=Color3.fromRGB(170,208,181),Danger=Color3.fromRGB(240,139,139)},
     Aurora={Background=Color3.fromRGB(13,14,23),Surface=Color3.fromRGB(22,24,38),Raised=Color3.fromRGB(32,35,53),Hover=Color3.fromRGB(43,47,69),Border=Color3.fromRGB(62,67,91),Text=Color3.fromRGB(243,244,255),Muted=Color3.fromRGB(158,163,190),Accent=Color3.fromRGB(161,143,255),AccentText=Color3.fromRGB(18,15,30),Success=Color3.fromRGB(119,221,181),Danger=Color3.fromRGB(247,142,164)},
     Ember={Background=Color3.fromRGB(21,15,15),Surface=Color3.fromRGB(32,24,24),Raised=Color3.fromRGB(45,32,30),Hover=Color3.fromRGB(58,40,36),Border=Color3.fromRGB(82,59,52),Text=Color3.fromRGB(255,244,237),Muted=Color3.fromRGB(190,165,155),Accent=Color3.fromRGB(255,166,113),AccentText=Color3.fromRGB(33,20,14),Success=Color3.fromRGB(169,208,158),Danger=Color3.fromRGB(255,128,128)}
 }
 local Window={};Window.__index=Window
 local Container={};Container.__index=Container
 local Control={};Control.__index=Control
+local function window_drag_position(position,viewport,size,margin,mobile,grip)
+    local minX=mobile and -margin or 0
+    local minY=0
+    local maxX=mobile and math.max(minX,viewport.X-margin-grip.X) or math.max(0,viewport.X-size.X)
+    local maxY=mobile and math.max(0,viewport.Y-grip.Y) or math.max(0,viewport.Y-size.Y)
+    return Vector2.new(math.clamp(position.X,minX,maxX),math.clamp(position.Y,minY,maxY))
+end
+local function gesture_input_matches(gesture,input)
+    return gesture~=nil and (input==gesture.input
+        or (gesture.input.UserInputType==Enum.UserInputType.MouseButton1
+            and input.UserInputType==Enum.UserInputType.MouseMovement))
+end
 local font=Enum.Font.Gotham
 local bold=Enum.Font.GothamBold
 local function create(class,properties,parent)
@@ -106,6 +118,34 @@ function Window:_Connect(signal,callback,owner)
     bucket[#bucket+1]=connection
     return connection
 end
+function Window:_BeginPointerGesture(kind,input)
+    if self.Destroyed or self.Closed or (input.UserInputType~=Enum.UserInputType.MouseButton1 and input.UserInputType~=Enum.UserInputType.Touch) then return false end
+    if self._gesture then return false end
+    if kind=="drag" and not self.Layout.Draggable or kind=="resize" and not self.Layout.Resizable then return false end
+    self._gesture={kind=kind,input=input,origin=Vector2.new(input.Position.X,input.Position.Y),position=self._position,size=self._desiredSize}
+    return true
+end
+function Window:_UpdatePointerGesture(input)
+    if self.Destroyed then self._gesture=nil;return false end
+    local g=self._gesture
+    if not g then return false end
+    if input==g.input and input.UserInputState==Enum.UserInputState.Cancel then self._gesture=nil;return false end
+    if not gesture_input_matches(g,input) then return false end
+    local position=Vector2.new(input.Position.X,input.Position.Y)
+    if g.kind=="drag" then
+        local delta=position-g.origin
+        if not g.moved and delta.Magnitude<3 then return false end
+        if not g.moved then g.moved=true;self._positionSpec=nil end
+        self._position=g.position+delta;self:_Layout()
+    elseif g.kind=="resize" then self:SetSize(g.size.X+position.X-g.origin.X,g.size.Y+position.Y-g.origin.Y)
+    elseif g.kind=="slider" and not g.control.Destroyed then g.control:_Pointer(position.X)
+    else return false end
+    return true
+end
+function Window:_EndPointerGesture(input)
+    if self._gesture and input==self._gesture.input then self._gesture=nil;return true end
+    return false
+end
 function Window:_TrackBindingTarget(instance)
     if self._bindingConnections[instance] then return end
     self._bindingConnections[instance]=instance.Destroying:Connect(function()
@@ -142,8 +182,8 @@ function Window:_Label(parent,text,size,token)
     self:_Color(label,"TextColor3",token or "Text");self:_Style(label,"Font","Font");return label
 end
 function Window:_Button(parent,text,size,owner)
-    local button=create("TextButton",{Text=tostring(text),Font=bold,TextSize=13,Size=size or UDim2.fromOffset(120,36),AutoButtonColor=false,Selectable=true},parent)
-    self:_Rounded(button,"ControlRadius");self:_Style(button,"Font","FontBold");self:_Style(button,"TextSize","TextSize");self:_Color(button,"BackgroundColor3","Raised");self:_Color(button,"TextColor3","Text");self:_Stroke(button,"Border",.3)
+    local button=create("TextButton",{Text=tostring(text),Font=bold,TextSize=13,Size=size or UDim2.fromOffset(120,44),AutoButtonColor=false,Selectable=true},parent)
+    self:_Rounded(button,"ControlRadius");self:_Style(button,"Font","FontBold");self:_Style(button,"TextSize","TextSize");self:_Color(button,"BackgroundColor3","Raised");self:_Color(button,"TextColor3","Text");self:_Stroke(button,"Border",.72)
     local highlight=create("Frame",{Name="SurfaceHighlight",Position=UDim2.new(0,8,0,1),Size=UDim2.new(1,-16,0,1),BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.94,BorderSizePixel=0,Active=false,Selectable=false,ZIndex=button.ZIndex+1},button)
     corner(highlight,1)
     self:_Connect(button:GetPropertyChangedSignal("ZIndex"),function()highlight.ZIndex=button.ZIndex+1 end,owner)
@@ -257,9 +297,11 @@ function Window:_Layout()
         local p,a=self._positionSpec,self._anchorPoint
         position=Vector2.new(viewport.X*p.X.Scale+p.X.Offset-width*a.X,viewport.Y*p.Y.Scale+p.Y.Offset-height*a.Y)
     end
-    local x=math.clamp(position.X,0,math.max(0,viewport.X-width))
-    local y=math.clamp(position.Y,0,math.max(0,viewport.Y-height))
-    self._position=Vector2.new(x,y);self.Root.Position=UDim2.fromOffset(x,y);self.Root.Size=self.Panel.Size
+    -- Keep mouse-first desktop windows fully visible. On touch screens, retain a reachable
+    -- header grip while allowing the rest of a viewport-filling window to move offscreen.
+    local grip=Vector2.new(math.min(width,72),math.min(height,72))
+    self._position=window_drag_position(position,viewport,Vector2.new(width,height),margin,mobile or UIS.TouchEnabled,grip)
+    self.Root.Position=UDim2.fromOffset(self._position.X,self._position.Y);self.Root.Size=self.Panel.Size
     self:_Arrange(width,height,mobile,compact,tiny,minimal)
     self._headerWash.Visible=self.Layout.ShowHeader and not minimal
     if self._headerDivider then self._headerDivider.Visible=self._headerWash.Visible end
@@ -273,7 +315,10 @@ function Window:_Layout()
     self.ToastHost.Size=UDim2.new(0,math.min(300,math.max(1,viewport.X-36)),1,-36)
     self:_LayoutNotifications()
     self:_ApplyPartLayouts()
-    self:_CloseDropdown()
+    -- An open menu stays anchored to its input unless the window itself moved or resized.
+    local last=self._lastGeometry
+    if not last or last.Size~=self._size or last.Position~=self._position then self:_CloseDropdown()end
+    self._lastGeometry={Size=self._size,Position=self._position}
     task.defer(function()
         if self.Destroyed then return end
         local focused=UIS:GetFocusedTextBox()
@@ -358,8 +403,18 @@ function Window:SelectTab(tab)
     if previous~=tab then self:_Emit(self,"TabChanged",tab,previous)end
     return tab
 end
+-- Building many controls in one frame refreshes search visibility once, not per control.
+function Window:_QueueSearch()
+    if self._searchQueued or self.Destroyed then return end
+    self._searchQueued=true
+    task.defer(function()
+        if not self._searchQueued or self.Destroyed then return end
+        self:SearchFor(self.Query)
+    end)
+end
 function Window:SearchFor(query)
     assert(type(query)=="string","Search needs a string")
+    self._searchQueued=false
     self.Query=query
     local first
     for _,tab in ipairs(self.Tabs) do
@@ -464,6 +519,8 @@ function Window:Destroy()
     if self.Categories then table.clear(self.Categories)end
     if self._categoryEntries then table.clear(self._categoryEntries)end
     for instance in pairs(table.clone(self._tweens)) do self:_CancelAnimation(instance) end
+    for instance in pairs(table.clone(self._animationWatchers)) do self:_ReleaseAnimationWatcher(instance) end
+    table.clear(self._pressedButtons)
     for _,connection in pairs(self._bindingConnections)do connection:Disconnect()end
     table.clear(self._bindingConnections)
     table.clear(self.Controls);table.clear(self._themeTargets);table.clear(self._styleTargets)
@@ -516,14 +573,14 @@ function Library:CreateWindow(options)
     if options.ReducedMotion~=nil then assert(type(options.ReducedMotion)=="boolean","ReducedMotion must be boolean");reduced=options.ReducedMotion end
     if self.Windows[id] then self.Windows[id]:Destroy() end
     local self=setmetatable({Id=id,Title=tostring(options.Title or "Gabibou UI"),Theme=theme,ThemeName=type(options.Theme)=="table" and "Custom" or (options.Theme or "Graphite"),Responsive=responsive,ReducedMotion=reduced,ToggleKey=key,ShowWatermark=options.ShowWatermark~=false,Destroyed=false,Closed=false,Tabs={},Controls={},Query="",Storage=options.Storage,_discordPrompt=discordPrompt,_connections={},_destroyCallbacks={},_themeTargets={},_tweens=setmetatable({},{__mode="k"}),_serial=0,_notifications={},_desiredSize=Vector2.new(math.clamp(options.Width or 800,320,1400),math.clamp(options.Height or 590,300,1000))},Window)
-    self.Style=style;self.Motion=motion;self.Layout=layout;self.Notifications=notifications;self.Navigation=navigation;self._positionSpec=initialPosition;self._anchorPoint=anchor;self._partLayouts={};self._events={};self._styleTargets={};self._bindingConnections={};self._animationRecords={}
+    self.Style=style;self.Motion=motion;self.Layout=layout;self.Notifications=notifications;self.Navigation=navigation;self._positionSpec=initialPosition;self._anchorPoint=anchor;self._partLayouts={};self._events={};self._styleTargets={};self._bindingConnections={};self._animationRecords={};self._animationWatchers={};self._pressedButtons={}
     self.Gui=create("ScreenGui",{Name="GabibouUI_"..id,ResetOnSpawn=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,DisplayOrder=options.DisplayOrder or 90,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},parent)
     self.Canvas=create("Frame",{Name="SafeArea",BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},self.Gui)
     self.Root=create("Frame",{Name="Window",BackgroundTransparency=1},self.Canvas)
     local depth=create("Frame",{Name="Depth",Position=UDim2.fromOffset(-3,4),Size=UDim2.new(1,6,1,4),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.78,BorderSizePixel=0,ZIndex=1},self.Root)
     corner(depth,22)
     self.Panel=create("Frame",{Name="Panel",Size=UDim2.fromScale(1,1),BorderSizePixel=0,Active=true,ZIndex=3},self.Root)
-    self:_Rounded(self.Panel,"WindowRadius");self:_Color(self.Panel,"BackgroundColor3","Background");self:_Stroke(self.Panel,"Border",.42)
+    self:_Rounded(self.Panel,"WindowRadius");self:_Color(self.Panel,"BackgroundColor3","Background");self:_Stroke(self.Panel,"Border",.72)
     self._headerWash=create("Frame",{Name="HeaderWash",BackgroundTransparency=.82,Size=UDim2.new(1,0,0,74),ZIndex=3},self.Panel)
     self:_Rounded(self._headerWash,"WindowRadius");self:_Color(self._headerWash,"BackgroundColor3","Raised")
     local cap=create("Frame",{Name="HeaderDivider",Position=UDim2.fromOffset(18,72),Size=UDim2.new(1,-36,0,1),BackgroundTransparency=.52,BorderSizePixel=0,ZIndex=5},self.Panel)
@@ -548,12 +605,20 @@ function Library:CreateWindow(options)
     self:_Connect(hide.Activated,function()self:Hide()end)
     self:_Connect(close.Activated,function()self:Confirm({Title="Close this interface?",Content="The window and its connections will be removed.",ConfirmText="Close",Callback=function()self:Destroy()end})end)
     self.Search=create("TextBox",{Name="Search",Text="",PlaceholderText="Search controls...",ClearTextOnFocus=false,Font=font,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left},self.Panel)
-    self:_Rounded(self.Search,"ControlRadius");self:_Style(self.Search,"Font","Font");self:_Style(self.Search,"TextSize","TextSize");padding(self.Search,12);self.Search:FindFirstChildOfClass("UIPadding").PaddingLeft=UDim.new(0,36);self:_Color(self.Search,"BackgroundColor3","Surface");self:_Color(self.Search,"TextColor3","Text");self:_Color(self.Search,"PlaceholderColor3","Muted");self:_Stroke(self.Search,"Border",.4)
+    self:_Rounded(self.Search,"ControlRadius");self:_Style(self.Search,"Font","Font");self:_Style(self.Search,"TextSize","TextSize");padding(self.Search,12);self.Search:FindFirstChildOfClass("UIPadding").PaddingLeft=UDim.new(0,36);self:_Color(self.Search,"BackgroundColor3","Surface");self:_Color(self.Search,"TextColor3","Text");self:_Color(self.Search,"PlaceholderColor3","Muted");self:_Stroke(self.Search,"Border",.76)
     Library:Icon(self.Search,"search",{Size=16,Position=UDim2.new(0,-25,.5,-8),Window=self,Token="Muted"})
-    self:_Connect(self.Search:GetPropertyChangedSignal("Text"),function()self:SearchFor(self.Search.Text)end)
+    local searchGeneration=0
+    self:_Connect(self.Search:GetPropertyChangedSignal("Text"),function()
+        searchGeneration+=1
+        local generation=searchGeneration
+        task.delay(.08,function()
+            if self.Destroyed or generation~=searchGeneration then return end
+            self:SearchFor(self.Search.Text)
+        end)
+    end)
     self.Nav=create("ScrollingFrame",{Name="Tabs",BackgroundTransparency=1,BorderSizePixel=0,CanvasSize=UDim2.new(),ScrollBarThickness=2},self.Panel)
     self.Nav.BackgroundTransparency=.28
-    self:_Rounded(self.Nav,"SectionRadius");self:_Color(self.Nav,"BackgroundColor3","Raised");self:_Stroke(self.Nav,"Border",.48)
+    self:_Rounded(self.Nav,"SectionRadius");self:_Color(self.Nav,"BackgroundColor3","Raised");self.Nav.BackgroundTransparency=.18;self:_Stroke(self.Nav,"Border",.82)
     self:_Color(self.Nav,"ScrollBarImageColor3","Border");self._navLayout=list(self.Nav,7,false)
     self.PageHost=create("Frame",{Name="Pages",BackgroundTransparency=1},self.Panel)
     self.PageTitle=self:_Label(self.Panel,"",22,"Text");self:_Style(self.PageTitle,"Font","FontBold");self.PageTitle.AutomaticSize=Enum.AutomaticSize.None;self.PageTitle.TextWrapped=false;self.PageTitle.TextTruncate=Enum.TextTruncate.AtEnd
@@ -570,24 +635,32 @@ function Library:CreateWindow(options)
     local viewport=self:_Viewport();self._position=Vector2.new(math.max(0,(viewport.X-self._desiredSize.X)/2),math.max(0,(viewport.Y-self._desiredSize.Y)/2))
     local function gesture(gui,kind)
         self:_Connect(gui.InputBegan,function(input)
-            if self.Closed or (input.UserInputType~=Enum.UserInputType.MouseButton1 and input.UserInputType~=Enum.UserInputType.Touch) then return end
-            if kind=="drag" and not self.Layout.Draggable or kind=="resize" and not self.Layout.Resizable then return end
-            if kind=="drag" then self._positionSpec=nil end
-            self._gesture={kind=kind,input=input,origin=Vector2.new(input.Position.X,input.Position.Y),position=self._position,size=self._desiredSize}
+            self:_BeginPointerGesture(kind,input)
         end)
     end
-    gesture(self.Header,"drag");gesture(self._resize,"resize")
+    gesture(self.Header,"drag")
+    -- The title strip contains only passive labels. Touches on them do not bubble to
+    -- Header.InputBegan, so make those targets active and give them the same drag start.
+    for _,target in ipairs({mark,self.TitleLabel,subtitle})do
+        target.Active=true
+        gesture(target,"drag")
+    end
+    gesture(self._resize,"resize")
     self:_Connect(UIS.InputChanged,function(input)
-        local g=self._gesture
-        if not g then return end
-        if input~=g.input and not (g.input.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseMovement) then return end
-        local position=Vector2.new(input.Position.X,input.Position.Y)
-        if g.kind=="drag" then self._position=g.position+(position-g.origin);self:_Layout()
-        elseif g.kind=="resize" then self:SetSize(g.size.X+position.X-g.origin.X,g.size.Y+position.Y-g.origin.Y)
-        elseif g.kind=="slider" and not g.control.Destroyed then g.control:_Pointer(position.X) end
+        self:_UpdatePointerGesture(input)
     end)
-    self:_Connect(UIS.InputEnded,function(input)if self._gesture and input==self._gesture.input then self._gesture=nil end end)
-    self:_Connect(UIS.WindowFocusReleased,function()self._gesture=nil;if self._capture then self._capture:_Render();self._capture=nil end end)
+    self:_Connect(UIS.InputEnded,function(input)
+        self:_EndPointerGesture(input)
+        for _,release in pairs(self._pressedButtons)do release(input)end
+    end)
+    self:_Connect(UIS.WindowFocusReleased,function()
+        self._gesture=nil;if self._capture then self._capture:_Render();self._capture=nil end
+        for _,release in pairs(self._pressedButtons)do release(nil)end
+    end)
+    -- Typing into any text box ends a pending key capture instead of leaving it stuck.
+    self:_Connect(UIS.TextBoxFocused,function()
+        if self._capture then local target=self._capture;self._capture=nil;target:_Render()end
+    end)
     self:_Connect(UIS.InputBegan,function(input,processed)
         if UIS:GetFocusedTextBox() then return end
         if self._capture and not self.Closed then
@@ -661,7 +734,7 @@ function Container:Section(options)
     local section=setmetatable({Window=self.Window,Tab=self,Title=tostring(options.Title or "Section"),_children={},_visible=true,Destroyed=false},Container)
     self.Window._serial+=1
     section.Root=create("Frame",{Size=UDim2.new(1,-4,0,0),AutomaticSize=Enum.AutomaticSize.Y,LayoutOrder=self.Window._serial*2},self.Body)
-    self.Window:_Rounded(section.Root,"SectionRadius");self.Window:_Color(section.Root,"BackgroundColor3","Raised");section.Root.BackgroundTransparency=.18;self.Window:_Stroke(section.Root,"Border",.5);list(section.Root,0,false)
+    self.Window:_Rounded(section.Root,"SectionRadius");self.Window:_Color(section.Root,"BackgroundColor3","Surface");section.Root.BackgroundTransparency=.08;self.Window:_Stroke(section.Root,"Border",.84);list(section.Root,0,false)
     local header=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,48)},section.Root)
     local label=self.Window:_Label(header,section.Title,14,"Text");self.Window:_Style(label,"Font","FontBold");label.Position=UDim2.fromOffset(14,0);label.Size=UDim2.new(1,-28,1,0);label.AutomaticSize=Enum.AutomaticSize.None
     local line=create("Frame",{Size=UDim2.new(1,-28,0,1),Position=UDim2.new(0,14,1,-1),BackgroundTransparency=.58},header);self.Window:_Color(line,"BackgroundColor3","Border")
@@ -719,7 +792,7 @@ function Container:_Row(kind,options,rightWidth,persistent)
         control._separator=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,1),LayoutOrder=row.LayoutOrder-1},self.Body)
         local line=create("Frame",{Size=UDim2.new(1,-28,1,0),Position=UDim2.fromOffset(14,0),BackgroundTransparency=.72},control._separator);window:_Color(line,"BackgroundColor3","Border")
     elseif kind=="Paragraph" then row.BackgroundTransparency=1
-    else window:_Rounded(row,"SectionRadius");window:_Color(row,"BackgroundColor3","Surface");row.BackgroundTransparency=.24;window:_Stroke(row,"Border",.62)end
+    else window:_Rounded(row,"SectionRadius");window:_Color(row,"BackgroundColor3","Surface");row.BackgroundTransparency=.52;window:_Stroke(row,"Border",.86)end
     create("UISizeConstraint",{MinSize=Vector2.new(0,rightWidth and 44 or 0)},row)
     local text=create("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,-(rightWidth and rightWidth+14 or 0),0,0),AutomaticSize=Enum.AutomaticSize.Y},row);list(text,5,false)
     control._text=text;control._rightWidth=rightWidth
@@ -820,6 +893,7 @@ function Control:Destroy()
     if self.Destroyed then return end
     self.Destroyed=true;disconnect(self._connections,self)
     self.Window:_DisconnectEvents(self)
+    self.Window._pressedButtons[self]=nil
     if self.Window._dropdownControl==self then self.Window:_CloseDropdown() end
     if self.Window._capture==self then self.Window._capture=nil end
     if self.Window._gesture and self.Window._gesture.control==self then self.Window._gesture=nil end
@@ -831,7 +905,7 @@ function Control:Destroy()
     end
     if not self.Window.Destroyed then self.Window:SearchFor(self.Window.Query) end
 end
-function Container:Paragraph(options)local c=self:_Row("Paragraph",options,nil,false);self.Window:SearchFor(self.Window.Query);return c end
+function Container:Paragraph(options)local c=self:_Row("Paragraph",options,nil,false);self.Window:_QueueSearch();return c end
 local buttonVariants={
     Primary={Background="Accent",Text="AccentText",Stroke="Accent",StrokeTransparency=.66,Icon="AccentText",BackgroundTransparency=0},
     Secondary={Background="Raised",Text="Text",Stroke="Border",StrokeTransparency=.3,Icon="Text",BackgroundTransparency=0},
@@ -887,27 +961,35 @@ function Container:Button(options)
         end
     end
     function control:_Render()renderPressState()end
+    -- The window owns the global InputEnded/WindowFocusReleased listeners; a button only
+    -- registers itself there while it is pressed or focused.
+    local pressedButtons=self.Window._pressedButtons
+    local function release(input)
+        if control.Destroyed then pressedButtons[control]=nil;return end
+        if input==nil then pressedInput=nil;focused=false
+        elseif pressedInput and (input==pressedInput or (pressedInput.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseButton1)) then pressedInput=nil
+        else return end
+        if not pressedInput and not focused then pressedButtons[control]=nil end
+        renderPressState()
+    end
     self.Window:_Connect(control._input.InputBegan,function(input)
         if not control.Enabled then return end
         if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
-            pressedInput=input;renderPressState()
+            pressedInput=input;pressedButtons[control]=release;renderPressState()
         end
     end,control)
-    self.Window:_Connect(UIS.InputEnded,function(input)
-        if not pressedInput then return end
-        if input==pressedInput or (pressedInput.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseButton1) then
-            pressedInput=nil;renderPressState()
-        end
+    self.Window:_Connect(control._input.SelectionGained,function()focused=true;pressedButtons[control]=release;renderPressState()end,control)
+    self.Window:_Connect(control._input.SelectionLost,function()
+        focused=false
+        if not pressedInput then pressedButtons[control]=nil end
+        renderPressState()
     end,control)
-    self.Window:_Connect(control._input.SelectionGained,function()focused=true;renderPressState()end,control)
-    self.Window:_Connect(control._input.SelectionLost,function()focused=false;renderPressState()end,control)
-    self.Window:_Connect(UIS.WindowFocusReleased,function()pressedInput=nil;focused=false;renderPressState()end,control)
     if options.Icon then
         create("UIPadding",{PaddingLeft=UDim.new(0,30),PaddingRight=UDim.new(0,8)},control._input)
         control._icon=Library:Icon(control._input,options.Icon,{Size=18,Position=UDim2.new(0,-22,.5,-9),Window=self.Window,Token=visual.Icon,Variant=options.IconVariant or "Outline"})
     end
     self.Window:_Connect(control._input.Activated,function()self.Window:_Callback(control)end,control)
-    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:Toggle(options)
     options=options or {};assert(options.Value==nil or type(options.Value)=="boolean","Toggle default must be boolean")
@@ -918,7 +1000,7 @@ function Container:Toggle(options)
     self.Window:_Stroke(control._track,"Border",.18)
     control._knob=create("Frame",{Size=UDim2.fromOffset(20,20),Position=UDim2.fromOffset(4,4),BorderSizePixel=0},control._track);corner(control._knob,10)
     function control:_Render()
-        local trackColor=self.Window.Theme[self.Value and "Accent" or "Surface"]
+        local trackColor=self.Window.Theme[self.Value and "Accent" or "Raised"]
         local knobColor=self.Window.Theme[self.Value and "AccentText" or "Muted"]
         local knobPosition=UDim2.fromOffset(self.Value and 30 or 4,4)
         if not self._rendered then
@@ -932,7 +1014,7 @@ function Container:Toggle(options)
         animateControlState(self.Window,self._knob,{BackgroundColor3=knobColor,Position=knobPosition})
     end
     self.Window:_Connect(control._input.Activated,function()if control.Enabled then control:Set(not control.Value,true) end end,control)
-    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:Slider(options)
     options=options or {}
@@ -968,11 +1050,12 @@ function Container:Slider(options)
     self.Window:_Connect(control._input.InputBegan,function(input)
         if not control.Enabled then return end
         if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+            if self.Window._gesture then return end
             self.Window._gesture={kind="slider",control=control,input=input};control:_Pointer(input.Position.X)
         elseif input.KeyCode==Enum.KeyCode.Left or input.KeyCode==Enum.KeyCode.DPadLeft then control:Set(control.Value-control.Step,true)
         elseif input.KeyCode==Enum.KeyCode.Right or input.KeyCode==Enum.KeyCode.DPadRight then control:Set(control.Value+control.Step,true) end
     end,control)
-    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:Input(options)
     options=options or {};local maximum=options.MaxLength or 120;assert(Logic.finite(maximum) and maximum>=1 and maximum<=4096,"MaxLength must be 1..4096");maximum=math.floor(maximum)
@@ -981,8 +1064,12 @@ function Container:Input(options)
     control._input=create("TextBox",{Text=initial,PlaceholderText=options.Placeholder or "Type here...",ClearTextOnFocus=false,Font=font,TextSize=12,Size=UDim2.fromOffset(140,36),TextTruncate=Enum.TextTruncate.AtEnd},control.Right)
     self.Window:_Style(control._input,"Font","Font");self.Window:_Style(control._input,"TextSize","TextSize");self.Window:_Rounded(control._input,"ControlRadius");padding(control._input,9);self.Window:_Color(control._input,"BackgroundColor3","Raised");self.Window:_Color(control._input,"TextColor3","Text");self.Window:_Color(control._input,"PlaceholderColor3","Muted");self.Window:_Stroke(control._input,"Border",.3)
     function control:_Render()self._input.Text=self.Value end
-    self.Window:_Connect(control._input.FocusLost,function()if control.Enabled then control:Set(control._input.Text,true) end end,control)
-    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    self.Window:_Connect(control._input.FocusLost,function()
+        if not control.Enabled then return end
+        local ok=pcall(control.Set,control,control._input.Text,true)
+        if not ok then control:_Render();self.Window:Notify({Title="Invalid text",Content="That text could not be used. The previous value was kept.",Kind="error"})end
+    end,control)
+    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:Keybind(options)
     options=options or {};local value=options.Value or "F6";if typeof(value)=="EnumItem" then value=value.Name end
@@ -993,9 +1080,22 @@ function Container:Keybind(options)
     self.Window:_Connect(control._input.Activated,function()
         if not control.Enabled then return end
         if self.Window._capture then self.Window._capture:_Render() end
+        local typing=UIS:GetFocusedTextBox();if typing then typing:ReleaseFocus(false)end
         self.Window._capture=control;control._input.Text="Press a key..."
     end,control)
-    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
+end
+local function dropdownBounds(position,inputSize,viewport,count,touchTarget)
+    local margin=math.min(12,math.max(0,(math.min(viewport.X,viewport.Y)-1)/2))
+    local width=math.min(math.max(1,inputSize.X),math.max(1,viewport.X-margin*2))
+    local height=math.min(260,count*(touchTarget+4)+12,math.max(1,viewport.Y-margin*2))
+    local x=math.clamp(position.X+inputSize.X-width,margin,math.max(margin,viewport.X-width-margin))
+    local below=position.Y+inputSize.Y+6
+    local above=position.Y-height-6
+    local y=below
+    if below+height>viewport.Y-margin and above>=margin then y=above end
+    y=math.clamp(y,margin,math.max(margin,viewport.Y-height-margin))
+    return x,y,width,height
 end
 function Container:Dropdown(options)
     options=options or {};local choices=Logic.options(options.Options);local initial=Logic.option(options.Value or choices[1],choices)
@@ -1019,16 +1119,16 @@ function Container:Dropdown(options)
         window:_CloseDropdown()
         local shield=create("TextButton",{Name="Dropdown",Text="",BackgroundTransparency=1,Size=UDim2.fromScale(1,1),AutoButtonColor=false,ZIndex=30},window.Canvas)
         window._dropdown=shield;window._dropdownControl=control
-        local viewport=window:_Viewport();local position=control._input.AbsolutePosition-window.Canvas.AbsolutePosition;local width=math.min(210,viewport.X-24);local height=math.min(260,#control.Options*48+16,viewport.Y-24)
-        local y=position.Y+control._input.AbsoluteSize.Y+6;if y+height>viewport.Y-12 then y=math.max(12,position.Y-height-6) end
-        local menu=create("ScrollingFrame",{Name="Options",Position=UDim2.fromOffset(math.clamp(position.X,12,math.max(12,viewport.X-width-12)),y),Size=UDim2.fromOffset(width,height),BorderSizePixel=0,AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.new(),ScrollBarThickness=3,ZIndex=31,Active=true},shield)
+        local position=control._input.AbsolutePosition-window.Canvas.AbsolutePosition
+        local x,y,width,height=dropdownBounds(position,control._input.AbsoluteSize,window:_Viewport(),#control.Options,window.Responsive.TouchTarget)
+        local menu=create("ScrollingFrame",{Name="Options",Position=UDim2.fromOffset(x,y),Size=UDim2.fromOffset(width,height),BorderSizePixel=0,AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.new(),ScrollBarThickness=3,ScrollingDirection=Enum.ScrollingDirection.Y,ZIndex=31,Active=true},shield)
         corner(menu,8);padding(menu,8);list(menu,4,false);window:_Color(menu,"BackgroundColor3","Surface");window:_Stroke(menu,"Border",.2)
         local temporary={_connections={},Destroyed=false}
         menu.Destroying:Once(function()temporary.Destroyed=true;disconnect(temporary._connections)end)
         window:_Connect(shield.Activated,function()window:_CloseDropdown()end,temporary)
         for index,option in ipairs(control.Options) do
             local selected=option==control.Value
-            local button=window:_Button(menu,option,UDim2.new(1,-4,0,window.Responsive.TouchTarget),temporary)
+            local button=window:_Button(menu,option,UDim2.new(1,-16,0,window.Responsive.TouchTarget),temporary)
             button.ZIndex=32;button.LayoutOrder=index;button.TextXAlignment=Enum.TextXAlignment.Left;button.TextTruncate=Enum.TextTruncate.AtEnd
             local inset=button:FindFirstChildOfClass("UIPadding") or create("UIPadding",{},button)
             inset.PaddingLeft=UDim.new(0,12);inset.PaddingRight=UDim.new(0,34)
@@ -1041,7 +1141,7 @@ function Container:Dropdown(options)
             window:_Connect(button.Activated,function()control:Set(option,true);window:_CloseDropdown()end,temporary)
         end
     end,control)
-    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Container:ColorPicker(options)
     options=options or {}
@@ -1095,7 +1195,7 @@ function Container:ColorPicker(options)
         if not control.Enabled or not control._expanded then control._colorInput:ReleaseFocus(false)end
     end,control)
     self.Window:_Connect(control.Root:GetPropertyChangedSignal("AbsoluteSize"),function()control:_Layout(self.Window.Mobile)end,control)
-    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:SearchFor(self.Window.Query);return control
+    control:_Render();control:_Layout(self.Window.Mobile);control:SetEnabled(control.Enabled);self.Window:_QueueSearch();return control
 end
 function Window:Confirm(options)
     assert(not self.Destroyed,"Window is destroyed");options=options or {}

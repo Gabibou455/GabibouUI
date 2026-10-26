@@ -43,7 +43,30 @@ Responsive layout is enabled by default. `Responsive` accepts a table with `Brea
 
 ## Layout options
 
-Set defaults for new windows with `UI:SetLayout(options)`, or update one window with `window:SetLayout(options)`. Settings cover tab position, mobile tab position, sidebar width, tab dimensions and gaps, content padding and spacing, header and footer sizes, search visibility, and control alignment. `PanelTransparency` defaults to `0.1` and affects only the main window surface; `0` is opaque and `1` is transparent.
+### Move a window on a phone
+
+Drag the title strip at the top of the window with one finger. You can start on its title, subtitle or logo area. Buttons, sliders and page scrolling keep their own gestures. The header stays reachable when you move a mobile window partly beyond the edge of the screen; drag it back to reveal the rest.
+
+Dragging is enabled by default. Keep the header visible if users need to move the window:
+
+```lua
+window:SetLayout({Draggable = true, ShowHeader = true})
+```
+
+To restore a centered position in your own button callback:
+
+```lua
+tab:Button({
+    Title = "Center window",
+    Callback = function()
+        window:SetPosition(UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+    end,
+})
+```
+
+Mouse-only desktop windows stay inside the viewport. Touch-enabled screens can move the window partly beyond its edge in portrait or landscape. Automated gesture checks do not replace testing on a physical phone.
+
+Set defaults for new windows with `UI:SetLayout(options)`, or update one window with `window:SetLayout(options)`. Settings cover tab position, mobile tab position, sidebar width, tab dimensions and gaps, content padding and spacing, header and footer sizes, search visibility, and control alignment. `PanelTransparency` defaults to `0.06` and affects only the main window surface; `0` is opaque and `1` is transparent.
 
 ```lua
 window:SetLayout({PanelTransparency = 0.12})

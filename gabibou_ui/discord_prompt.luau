@@ -2,8 +2,8 @@
 Library._discordPromptShown = Library._discordPromptShown or {}
 
 local discordPromptDefaults = {
-	Title = "Join the community",
-	Content = "Join the Gabibou UI community for updates and help.",
+	Title = "Gabibou community",
+	Content = "Join the Discord for updates, help, and community news.",
 	JoinText = "Copy invite",
 	ContinueText = "Not now",
 	OncePerSession = true,
@@ -97,7 +97,7 @@ function Window:PromptDiscord(value)
 		ConfirmText = options.JoinText,
 		CancelText = options.ContinueText,
 		LinkText = url,
-		FooterText = "Gabibou UI · by Gabibou",
+		FooterText = "Discord invite",
 		BeforeConfirm = explicit_action,
 	})
 	if not opened then return false, "A dialog is already open" end

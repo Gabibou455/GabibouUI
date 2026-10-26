@@ -1,10 +1,14 @@
-# Gabibou UI 1.5.0-rc.22
+# Gabibou UI 1.5.0-rc.25
 
 A Roblox interface library written in Luau. Load it in one line, create a window, and add controls using short constructors. The full options-table API remains available for layouts, animations, loading screens, key screens and other customization. Graphite is the default black, gray and white theme; the library includes 96 original icons in three variants.
 
-> This guide describes release candidate 1.5.0-rc.22. It includes named interface designs, button action variants, responsive layouts, key-gate part overrides, and the current controls and lifecycle APIs. Historical release notes identify when individual capabilities were introduced. See [the beginner walkthrough](https://gabibou-ui.mintlify.app/getting-started/quickstart), [external key-provider examples](https://gabibou-ui.mintlify.app/examples/key-providers), and [an explained example of every control](https://gabibou-ui.mintlify.app/customization/controls).
+> This guide describes release candidate 1.5.0-rc.25. It adds an optional appearance editor, command palette and named configuration presets with optional storage. Existing design presets and control APIs remain available.
 
 Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and a complete feature map. Use [CUSTOMIZATION.md](CUSTOMIZATION.md) for advanced styling, custom controls, events, and animations.
+
+Add the optional appearance editor with `window:Appearance()`. It provides theme, accent, transparency, navigation and motion controls using the same standard components. Its values are excluded from application profiles. See [appearance_example.luau](appearance_example.luau) for the complete setup.
+
+Add named profiles with `window:Presets()`, or use `window:Presets({StorageKey = "my-app"})` when your window has a Read/Write storage adapter. Register searchable actions with `window:Command({...})` and open them from Ctrl+K or `window:OpenCommands()`. The [commands and presets guide](mintlify/customization/commands-and-presets.mdx) and included examples explain each setup.
 
 ## Remote loading from GitHub
 

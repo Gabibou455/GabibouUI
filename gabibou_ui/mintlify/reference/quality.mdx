@@ -3,7 +3,29 @@ title: Quality status
 description: Verified checks and remaining validation for this release candidate.
 ---
 
-## Current release candidate: rc.21
+## Release candidate: rc.25
+
+Standalone SHA-256: `6ff16c9dad4ba56c51499a86b1985b2f3b1b2c4ad197e36835327e4c3e91fcdd`.
+
+The latest rc.25 build fixes invalid Input text, dropdowns closing on keyboard or canvas resizes, and stuck Keybind captures. It also reduces startup and hover work (batched search refresh, shared button listeners, reused animation watchers). The 42 logic checks passed and the standalone module compiled with official Luau. The Roblox runtime suites were not rerun for this build.
+
+The mobile drag patch earlier in rc.25 passed 11 offline gesture checks, 15 synthetic-pointer checks and five narrow-viewport geometry checks in a Roblox client. Physical-phone input remains unverified.
+## Previous local candidate: rc.24
+
+The local standalone hash is `c8e571cca378694abcea34ff38ac3966916cb51d4c8487466d72e47393fdbe80`. Ten runtime suites passed **449 checks**, including Appearance 13, Commands 22, Presets 44 and Native Visual 9. Native button feedback, minimize and restore checks passed on a subsequent foreground retry. Seven preset checks now cover keeping the dropdown synchronized with code-driven saves; an earlier visual mismatch came from a minimal test fixture that did not load the full demo gallery.
+
+The command tests exercised native arrows, Enter and mouse activation. Escape uses the actual handler with a synthetic event; two-window scope uses `OpenCommands()`. CoreGui still blocked native Ctrl+K, even with focus released. These tests do not measure animation performance.
+
+Both portable examples created and cleaned up windows with ModuleScript imports replaced by the loaded library. Preset persistence restored values from a real 143-byte temporary file after window recreation; the file was removed. A full Roblox process restart was not tested. Six offline parent checks, the isolated 68-check Visual suite on the full demo fixture, official Luau compilation and validation of 28 documentation pages passed. Windows rc.24 screenshots document desktop command and session-preset rendering, not physical mobile input or storage-provider behavior.
+
+This candidate remains local. Studio execution, physical mobile input, native Ctrl+K and broad executor compatibility are unverified. The public loader serves the published release until publication; rc.23 images are labeled historical references.
+## Historical local candidate: rc.23
+
+The local rc.23 standalone module is `feae53dbc88a19c36be9d217389c7233041219616f35723fe1f508e0809b03e0`. Eight affected suites passed **383 checks** on the connected Windows Roblox client: Design 28, Layout 34, Navigation 64, Key 96, Loading 71, Visual 68, Native Visual 9, and Appearance 13. Six parent-resolution checks also passed in mocked Luau. The two new examples created and cleaned up their windows using the loaded library as a substitute for their ModuleScript import.
+
+This is a local candidate; the public remote loader continues to serve the published release until deployment. Physical mobile input, Roblox Studio execution and broad executor compatibility remain unverified. These checks are evidence for their listed behavior, not a guarantee of perfection.
+
+## Historical candidate: rc.21
 
 The rc.21 standalone module SHA-256 is `5407c1d6a40422005d292289e55740dbb55f9982d52227206db6cdd03e57d6f5`. Ten runtime suites passed **1,132 assertions** on the connected Windows Roblox client on 2026-10-10. These results apply to this module hash; published GitHub `main` and other installed copies may differ.
 
@@ -139,3 +161,6 @@ The earlier full run passed 1,258 assertions across 19 runtime suites. Four focu
 - Review of appearance, intended target environments, and the prepared MIT license.
 
 The rc.13 targeted Visual suite passed in the connected client. Physical phone/tablet use and the final notification toast capture remain outstanding. Keep rc.13 marked as a pre-release until the intended environments have been checked. For publishing steps, see `PUBLISHING.md` in the release package.
+
+
+

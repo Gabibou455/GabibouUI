@@ -45,6 +45,7 @@
             "pages": [
               "customization/controls",
               "customization/values-and-config",
+              "customization/commands-and-presets",
               "customization/appearance-and-layout",
               "customization/icons-and-branding",
               "customization/loading-screens",

@@ -315,7 +315,7 @@ function Window:_LayoutNavigation(mobile)
             -- Layout.IconSize remains the source of truth for custom sizes.
             local tileSize=rail and math.clamp(buttonHeight-16,24,28) or 24
             local iconWidth=icon and (rail and math.clamp(iconSize,12,tileSize-8) or iconSize) or 0
-            local labelLeft=icon and (rail and tileSize+20 or iconSize+20) or 14
+            local labelLeft=icon and (rail and tileSize+16 or iconSize+20) or 14
             local surfaceLeft=rail and math.max(6,labelLeft-8) or labelLeft-4
             local surfaceRight=rail and 20 or 8
 
@@ -411,23 +411,19 @@ function Window:_RefreshNavigation(immediate)
             local hovered = (tab._hovered == true or tab._focused == true) and not selected
             local railPressed = variant == "Rail" and tab._pressed == true
             local contrastSelected = selected and variant == "Pill"
-            local backgroundToken = contrastSelected and "Accent" or (selected and "Raised" or (hovered and "Hover" or "Surface"))
+            local backgroundToken = contrastSelected and "Accent" or ((selected or railPressed) and "Raised" or (hovered and "Hover" or "Surface"))
             local textToken = contrastSelected and "AccentText" or ((selected or hovered or railPressed) and "Text" or "Muted")
             local iconToken = variant == "Rail" and (selected or railPressed) and "Text" or textToken
             -- Keep the rail quiet at rest. Selection remains easy to find from
             -- the raised surface, label weight, icon tint, and slim indicator.
-            local alpha = variant == "Rail" and 1 or (variant == "Pill" and 0 or
-                ((selected or hovered) and (selected and 0.46 or 0.78) or 1))
+            local alpha = variant == "Rail" and ((selected or railPressed) and 0.62 or (hovered and 0.78 or 1))
+                or (variant == "Pill" and 0 or ((selected or hovered) and (selected and 0.46 or 0.78) or 1))
 
             navigationButtonState(self, button, backgroundToken, alpha, immediate)
-            local labelSurfaceToken = (selected or railPressed) and "Raised" or (hovered and "Hover" or "Surface")
-            local labelSurfaceAlpha = railPressed and 0.34 or (selected and 0.58 or (hovered and 0.78 or 1))
-            navigationButtonState(self, tab._labelSurface, labelSurfaceToken,
-                variant == "Rail" and labelSurfaceAlpha or 1, immediate)
-            local iconTileToken = (selected or railPressed or hovered) and "Raised" or "Surface"
-            local iconTileAlpha = not tab._icon and 1 or (selected and 0.58 or (railPressed and 0.34 or (hovered and 0.72 or 1)))
-            navigationButtonState(self, tab._iconTile, iconTileToken,
-                variant == "Rail" and iconTileAlpha or 1, immediate)
+            -- Keep the glyph and title on one shared row wash. Tinting their
+            -- own tiles creates two nested boxes in the rail.
+            navigationButtonState(self, tab._labelSurface, "Surface", 1, immediate)
+            navigationButtonState(self, tab._iconTile, "Surface", 1, immediate)
             navigationTween(self, tab._label, "TextColor3", textToken, immediate)
             self:_Style(tab._label, "Font", (selected or hovered) and "FontBold" or "Font")
             self:_Style(tab._label, "TextSize", "TextSize")

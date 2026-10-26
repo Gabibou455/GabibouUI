@@ -1,4 +1,32 @@
-# Quality status: 1.5.0-rc.22 release candidate
+# Quality status: 1.5.0-rc.25
+
+## Release candidate: rc.25
+
+Standalone SHA-256: `6ff16c9dad4ba56c51499a86b1985b2f3b1b2c4ad197e36835327e4c3e91fcdd`.
+
+The latest rc.25 build fixes invalid Input text, dropdowns closing on keyboard or canvas resizes, and stuck Keybind captures. It also reduces startup and hover work (batched search refresh, shared button listeners, reused animation watchers). The 42 logic checks passed and the standalone module compiled with official Luau. The Roblox runtime suites were not rerun for this build.
+
+The mobile drag patch earlier in rc.25 passed 11 offline gesture checks, 15 synthetic-pointer checks and five narrow-viewport geometry checks in a Roblox client. Physical-phone input remains unverified.
+## Previous local candidate: rc.24
+
+The final standalone SHA-256 is `c8e571cca378694abcea34ff38ac3966916cb51d4c8487466d72e47393fdbe80`. Ten runtime suites passed 449 checks: Design 28, Layout 34, Navigation 64, Key 96, Loading 71, Visual 68, Native Visual 9, Appearance 13, Presets 44 and Commands 22. The native button feedback, minimize and restore checks passed on a subsequent foreground retry. Presets gained seven assertions for keeping the visible preset dropdown synchronized with programmatic saves; the earlier visual fixture did not populate the full demo gallery, so that initial mismatch was a test-fixture gap, not a source regression.
+
+Commands exercised real Up/Down/Enter and mouse activation. Escape used the actual handler with a synthetic event because Roblox reserves the native key. Two-window scope used `OpenCommands()`. CoreGui still blocked native Ctrl+K input, even after focus was released. An Enter/FocusLost ordering defect was fixed before these results. Initial failed attempts are retained privately. Runtime checks do not establish animation performance.
+
+Both UI-only examples created and cleaned up windows using the loaded local library in place of ModuleScript imports. Preset persistence passed using a real temporary workspace file: 143 bytes were restored after window recreation and the file was removed. A full Roblox process restart was not tested. Six offline parent-resolution cases passed on the final module. The isolated Visual suite passed 68 checks on the full demo fixture. Official Luau compilation and Mintlify validation passed for 28 pages with no broken local links. Windows rc.24 screenshots document the command palette and session preset UI; they do not establish mobile rendering or storage-provider behavior.
+
+This candidate is local and unpublished. Physical mobile input, Studio execution, broad executor compatibility and native Ctrl+K remain unverified. Passing listed checks does not establish a bug-free library.
+## Verified historical local candidate: rc.23
+
+On the connected Windows Roblox client, eight affected suites passed 383 checks on standalone SHA-256 `feae53dbc88a19c36be9d217389c7233041219616f35723fe1f508e0809b03e0`: Design 28, Layout 34, Navigation 64, Key 96, Loading 71, Visual 68, Native Visual 9, and Appearance 13. Seven specialists contributed implementation, audit and independent review. The two new UI-only examples also created and cleaned up their windows in this client, with their ModuleScript require replaced by the loaded local library for that test.
+
+Six mocked parent-resolution regressions passed using the exact helper extracted from this final module. The official Luau compiler passed for the module and examples. Mintlify schema and MDX validation passed for 27 pages with no broken local links.
+
+The first runs and failures are retained privately: key action spacing and target size were corrected, disabled toggles received a contrasting track, and obsolete visual expectations were revised while preserving behavior and geometry checks. No current results are attributed to historical module hashes.
+
+This candidate is local and has not been published. Desktop screenshots document visible rendering. Simulated narrow/keyboard layouts do not replace physical mobile testing; the new editor, provider behavior and rendering have not been validated on every executor or Roblox Studio. Passing these checks does not establish a bug-free library.
+
+## Published candidate: rc.22 (historical)
 
 The rc.22 candidate waits up to 8 seconds for `PlayerGui` during default window-parent resolution; callers may pass an explicit GUI `Parent`. Its remote example now checks fetch and compilation stages and reports actionable loader errors. Offline mocked validation passed six parent-resolution cases and 64 loader assertions. The final standalone artifact contains the exact tested resolver helper, and static checks confirm `CreateWindow` resolves the parent before creating its `ScreenGui`. These checks use mocked Luau objects; live Roblox-client and executor compatibility remain pending. No rc.21 runtime suite results are attributed to rc.22.
 
@@ -293,3 +321,6 @@ A native reopen check initially failed while the preview key modal remained open
 - Your review of appearance, intended target environments and the prepared MIT license.
 
 The rc.13 targeted Visual suite passed in the connected client. Physical phone/tablet use and the final notification toast capture remain outstanding. Keep rc.13 marked as a pre-release until the intended environments have been checked. For publishing steps, see [PUBLISHING.md](PUBLISHING.md).
+
+
+

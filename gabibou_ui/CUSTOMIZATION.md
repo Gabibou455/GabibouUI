@@ -1,6 +1,6 @@
-# Customization and animations — Gabibou UI 1.5.0-rc.21
+# Customization and animations — Gabibou UI 1.5.0-rc.25
 
-This guide covers the current Gabibou UI 1.5.0-rc.21 candidate: interface designs, controls, layout, loading screens, key gates, events, and animation. Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and short constructors. These examples use the full options-table API, which remains available for customization. Unless a snippet shows initialization, load the library before using it. Check `UI.Version` when comparing this guide with an installed copy.
+This guide covers the current Gabibou UI 1.5.0-rc.25 candidate: interface designs, controls, layout, loading screens, key gates, events, and animation. Start with the [Developer Guide](DEVELOPER_GUIDE.md) for installation and short constructors. These examples use the full options-table API, which remains available for customization. Unless a snippet shows initialization, load the library before using it. Check `UI.Version` when comparing this guide with an installed copy.
 
 ## Build a window from a schema
 

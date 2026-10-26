@@ -1,0 +1,108 @@
+---
+title: Commands and presets
+description: Add searchable actions and named configurations, with optional storage across launches.
+icon: command
+---
+
+These tools are optional. Commands use a searchable palette; presets use a normal tab. Neither runs game actions unless your own callbacks do so.
+
+## Search and launch an action
+
+```lua
+local UI = require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
+local window = UI:CreateWindow({Title = "My project"})
+window:Command({
+    Id = "preview", Title = "Show preview", Description = "Display a notification",
+    Keywords = {"demo", "message"}, Icon = "bell",
+    Callback = function()
+        window:Notify({Title = "Ready", Content = "Your interface is ready."})
+    end,
+})
+window:Tab("Actions", "search"):Button("Open commands", function()
+    window:OpenCommands()
+end)
+```
+
+Ctrl+K opens the active command window when no text field has focus. Search title, description and keywords; matching is ASCII case-insensitive. Up/Down selects a result, Enter runs it and Escape closes the palette. Keep the visible button for touch users. Clicking outside closes it too.
+
+`Command` accepts exactly `Id`, `Title`, `Description`, `Keywords`, `Icon` and `Callback`. IDs are unique, 1–64 letters, digits, `_` or `-`. Titles allow 1–80 UTF-8 characters; descriptions allow up to 160. A dense `Keywords` array accepts up to 20 unique entries of 1–48 characters. The registry holds at most 256 commands, search accepts 256 characters, and at most 50 results are rendered.
+
+`window:CloseCommands()` closes the palette; `window:RemoveCommand(id)` removes a registration. The returned handle also has `Remove()`. Hide, tab changes and destruction close the palette; window destruction releases command callbacks.
+
+![Searchable command palette open over the rc.24 demo in the Windows Roblox client, showing three matching commands](/images/rc24-commands.png)
+
+The local rc.24 screenshot shows the command palette in the Windows Roblox client. It documents the rendered desktop interface; it does not demonstrate native Ctrl+K behavior or physical mobile input.
+
+## Add session presets in one line
+
+```lua
+local UI = require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
+local window = UI:CreateWindow({Title = "Settings"})
+local tab = window:Tab("Settings", "sliders")
+tab:Toggle({Id = "alerts", Title = "Enable alerts", Value = true})
+tab:Slider({Id = "duration", Title = "Notification duration", Min = 1, Max = 10, Step = 1, Value = 4})
+window:Presets()
+```
+
+Use the name field and Save/Load/Delete buttons, or call the same window APIs:
+
+```lua
+local saved, reason = window:SavePreset("evening")
+if not saved then warn(reason) end
+local loaded, countOrReason = window:LoadPreset("evening")
+local names = window:GetPresetNames()
+-- window:DeletePreset("evening")
+```
+
+Save returns `true` or `false, reason`; Load returns `true, appliedValueCount` or `false, reason`; Delete returns `true` or `false, reason`. Names are case-sensitive, 1–48 letters, digits, `_` or `-`. There are at most 50 names; saving an existing name replaces it. Loading does not fire callbacks unless you explicitly pass `true` as the second argument.
+
+`GetPresetNames()` returns a sorted list. Its second return value reports a storage error when one exists:
+
+```lua
+local names, storageError = window:GetPresetNames()
+if storageError then warn(storageError) end
+for _, name in ipairs(names) do print(name) end
+```
+
+Snapshots include persistent control values and a built-in theme. They exclude Appearance/Presets editor controls, custom theme colors, layout, motion and window geometry. A snapshot is limited to 256 KiB. Keep persistent control IDs stable across launches. Without a storage key, presets last for this window session.
+
+## Keep presets after relaunch
+
+Provide `Storage.Read(filename)` and `Storage.Write(filename, contents)` when creating your window, then opt in with a stable key:
+
+```lua
+-- File-storage example only: these functions must exist in your environment.
+assert(type(isfile) == "function" and type(readfile) == "function" and type(writefile) == "function")
+local window = UI:CreateWindow({
+    Title = "Stored settings",
+    Storage = {
+        Read = function(filename)
+            if not isfile(filename) then return nil end
+            return readfile(filename)
+        end,
+        Write = function(filename, contents)
+            writefile(filename, contents)
+        end,
+    },
+})
+window:Tab("Settings", "sliders"):Toggle({Id = "alerts", Title = "Enable alerts", Value = true})
+window:Presets({StorageKey = "my-project-presets"})
+```
+
+The library itself does not require filesystem globals. Studio developers supply their own storage bridge; do not use DataStoreService directly in a LocalScript. The optional file example requires the three named APIs and is separate from the portable session example.
+
+`StorageKey` uses the same 1–48-character name rules and stores one `<key>.json` envelope, at most 1 MiB. Configure it before saving session presets. Supplying a Storage adapter without a StorageKey does not silently enable persistence.
+
+Read returns a JSON string or `nil` for a missing file. Throw an error, or return `nil, reason`, for read failure. Write returns no values or `true` for success; an error, `false`, or `nil, reason` means failure. A read or corrupt-data failure blocks writes to preserve the original bytes. Restored names become available in the dropdown; they are not automatically applied. Choose Load when ready.
+
+An adapter write already in progress can finish externally after window destruction. The library prevents a subsequent memory commit or success message, but cannot cancel your adapter's external write.
+
+`Presets` accepts `Title`, `Icon`, `Id` and optional `StorageKey`, and returns a removable tab. Removing the tab preserves session presets for that window; destroying the window clears memory.
+
+![Presets tab in the rc.24 local demo in the Windows Roblox client, with the session preset named default selected](/images/rc24-presets.png)
+
+This local rc.24 screenshot shows the session preset interface with its list scrolled to the controls and `default` selected. It documents the visible UI only; it does not demonstrate a storage provider or persistence across a process restart, and it is not a physical mobile capture.
+
+The ZIP includes `commands_example.luau`, `presets_example.luau` and the environment-specific `presets_storage_example.luau`. See [Values and configuration](/customization/values-and-config) for the snapshot schema, and [Design your interface](/customization/design-your-interface) for the one-line appearance editor.
+
+
