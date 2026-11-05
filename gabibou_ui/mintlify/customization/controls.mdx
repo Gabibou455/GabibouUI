@@ -1,230 +1,126 @@
 ---
-title: Controls
-description: Add buttons, toggles, sliders, and other controls to a window.
+title: "Boutons et composants"
+description: "Guide pratique Gabibou UI : boutons et composants"
 ---
 
-A **window** is the main panel for your menu. A **tab** is a page inside that panel. A **control** is an item the player can use, such as a button or slider. This page starts with a complete example, then shows the available controls.
+{/* Generated from docs/composants.md by sync_docs.cjs. */}
 
-| What the player needs to do | Control | Callback receives |
-| --- | --- | --- |
-| Run an action | `Button` | Nothing |
-| Turn a setting on or off | `Toggle` | `true` or `false` |
-| Choose a number | `Slider` | Number |
-| Choose one item | `Dropdown` | String |
-| Enter text | `Input` | String, after confirming or leaving the field |
-| Run an action with a key | `Keybind` | Key name when pressed |
-| Choose a color | `ColorPicker` | Hex color string |
-| Show text | `Paragraph` | Nothing |
-| Group controls | `Section` | Nothing |
-| Add custom Roblox UI | `Custom` | Nothing |
+Les exemples utilisent le `tab` créé dans [Démarrer](/getting-started/quickstart). Ajoute-les après sa création. Les mêmes méthodes fonctionnent sur une section.
 
-![Running rc.21 Gabibou UI demo with a button, one toggle off, one toggle on, and a slider](/images/controls-examples.png)
+| Besoin | Composant | Valeur reçue par la callback |
+|---|---|---|
+| Lancer une action | `Button` | Aucun argument |
+| Activer ou désactiver | `Toggle` | Booléen |
+| Régler un nombre | `Slider` | Nombre |
+| Choisir dans une liste | `Dropdown` | Texte de l’option |
+| Saisir du texte | `Input` | Texte confirmé ou modifié à la perte du focus |
+| Assigner un raccourci clavier | `Keybind` | Nom de la touche lorsqu’elle est pressée |
+| Choisir une couleur | `ColorPicker` | Texte `#RRGGBB` |
+| Afficher une explication | `Paragraph` | Aucune callback |
 
-*A live rc.21 example window; it shows a button, one toggle off, one toggle on, and a slider.*
-
-## Complete example
-
-Choose an installation method in [Installation](/getting-started/installation). Paste the complete block below into the same client script as your loader. For Roblox Studio, replace the first line with the two `require` lines shown in the installation steps; keep the remaining lines below them in the same `LocalScript`.
+## Button
 
 ```lua
-local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
-local window = UI:CreateWindow('My project')
-local tab = window:Tab('Home', 'home')
-local settings = tab:Section('Settings')
-
-settings:Toggle('Shadows', function(enabled)
-    print('Shadows:', enabled)
-end)
-
-settings:Button('Refresh', function()
-    print('Refresh clicked')
+tab:Button("Actualiser", {Text = "Lancer", Variant = "Primary"}, function()
+    window:Notify({Title = "Actualisation demandée"})
 end)
 ```
 
-This creates a window called **My project**, a tab named **Home**, and a **Settings** heading containing a toggle and a button. Click the toggle to print `Shadows: true` or `Shadows: false`. Click the button to print `Refresh clicked`.
+`Text` est le texte du bouton, distinct du titre de la ligne. `Variant` accepte `Primary` (défaut), `Secondary` et `Subtle`. Le bouton lance la callback lorsqu’il est activé.
 
-The function passed to a control is its **callback**. It runs when the player uses the control. A toggle callback receives the new on/off value (`true` or `false`); a button callback receives no value because it represents an action.
-
-## Add one control to your example
-
-Use these short examples to extend the complete example above. Put each new call after the `local settings = ...` line if you want the control under Settings. Put it after `local tab = ...` and use `tab:` if you want it directly on the Home page.
-
-### Button: run an action
+## Toggle
 
 ```lua
-settings:Button('Refresh', function()
-    print('Refresh clicked')
+local effects = tab:Toggle("Effets", {Id = "effects", Value = true}, function(enabled)
+    print("Effets :", enabled)
 end)
 ```
 
-Runs its callback when clicked. The callback receives no arguments. Optional settings include `Text` for the button caption (default `Run`), `Description`, `Icon`, `IconVariant`, and `Variant`; the first string labels the control.
+`Value` vaut `false` par défaut. La callback reçoit `true` ou `false` après un changement. `effects:Get()` lit la valeur actuelle.
 
-`Variant` sets the button's visual weight. `Primary` uses the accent color and is the default. `Secondary` uses a raised surface. `Subtle` uses a softer, quieter surface for supporting actions. Use one primary action when a section has a clear main action, then give supporting actions a lighter variant:
-
-```lua
-settings:Button({
-    Title = 'Save settings',
-    Text = 'Save',
-    Variant = 'Primary',
-    Callback = function()
-        print('Settings saved')
-    end,
-})
-
-settings:Button({
-    Title = 'Restore defaults',
-    Text = 'Restore defaults',
-    Variant = 'Subtle',
-    Callback = function()
-        print('Defaults restored')
-    end,
-})
-```
-
-The accepted values are `Primary`, `Secondary`, and `Subtle`. If you omit `Variant`, the button uses `Primary`.
-
-On rc.21, custom button labels are shortened with an ending ellipsis when they exceed the available button width, whether or not the button has an icon. The configured `Text` string and callback stay unchanged.
-
-### Toggle: turn a setting on or off
+## Slider
 
 ```lua
-local shadows = settings:Toggle('Shadows', {Value = false}, function(enabled)
-    print('Shadows:', enabled)
-end)
-```
-
-`Value` sets the starting state and defaults to `false`. The callback receives a boolean: `true` when on, `false` when off. The callback runs after the player changes the toggle, not when it is created.
-
-To read or change the value later, add these lines below the toggle:
-
-```lua
-print(shadows:Get())
-shadows:Set(true) -- changes the value without calling the callback
-shadows:Set(false, true) -- changes the value and calls the callback if it changed
-```
-
-### Slider: choose a number
-
-Add this after the toggle example:
-
-```lua
-local volume = settings:Slider('Music volume', {
-    Min = 0,
-    Max = 100,
-    Step = 1,
-    Value = 50,
+local volume = tab:Slider("Volume", {
+    Id = "volume", Min = 0, Max = 100, Step = 5, Value = 50,
 }, function(value)
-    print('Volume:', value)
+    print("Volume :", value)
 end)
 ```
 
-The callback receives the selected number. `Min` and `Max` set the range, `Step` sets the allowed increments, and `Value` sets the starting number. They default to `0`, `100`, `1`, and `Min` respectively. Values stay within the range and round to steps counted from `Min`; for example, `Min = 10` and `Step = 4` allow 10, 14, 18, and so on. Save the returned control if you want to read or change it later: `volume:Get()` reads the current number, and `volume:Set(75, true)` sets it and calls the callback if it changed.
+Les défauts sont `Min = 0`, `Max = 100`, `Step = 1`, `Value = Min`. `Max` doit dépasser `Min` et `Step` doit être positif. La valeur est bornée puis arrondie aux pas calculés depuis `Min`.
 
-### Dropdown: choose one item from a list
+Sur mobile, un glissement horizontal règle la valeur ; un glissement vertical laisse défiler la page. Un tap sélectionne une valeur au relâchement.
+
+## Dropdown
 
 ```lua
-local quality = settings:Dropdown('Quality', {
-    Options = {'Low', 'Medium', 'High'},
-    Value = 'Medium',
+local quality = tab:Dropdown("Qualité", {
+    Id = "quality", Options = {"Basse", "Moyenne", "Haute"}, Value = "Moyenne",
 }, function(choice)
-    print('Quality:', choice)
+    print("Qualité :", choice)
 end)
 ```
 
-The callback receives the selected string. `Options` must contain at least one unique, nonempty string. `Value` must match an option; if omitted, the first option is selected. Use `quality:Get()` to read the current selection and `quality:Set('High', true)` to change it and call the callback if it changed. Use `quality:SetOptions({'Low', 'High'})` to replace the choices; if the current choice is missing from the new list, the first new choice is selected.
+`Options` contient au moins une chaîne non vide, sans doublon. `Value` doit appartenir à la liste ; sans valeur explicite, la première option est sélectionnée. `quality:SetOptions({"Basse", "Haute"})` remplace la liste et conserve la sélection si elle existe encore, sinon choisit la première option.
 
-### Input: enter text
+## Input
 
 ```lua
-local playerName = settings:Input('Player name', {
-    Value = '',
-    Placeholder = 'Enter a name',
-    MaxLength = 24,
+tab:Input("Pseudo", {
+    Value = "", Placeholder = "Entre un nom", MaxLength = 24,
 }, function(text)
-    print('Player name:', text)
+    print("Pseudo :", text)
 end)
 ```
 
-The callback receives the changed text when the player confirms it or leaves the text box. `Value` defaults to an empty string, `Placeholder` to `Type here...`, and `MaxLength` to `120`. The maximum length must be from `1` to `4096`; longer text is trimmed to that limit.
+La callback est appelée pour le texte modifié à la perte du focus. `MaxLength` vaut `120` par défaut et accepte de 1 à 4096 caractères UTF-8.
 
-![Live rc.21 settings window showing a Quality dropdown and Player name input](/images/controls-input.png)
-
-*A live rc.21 screenshot of a dropdown and text input in the Settings panel.*
-
-### Keybind: run an action when a key is pressed
+## Keybind
 
 ```lua
-local actionKey = settings:Keybind('Action key', {Value = Enum.KeyCode.K}, function(keyName)
-    print('Pressed:', keyName)
+tab:Keybind("Action", {Value = Enum.KeyCode.F6}, function(keyName)
+    print("Touche :", keyName)
 end)
 ```
 
-Click the key control and press a key to assign it. The callback runs when that key is pressed outside key capture, and receives its name as a string such as `K`. `Value` accepts an `Enum.KeyCode` or its name as a string and defaults to `F6`.
+Le joueur active le champ puis presse une touche pour l’assigner. La callback s’exécute lorsque cette touche est ensuite pressée, hors saisie de texte. `Value` accepte un `Enum.KeyCode` ou son nom ; son défaut est `F6`. Prévois aussi un bouton visible pour les utilisateurs tactiles.
 
-### Color picker: choose a color
+## ColorPicker
 
 ```lua
-local accent = settings:ColorPicker('Accent color', {
-    Value = '#78B8FF',
-    Palette = {'#78B8FF', '#A18FFF', '#F08B8B'},
+local color = tab:ColorPicker("Couleur", {
+    Value = "#78B8FF", Palette = {"#78B8FF", "#A18FFF", "#F08B8B"},
 }, function(hex)
-    print('Accent:', hex)
+    print("Couleur :", hex)
 end)
 ```
 
-The callback receives a `#RRGGBB` string. `Value` accepts that format or a Roblox `Color3` value and defaults to `#F2F4F8`. A custom `Palette` must contain 1 to 32 hex strings or `Color3` values. Save the returned control to use `accent:Get()` for its hex value, `accent:GetColor()` for its `Color3` value, or `accent:Set('#A18FFF', true)` to change the color and call the callback if it changed.
+La callback et `color:Get()` renvoient une chaîne `#RRGGBB`. `color:GetColor()` renvoie un `Color3`. `Value` accepte aussi un `Color3`. Une palette personnalisée accepte de 1 à 32 couleurs.
 
-### Paragraph: display text
-
-```lua
-settings:Paragraph('Connection status', {Description = 'Connected to the server.'})
-```
-
-Displays a title and description. It has no value or callback.
-
-### Section: group related controls
+## Paragraph et Section
 
 ```lua
-local audio = tab:Section('Audio')
-audio:Toggle('Music', function(enabled)
-    print('Music:', enabled)
+tab:Paragraph("Informations", {Description = "Les réglages sont propres à cette session."})
+
+local audio = tab:Section("Audio")
+audio:Toggle("Musique", {Value = true}, function(enabled)
+    print("Musique :", enabled)
 end)
 ```
 
-Pass a title string or `{Title = 'Audio'}`. `Section` returns an object that accepts controls just like a tab.
+Une section regroupe des composants dans l’onglet. Une catégorie regroupe des onglets : `window:Category("Réglages"):Tab("Audio", "volume")`.
 
-### Custom: place your own Roblox UI inside a control
+## Options communes
 
-```lua
-tab:Custom({
-    Title = 'Preview',
-    Height = 48,
-    Build = function(content, control, window, options)
-        local label = Instance.new('TextLabel')
-        label.BackgroundTransparency = 1
-        label.Size = UDim2.fromScale(1, 1)
-        label.Text = 'Preview is ready'
-        label.TextColor3 = window.Theme.Text
-        label.Parent = content
-    end,
-})
-```
+| Option | Usage |
+|---|---|
+| `Id` | Retrouver le composant avec `window:Get(id)` et gérer ses valeurs |
+| `Description` | Texte d’aide sous le titre |
+| `Disabled = true` | Créer le composant désactivé |
+| `Persistent = false` | Exclure sa valeur des configurations et profils |
+| `Layout` | Régler sa largeur, sa hauteur, son ordre ou sa position |
 
-`Build` receives the content area, control, window, and options. Parent Roblox UI instances to `content` to show them inside the control. `Height` is the content area's height in pixels; it defaults to `80` and accepts `0` to `2000`. `Build` is optional. Custom controls have no stored value or built-in callback.
+Les options propres à chaque composant sont décrites ci-dessus. Toutes les options communes ne s’appliquent pas aux objets de navigation tels que les sections.
 
-## Value controls and options
-
-`Toggle`, `Slider`, `Dropdown`, `Input`, `Keybind`, and `ColorPicker` return a control object. Save it in a variable, such as `local volume = settings:Slider(...)`, when you want to use `Get()` or `Set()` later.
-
-- `Get()` reads the current value.
-- `Set(value)` changes it without running the callback.
-- `Set(value, true)` changes it and runs the callback if the value changed.
-- User changes run the callback automatically, except assigning a key during key capture.
-
-For value controls, pass the label, an optional settings table, then the callback. For example: `settings:Slider('Volume', {Min = 0, Max = 100}, callback)`. If you do not need settings, pass the callback second: `settings:Toggle('Music', callback)`. The older table form remains available: `settings:Toggle({Title = 'Music', Value = false, Callback = callback})`.
-
-Settings can include `Description`, `Id`, `Disabled`, and `Layout`; `Desc` is an alias for `Description`. Direct controls get an ID automatically. Declarative controls require `Id`. Give each window a distinct `Id` when showing multiple windows at once. Set `Persistent = false` to exclude a value from configuration snapshots.
-
-For saving and restoring values, see [Values and configuration](/customization/values-and-config). For custom components and animation, see [Animations and custom components](/customization/animations-and-components).
-
-Next: [Values and configuration](/customization/values-and-config) · [Events and lifecycle](/customization/events-and-lifecycle)
+Pour lire et modifier les composants après création : [Valeurs et profils](/customization/values-and-config). Pour créer du contenu Roblox personnalisé : [API](/reference/api).

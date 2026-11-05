@@ -1,5 +1,13 @@
 # Quality status: 1.5.0-rc.26
 
+## Documentation update — 2026-11-05
+
+The primary French guide has 12 GitBook-compatible Markdown pages. The same content generates 12 pages in the existing Mintlify documentation, whose full navigation retains 31 pages including specialist material in an Advanced tab. Default option tables and the 96-icon catalogue are generated from production source declarations.
+
+Checks passed: all canonical/navigation links and fragment references, documented snippet method names and literal icon names, 32 Luau code-block compilations, Mintlify configuration schema validation and compilation of all 31 MDX pages. The complete displayed example matches its downloadable Luau file. No library runtime behavior changed in this documentation update; native Roblox execution of these documentation examples was not performed.
+
+GitBook configuration is included; it does not establish that a GitBook account, Git Sync integration or public GitBook site has been created. See [documentation publishing](DOCS_PUBLISHING.md).
+
 ## Current main: mobile improvements — 2026-11-05
 
 Standalone SHA-256: `80fa6d1c9d2ba86d6417e98847f901b801f7c575dd780b87265313855b9f15b7`.

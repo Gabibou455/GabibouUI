@@ -1,78 +1,97 @@
 ---
-title: Complete quickstart example
-description: A copyable ModuleScript example with controls, callbacks, and value updates.
+title: "Exemple complet à copier"
+description: "Guide pratique Gabibou UI : exemple complet à copier"
 ---
 
-Use this in a client `LocalScript` after adding the library `ModuleScript` to `ReplicatedStorage`.
+{/* Generated from docs/exemple-complet.md by sync_docs.cjs. */}
 
+Ce menu règle les ombres et la luminosité du client Roblox, change le thème de la fenêtre et propose une réinitialisation, des commandes, des profils et un éditeur d’apparence.
+
+**Studio :** installe `ReplicatedStorage.GabibouUI` comme indiqué dans [Démarrer](/getting-started/quickstart), puis copie tout le bloc dans un LocalScript sous `StarterPlayerScripts`. Lance Play.
+
+**Client compatible :** remplace la ligne `require` par la ligne de chargement distante fournie en commentaire. Ne conserve qu’une seule déclaration de `UI`.
+
+{/* example:menu-complet */}
 ```lua
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UI = require(ReplicatedStorage:WaitForChild("GabibouUI"))
+-- Studio : ModuleScript GabibouUI dans ReplicatedStorage,
+-- puis ce code dans un LocalScript sous StarterPlayerScripts.
+local UI = require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
+-- Client compatible : remplace uniquement le require ci-dessus par :
+-- local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
 
-local window = UI:CreateWindow("My project")
-local tab = window:Tab("Settings", "settings")
+local Lighting = game:GetService("Lighting")
+local defaults = {
+    shadows = Lighting.GlobalShadows,
+    brightness = Lighting.Brightness,
+    theme = "Graphite",
+}
 
-local effects = tab:Toggle("Effects", function(enabled)
-    print("Effects:", enabled)
-end)
-
-local volume = tab:Slider("Volume", {Min = 0, Max = 100, Value = 50}, function(value)
-    print("Volume:", value)
-end)
-
-local quality = tab:Dropdown("Quality", {
-    Options = {"Low", "Medium", "High"},
-    Value = "Medium",
-}, function(choice)
-    print("Quality:", choice)
-end)
-
-tab:Button("Reset values", function()
-    effects:Set(false)
-    volume:Set(50)
-    quality:Set("Medium")
-end)
-
-print("Current effects setting:", effects:Get())
-volume:Set(75, true) -- The second argument calls the callback when the value changes.
-```
-
-In this example, the toggle uses its default `false` value. The slider starts at `50`, and the dropdown starts at `Medium` because those starting values are supplied explicitly. A value control's callback receives the new value after a user change. `Get()` reads a value; `Set(value)` changes it without firing the callback, and `Set(value, true)` fires it if the value changed.
-
-For the shortest setup, see [Quickstart](/getting-started/quickstart). See [Controls](/customization/controls) for each control's full options and defaults.
-
-## Advanced: declarative setup
-
-`UI:Create` builds a window from a table. Use this form when you prefer to describe tabs and controls as data instead of adding them one by one.
-
-```lua
-local window = UI:Create({
-    Id = "MyInterface",
-    Title = "My project",
-    Subtitle = "Settings",
-    Branding = {Mode = "Avatar", Placement = "BothRight"},
-    Loading = {
-        Title = "My project",
-        Subtitle = "Preparing settings",
-        Logo = "Avatar",
-        MinimumDuration = 0.6,
-    },
-    Tabs = {{
-        Title = "Settings",
-        Icon = "settings",
-        Sections = {{
-            Title = "Display",
-            Controls = {
-                {Type = "Toggle", Id = "effects", Title = "Effects", Value = true},
-                {Type = "Slider", Id = "volume", Title = "Volume", Min = 0, Max = 100, Value = 50},
-            },
-        }},
-    }},
+local window = UI:CreateWindow("Mon menu", {
+    Id = "GabibouQuickstart",
+    Design = "Atelier",
+    Theme = defaults.theme,
+    Responsive = {TouchTarget = 48},
+    Layout = {MobileTabPosition = "Bottom"},
 })
 
-window:Get("effects"):On("Changed", function(value)
-    print("Effects:", value)
-end)
-```
+local tab = window:Tab("Reglages", "settings")
+local graphics = tab:Section("Affichage du jeu")
 
-For all options accepted by each form, see the [API reference](/reference/api).
+graphics:Toggle("Ombres", {Id = "shadows", Value = defaults.shadows}, function(enabled)
+    Lighting.GlobalShadows = enabled
+end)
+
+graphics:Slider("Luminosite", {
+    Id = "brightness", Min = 0, Max = 5, Step = 0.1, Value = defaults.brightness,
+}, function(value)
+    Lighting.Brightness = value
+end)
+
+tab:Dropdown("Theme", {
+    Id = "theme", Options = {"Graphite", "Aurora", "Ember"}, Value = defaults.theme,
+}, function(theme)
+    window:SetTheme(theme)
+end)
+
+tab:Button("Reinitialiser les reglages", {Text = "Reinitialiser", Variant = "Secondary"}, function()
+    window:SetValues(defaults, true)
+    window:Notify({Title = "Reglages reinitialises", Kind = "success"})
+end)
+
+-- L'editeur de profils restaure les champs sans lancer leurs callbacks.
+-- Ce bouton applique explicitement les valeurs affichees au jeu.
+tab:Button("Appliquer les valeurs affichees", {Text = "Appliquer"}, function()
+    local values = window:GetValues()
+    Lighting.GlobalShadows = values.shadows
+    Lighting.Brightness = values.brightness
+    window:SetTheme(values.theme)
+end)
+
+window:Command({
+    Id = "status", Title = "Afficher le statut", Icon = "info",
+    Callback = function()
+        window:Notify({Title = "Interface prete", Content = "Version " .. UI.Version})
+    end,
+})
+
+tab:Button("Commandes", {Text = "Ouvrir"}, function()
+    window:OpenCommands()
+end)
+
+window:Presets({Title = "Profils"})
+window:Appearance({Title = "Apparence"})
+```
+{/* /example:menu-complet */}
+
+## Ce que tu peux essayer
+
+1. Change **Ombres** ou **Luminosite** : l’affichage du jeu change sur ton client.
+2. Choisis un thème : l’interface change de couleur.
+3. Presse **Reinitialiser** : les réglages reviennent aux valeurs relevées au démarrage.
+4. Ouvre **Commandes**, puis **Afficher le statut** : une notification affiche la version chargée.
+5. Enregistre un profil dans **Profils**, change des réglages, puis recharge-le. L’éditeur restaure les champs silencieusement : retourne dans **Reglages** et presse **Appliquer** pour envoyer ces valeurs aux propriétés du jeu.
+6. Ouvre **Apparence** pour modifier le style du menu.
+
+Les profils de cet exemple restent en mémoire pendant la vie de la fenêtre. Les changements graphiques sont locaux. Pour les garder après destruction de la fenêtre ou fermeture du jeu, ajoute ton stockage comme décrit dans [Valeurs et profils](/customization/values-and-config).
+
+[Télécharger le LocalScript](https://github.com/Gabibou455/GabibouUI/blob/main/docs/examples/menu-complet.luau).

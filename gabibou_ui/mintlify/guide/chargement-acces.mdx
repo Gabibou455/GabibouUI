@@ -1,0 +1,75 @@
+---
+title: "Chargement et accès par clé"
+description: "Guide pratique Gabibou UI : chargement et accès par clé"
+---
+
+{/* Generated from docs/chargement-acces.md by sync_docs.cjs. */}
+
+Ces fonctionnalités sont facultatives. Un menu simple peut être créé directement avec [Démarrer](/getting-started/quickstart).
+
+## Afficher la progression de la construction du menu
+
+Après avoir chargé `UI`, ce bloc crée sa propre fenêtre :
+
+```lua
+local window = UI:Create({
+    Id = "LoadedMenu",
+    Title = "Mon menu",
+    Loading = {Title = "Préparation", Variant = "Compact"},
+    Tabs = {{
+        Title = "Accueil",
+        Icon = "home",
+        Controls = {{
+            Type = "Toggle", Id = "effects", Title = "Effets", Value = true,
+            Callback = function(enabled) print("Effets :", enabled) end,
+        }},
+    }},
+})
+```
+
+`UI:Create` construit la fenêtre à partir d’une table. Chaque contrôle déclaratif doit posséder un `Id` unique. Son loader mesure la construction des composants.
+
+## Piloter un loader séparé
+
+```lua
+local loader = UI:CreateLoader({Title = "Préparation", Variant = "Centered", Height = 300})
+loader:SetProgress(0.25, "Lecture des préférences")
+loader:SetStatus("Préparation du menu")
+loader:Complete("Prêt")
+```
+
+Cet exemple montre les appels ; remplace les étapes par tes tâches réelles. Le pourcentage représente le travail annoncé par ton code. Les variantes sont `Compact`, `Centered` et `Minimal`. `SetProgress` accepte de 0 à 1. `Complete` termine puis détruit le loader ; `Destroy` l’annule.
+
+## Valider une clé avec un serveur Roblox
+
+Le contrat est simple : `Validate(key)` renvoie `true, result` pour accepter ou `false, message` pour refuser. La bibliothèque ne fournit pas ton système d’authentification.
+
+Dans Studio, le dépôt fournit deux scripts complémentaires :
+
+1. Copie [key_server.example.luau](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/key_server.example.luau) dans un **Script** sous `ServerScriptService`. Remplace la clé `CHANGE_ME` dans ce script serveur.
+2. Copie [starter.luau](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/starter.luau) dans un **LocalScript** sous `StarterPlayerScripts` et conserve `ReplicatedStorage.GabibouUI`.
+
+Le script serveur crée `GabibouValidateKey`. Une fois ce serveur configuré, voici le raccordement client minimal après le chargement de `UI` :
+
+```lua
+local validateKey = game:GetService("ReplicatedStorage"):WaitForChild("GabibouValidateKey")
+
+UI:CreateKeySystem({
+    Title = "Accès au menu",
+    Validate = function(key)
+        return validateKey:InvokeServer(key)
+    end,
+    OnSuccess = function()
+        local window = UI:CreateWindow("Mon menu")
+        window:Tab("Accueil", "home"):Paragraph("Accès validé")
+    end,
+})
+```
+
+Les clés et les décisions d’autorisation restent sur le serveur. Le dialogue client affiche un résultat ; chaque action serveur protégée doit vérifier l’autorisation du joueur.
+
+## Utiliser un fournisseur existant
+
+`UI:KeyProvider(name, options)` adapte un SDK que **tu fournis** en callback `Validate`. Noms pris en charge : `Luarmor`, `Vampauth`, `KeyAuth`, `Custom`. Il ne télécharge pas les SDK. Les [exemples de fournisseurs](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/mintlify/examples/key-providers.mdx) détaillent leurs options.
+
+`UI:Launch(spec)` enchaîne une éventuelle validation de clé, les étapes `Steps`, le chargement et la création déclarative de la fenêtre. La session retournée expose `Status`, `Window`, `Loader`, `Gate`, `Cancel()` et `Destroy()`.

@@ -1,33 +1,36 @@
 ---
-title: Gabibou UI
-description: A beginner-friendly guide to building your first Roblox interface with Luau.
+title: "Gabibou UI en une minute"
+description: "Guide pratique Gabibou UI : gabibou ui en une minute"
 ---
 
-Gabibou UI helps you build menus for a Roblox game. A **window** is the main menu panel. A **tab** is a page inside that window. A **control** is something the player can use, such as a button or a toggle.
+{/* Generated from docs/README.md by sync_docs.cjs. */}
 
-You will first load the library, then create a window and a tab, then add a control. The [Quickstart](/getting-started/quickstart) explains each line and shows what to expect.
+Gabibou UI construit des menus Roblox en Luau : fenêtres, onglets, boutons, réglages et notifications. L’affichage s’adapte au bureau et au mobile.
 
-<CardGroup cols={2}>
-  <Card title="Start with the Quickstart" icon="rocket" href="/getting-started/quickstart">
-    Copy a complete example, run it, and learn what the callback does.
-  </Card>
-  <Card title="Choose how to install" icon="download" href="/getting-started/installation">
-    Follow the steps for a supported client or for Roblox Studio.
-  </Card>
-  <Card title="Learn each control" icon="sliders" href="/customization/controls">
-    Add buttons, toggles, sliders, dropdowns, and other controls.
-  </Card>
-  <Card title="Change the look" icon="palette" href="/customization/appearance-and-layout">
-    Explore themes, window layout, tabs, and icons after the first example works.
-  </Card>
-  <Card title="Use with AI" icon="robot" href="/getting-started/use-with-ai">
-    Connect your AI tool to the docs, then ask it to build your interface.
-  </Card>
-  <Card title="Guide for AI agents" icon="book" href="/ai/agent-guide">
-    Give an agent the source, API workflow, examples, and license details.
-  </Card>
-</CardGroup>
+**Pour commencer, copie [l’exemple complet](/examples/quickstart).** Il contient le chargement de la bibliothèque, une fenêtre, des réglages fonctionnels et un bouton de réinitialisation.
 
-Choose the installation guide before running code. The remote loader requires a client environment that supports `loadstring` and `game:HttpGet`. In standard Roblox Studio, put the library in a `ModuleScript` and load it from a `LocalScript`.
+Les trois objets à connaître :
 
-For more complete projects, browse [examples](/examples/quickstart). If your interface protects an action or account, check that action on the server; a client interface alone cannot enforce access.
+| Objet | Ce qu’il représente | Exemple |
+|---|---|---|
+| `UI` | La bibliothèque chargée | `UI:CreateWindow("Mon menu")` |
+| `window` | Une fenêtre avec ses onglets | `window:Tab("Réglages", "settings")` |
+| `tab` ou `section` | L’endroit où ajouter des composants | `tab:Button("Bonjour", function() print("Bonjour") end)` |
+
+Une **callback** est la fonction appelée lorsque le joueur utilise un composant. Un toggle lui transmet `true` ou `false`, un slider lui transmet un nombre.
+
+## Trouver directement la bonne page
+
+| Je veux… | Page |
+|---|---|
+| Installer la lib dans Studio ou la charger à distance | [Démarrer](/getting-started/quickstart) |
+| Copier un menu entier | [Exemple complet](/examples/quickstart) |
+| Ajouter un toggle, slider, dropdown ou champ de texte | [Composants](/customization/controls) |
+| Changer le thème, les onglets ou le comportement mobile | [Apparence et mobile](/customization/appearance-and-layout) |
+| Lire une valeur, la changer ou enregistrer un profil | [Valeurs et profils](/customization/values-and-config) |
+| Afficher un message ou une confirmation | [Notifications et commandes](/guide/notifications-commandes) |
+| Ajouter un loader ou une saisie de clé | [Chargement et accès](/guide/chargement-acces) |
+| Comprendre une erreur | [Dépannage](/guide/depannage) |
+| Retrouver une méthode ou une valeur exacte | [API](/reference/api) · [Options](/reference/customization) · [Icônes](/reference/icon-catalogue) |
+
+Les guides décrivent la branche `main` du [dépôt GabibouUI](https://github.com/Gabibou455/GabibouUI). Une version installée depuis un ancien tag peut avoir moins de fonctionnalités.

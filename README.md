@@ -2,6 +2,17 @@
 
 A customizable Luau interface library with a black, gray and white default theme. Build a window, add controls, then customize its appearance when needed.
 
+## Documentation
+
+**[Lire le guide français](docs/README.md)** — un parcours court pour installer la bibliothèque et construire son menu.
+
+- [Exemple complet à copier](docs/exemple-complet.md)
+- [Boutons et composants](docs/composants.md)
+- [Apparence et mobile](docs/apparence-mobile.md)
+- [Méthodes de l’API](docs/reference/api.md) · [Valeurs par défaut](docs/reference/options.md) · [Dépannage](docs/depannage.md)
+
+Le même guide alimente la [documentation hébergée existante](https://gabibou-ui.mintlify.app). Le dossier `docs/` et les configurations `.gitbook.yaml` permettent aussi de le synchroniser avec GitBook ; le [guide de publication](DOCS_PUBLISHING.md) décrit le raccordement. Une configuration dans le dépôt ne signifie pas qu’un site GitBook est déjà publié.
+
 Release candidate `1.5.0-rc.26` includes `window:Appearance()` for an appearance editor, searchable commands and named presets. Presets stay in memory by default; developers can provide storage to keep them after relaunch. See the [changelog](CHANGELOG.md) for fixes in this candidate.
 
 ## Start with one line

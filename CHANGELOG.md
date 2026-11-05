@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — documentation
+
+- Add a French, GitBook-compatible guide with a clear start page, a complete downloadable menu, component examples, mobile guidance and troubleshooting.
+- Generate shared Mintlify pages from the same Markdown and keep specialist documentation in an Advanced tab.
+- Generate default option tables and all 96 icon names/IDs from production Luau sources.
+- Add GitBook configuration, publishing instructions and checks for navigation, links, source API names, icon names and Luau snippets.
+- Explain that the built-in preset editor restores controls without firing callbacks, and show how to apply values to project behavior.
+
 ## Unreleased — mobile layout
 
 - Use mobile navigation and stacked controls on short touch landscapes; configure the height threshold with `Responsive.LandscapeHeight` (default 500 px, 0 disables the rule).

@@ -1,0 +1,113 @@
+# Catalogue des icônes
+
+96 dessins intégrés, utilisables par nom ou ID. Ce sont des IDs internes Gabibou UI, pas des IDs d’images Roblox. Les dessins intégrés ne nécessitent aucun téléchargement d’image.
+
+```lua
+local tab = window:Tab("Accueil", "home")
+tab:Button("Actualiser", {Icon = "refresh", IconVariant = "Duotone"}, function()
+    print("Actualisation")
+end)
+```
+
+Ce bloc utilise un `window` existant. Les variantes sont `Outline` (défaut), `Soft` et `Duotone`. Les noms sont sensibles à la casse.
+
+| ID | Nom |
+|---:|---|
+| 1 | `home` |
+| 2 | `sliders` |
+| 3 | `palette` |
+| 4 | `save` |
+| 5 | `code` |
+| 6 | `search` |
+| 7 | `close` |
+| 8 | `check` |
+| 9 | `chevron-down` |
+| 10 | `chevron-right` |
+| 11 | `settings` |
+| 12 | `user` |
+| 13 | `folder` |
+| 14 | `download` |
+| 15 | `upload` |
+| 16 | `refresh` |
+| 17 | `bell` |
+| 18 | `info` |
+| 19 | `plus` |
+| 20 | `minus` |
+| 21 | `farm` |
+| 22 | `panel` |
+| 23 | `inventory` |
+| 24 | `harvest` |
+| 25 | `seed` |
+| 26 | `sprout` |
+| 27 | `watering-can` |
+| 28 | `shovel` |
+| 29 | `tools` |
+| 30 | `tractor` |
+| 31 | `map` |
+| 32 | `menu` |
+| 33 | `arrow-left` |
+| 34 | `arrow-right` |
+| 35 | `minimize` |
+| 36 | `maximize` |
+| 37 | `restore` |
+| 38 | `resize` |
+| 39 | `window` |
+| 40 | `automation` |
+| 41 | `play` |
+| 42 | `pause` |
+| 43 | `stop` |
+| 44 | `bolt` |
+| 45 | `shield` |
+| 46 | `key` |
+| 47 | `lock` |
+| 48 | `unlock` |
+| 49 | `coins` |
+| 50 | `gift` |
+| 51 | `teleport` |
+| 52 | `target` |
+| 53 | `chart` |
+| 54 | `chart-bar` |
+| 55 | `clock` |
+| 56 | `timer` |
+| 57 | `compass` |
+| 58 | `heart` |
+| 59 | `star` |
+| 60 | `eye` |
+| 61 | `eye-off` |
+| 62 | `filter` |
+| 63 | `sort` |
+| 64 | `check-circle` |
+| 65 | `alert` |
+| 66 | `help` |
+| 67 | `copy` |
+| 68 | `clipboard` |
+| 69 | `trash` |
+| 70 | `edit` |
+| 71 | `wand` |
+| 72 | `wifi` |
+| 73 | `globe` |
+| 74 | `link` |
+| 75 | `mail` |
+| 76 | `message` |
+| 77 | `terminal` |
+| 78 | `bug` |
+| 79 | `cpu` |
+| 80 | `server` |
+| 81 | `database` |
+| 82 | `cloud` |
+| 83 | `cloud-download` |
+| 84 | `camera` |
+| 85 | `image` |
+| 86 | `music` |
+| 87 | `volume` |
+| 88 | `volume-off` |
+| 89 | `sun` |
+| 90 | `moon` |
+| 91 | `gamepad` |
+| 92 | `trophy` |
+| 93 | `rocket` |
+| 94 | `backpack` |
+| 95 | `sword` |
+| 96 | `flag` |
+
+`UI:GetIconId("home")` renvoie 1 ; `UI:GetIconName(1)` renvoie `home`. Les dessins personnalisés enregistrés avec `RegisterIcon` obtiennent des IDs à partir de 1000. Pour prévisualiser les fichiers PNG/SVG hors ligne, télécharge l’archive du projet puis ouvre `GabibouUI_Icons/index.html`.

@@ -1,120 +1,81 @@
 ---
-title: Appearance and responsive layout
-description: Configure themes, styles, motion, and adaptive layouts.
+title: "Apparence et mobile"
+description: "Guide pratique Gabibou UI : apparence et mobile"
 ---
 
-## Themes
+{/* Generated from docs/apparence-mobile.md by sync_docs.cjs. */}
 
-Built-in themes are `Graphite`, `Aurora`, and `Ember`. Set `Theme` when creating a window or call `window:SetTheme(nameOrColors)`. Custom theme tables use `Color3` values. Partial tables inherit omitted tokens from Graphite.
+## Choisir un design
 
-Theme tokens are `Background`, `Surface`, `Raised`, `Hover`, `Border`, `Text`, `Muted`, `Accent`, `AccentText`, `Success`, and `Danger`.
+Passe les options lors de la création de ta fenêtre :
 
 ```lua
-window:SetTheme({
-    Background = Color3.fromRGB(8, 8, 10),
-    Surface = Color3.fromRGB(17, 18, 21),
-    Raised = Color3.fromRGB(27, 29, 33),
-    Border = Color3.fromRGB(65, 67, 73),
-    Text = Color3.fromRGB(248, 248, 250),
-    Muted = Color3.fromRGB(163, 165, 172),
-    Accent = Color3.fromRGB(245, 245, 247),
+local window = UI:CreateWindow("Mon menu", {
+    Design = "Atelier",
+    Width = 800,
+    Height = 590,
+    Responsive = {TouchTarget = 48, LandscapeHeight = 500},
+    Layout = {MobileTabPosition = "Bottom"},
 })
 ```
 
-`window:BindColor(instance, property, token)` binds a `Color3` property on a descendant of the window GUI to a theme token.
+Ce bloc remplace la création de `window` dans ton script ; ajoute ensuite tes onglets et composants.
 
-## Style and motion
+| Design | Aspect | Navigation |
+|---|---|---|
+| `Studio` | Graphite, espacement confortable | Gauche, `Soft` |
+| `Minimal` | Graphite, compact, angles nets | Gauche, `Classic` |
+| `Command` | Presque noir, espacé | Haut, `Pill` |
+| `Atelier` | Monochrome, confortable | Gauche, `Rail` |
 
-`UI:SetStyle` and `UI:SetMotion` change defaults for future windows. `window:SetStyle` and `window:SetMotion` update one existing window.
+`Theme`, `Style`, `Layout` et `Navigation` explicites prennent le dessus sur le preset. Un design plus précis s’écrit par exemple `Design = {Preset = "Atelier", Accent = Color3.fromRGB(120, 184, 255), Radius = 12}`.
 
-Style fields include `Font`, `FontBold`, `TextSize`, `DescriptionSize`, `TitleSize`, `WindowRadius`, `SectionRadius`, `ControlRadius`, and `RowPadding`. Motion fields are `Duration`, `Style`, `Direction`, `RepeatCount`, `Reverses`, and `Delay`.
+## Modifier une fenêtre existante
 
 ```lua
-window:SetStyle({TitleSize = 20, WindowRadius = 18, ControlRadius = 8})
-window:SetMotion({Duration = 0.24, Style = Enum.EasingStyle.Quart})
+window:SetTheme("Aurora")
+window:SetStyle({TextSize = 14, WindowRadius = 16})
+window:SetLayout({TabPosition = "Left", MobileTabPosition = "Bottom"})
+window:SetNavigation({Variant = "Rail", IconVariant = "Outline"})
 window:SetReducedMotion(true)
 ```
 
-For valid values and ranges, see [API reference](/reference/api). Reduced motion cancels active managed tweens and applies their final values.
+Thèmes disponibles : `Graphite`, `Aurora`, `Ember`. Variantes de navigation : `Classic`, `Soft`, `Pill`, `Rail`.
 
-## Responsive settings
-
-Responsive layout is enabled by default. `Responsive` accepts a table with `Breakpoint` (320–1000 px; default 620), `TouchTarget` (44–72 px; default 44), `Margin` (4–40 px; default 12), and `LandscapeHeight` (0–700 px; default 500). A touch screen in landscape uses mobile navigation when its safe height is at most `LandscapeHeight`, even when the window exceeds the width breakpoint. Set this option to 0 to disable the extra landscape rule. Classification uses the safe screen before keyboard occlusion, so opening a tablet's keyboard does not classify it as a phone.
-
-Rotation and keyboard changes recover the whole panel inside the safe area. Short layouts reduce header space and hide the subtitle, search and footer; tabs remain visible when at least 140 px of panel height is available. Mobile sliders have larger knobs: horizontal drags adjust their value, vertical swipes scroll the page without changing it, and taps select a value on release. The page's previous scrolling state is restored when a horizontal slider drag ends or is cancelled.
-
-The library adapts navigation and controls to window size, safe insets, and the on-screen keyboard. Test your own custom content on the devices you support; automated layouts do not verify physical-device input.
-
-## Layout options
-
-### Move a window on a phone
-
-Drag the title strip at the top of the window with one finger. You can start on its title, subtitle or logo area. Buttons, sliders and page scrolling keep their own gestures. The header stays reachable when you move a mobile window partly beyond the edge of the screen; drag it back to reveal the rest.
-
-Dragging is enabled by default. Keep the header visible if users need to move the window:
+Pour laisser le joueur choisir son apparence :
 
 ```lua
-window:SetLayout({Draggable = true, ShowHeader = true})
+window:Appearance({Title = "Apparence"})
 ```
 
-To restore a centered position in your own button callback:
+Cela ajoute un onglet d’édition. Ses réglages sont exclus des profils de l’application.
+
+## Comportement mobile
+
+La fenêtre tient compte de la zone sûre et du clavier. Les champs larges passent sous leurs titres ; les toggles restent à côté du texte si la largeur le permet. Les onglets deviennent horizontaux sur une fenêtre étroite ou un téléphone tactile en paysage.
+
+| Option `Responsive` | Défaut | Plage |
+|---|---:|---|
+| `Breakpoint` | 620 | 320–1000 px : largeur de fenêtre sous laquelle utiliser le mode mobile |
+| `TouchTarget` | 44 | 44–72 px : taille minimale des contrôles concernés |
+| `Margin` | 12 | 4–40 px : marge autour de la fenêtre |
+| `LandscapeHeight` | 500 | 0–700 px : hauteur sûre maximale déclenchant le mode mobile en paysage tactile ; 0 désactive cette règle |
+
+Le classement paysage utilise l’écran avant l’ouverture du clavier : le clavier d’une tablette ne la transforme pas en téléphone. Après rotation ou changement de clavier, une fenêtre déplacée hors écran revient dans la zone visible.
+
+Sur un écran bas, l’en-tête est réduit et le sous-titre ainsi que le pied de fenêtre sont masqués. La recherche est masquée en mode compact sauf lorsqu’elle garde le focus, et reste masquée lorsque le panneau mesure moins de 260 px de haut. Les onglets restent affichés à partir de 140 px de hauteur de panneau. Le rendu et les gestes sur téléphone physique restent à tester dans ton projet.
+
+## Icônes et logo
 
 ```lua
-tab:Button({
-    Title = "Center window",
-    Callback = function()
-        window:SetPosition(UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
-    end,
-})
-```
-
-Mouse-only desktop windows stay inside the viewport. Touch-enabled screens can move the window partly beyond its edge in portrait or landscape. Automated gesture checks do not replace testing on a physical phone.
-
-Set defaults for new windows with `UI:SetLayout(options)`, or update one window with `window:SetLayout(options)`. Settings cover tab position, mobile tab position, sidebar width, tab dimensions and gaps, content padding and spacing, header and footer sizes, search visibility, and control alignment. `PanelTransparency` defaults to `0.06` and affects only the main window surface; `0` is opaque and `1` is transparent.
-
-```lua
-window:SetLayout({PanelTransparency = 0.12})
-```
-
-Tabs and controls accept a local `Layout` table. Tab keys include `Order`, `Width`, `Height`, and `IconSize`. Control keys include `Order`, `Width`, `Height`, and `Position` (`Left`, `Right`, `Below`). See [API reference](/reference/api) for the complete defaults and ranges.
-
-## Tab categories
-
-Categories group related tabs under a shared heading. Create a category from the window, then add tabs to it. A tab can still use the same controls and sections as any other tab.
-
-```lua
-local general = window:Category("General")
-local home = general:Tab("Home", "home")
-home:Toggle("Show tips", {Value = true})
-
-local farming = window:Category("Farming")
-local farm = farming:Tab("Farm", "farm")
-farm:Button("Start farming", function()
-    print("Farming started")
+local home = window:Tab("Accueil", "home")
+home:Button("Actualiser", {Icon = "refresh", IconVariant = "Duotone"}, function()
+    print("Actualisation")
 end)
+
+window:SetBranding({Mode = "Initials", Text = "G", Placement = "TopLeft"})
 ```
 
-You can also write `window:Category({Title = "General"})`. Calling `window:Category` again with the same title returns the existing category, so tabs added through either call stay grouped together. Change a heading with `category:SetTitle("Basics")`; `category:Destroy()` removes that category and its tabs. A category heading is hidden when it has no tabs, including when filtering hides all of its tabs.
+Les noms et IDs sont dans le [catalogue](/reference/icon-catalogue). Un ID Gabibou UI n’est pas un ID d’image Roblox. `Mode = "Avatar"` utilise l’avatar ; `Mode = "Image"` nécessite une option `Image` contenant une URI `rbxassetid://` valide.
 
-For a single tab, pass its category in the options table. This creates the category automatically when needed and reuses a category with the same title:
-
-```lua
-local farm = window:Tab({Title = "Farm", Category = "Farming", Icon = "farm"})
-farm:Slider("Plot size", {Min = 1, Max = 10, Value = 3})
-```
-
-Category headings follow the navigation layout: they appear inline in the tab rail when tabs run across the top or bottom, and vertically to the left or right when tabs run down the side. On mobile, their placement follows `MobileTabPosition` (`Top` or `Bottom`).
-
-## Window parts
-
-`window:GetParts()` exposes `Panel`, `Header`, `Tabs`, `Search`, `PageTitle`, `Pages`, `Footer`, `Reopen`, `Notifications`, `Minimize`, `Close`, and `Resize`.
-
-```lua
-window:SetPartLayout("Header", {Position = UDim2.fromOffset(20, 8)})
--- Restore the calculated position later.
-window:ResetPartLayout("Header")
-```
-
-`SetPartLayout` accepts `Position` and `Size` as finite `UDim2` values, `AnchorPoint` as a `Vector2` in the 0–1 range, and `Visible` as a boolean. Overrides apply after automatic responsive layout and can overlap or extend beyond the window. Reset parts when they should return to automatic layout.
-
-Next: [Icons and branding](/customization/icons-and-branding) · [Loading screens](/customization/loading-screens)
+Les modifications avancées avec `SetPartLayout` imposent tes coordonnées après la disposition automatique : vérifie alors toi-même les petits écrans. Les [valeurs exactes](/reference/customization) permettent de retrouver toutes les options.

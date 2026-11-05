@@ -1,0 +1,83 @@
+# Installer et créer son menu
+
+## 1. Choisir le chargement
+
+### Dans Roblox Studio
+
+1. Ouvre [le module Gabibou UI](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui.luau), puis copie son contenu complet.
+2. Dans `ReplicatedStorage`, crée un **ModuleScript** nommé exactement `GabibouUI`. Remplace son contenu par le module copié.
+3. Dans `StarterPlayer > StarterPlayerScripts`, crée un **LocalScript**.
+4. Colle cette ligne au début du LocalScript :
+
+```lua
+local UI = require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
+```
+
+Lance **Play** pour voir l’interface. Le code du menu s’exécute côté client.
+
+### Dans un client proposant `loadstring` et `game:HttpGet`
+
+Utilise cette ligne de chargement :
+
+```lua
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
+```
+
+Ce chargement nécessite les deux fonctions indiquées. Pour un LocalScript Roblox Studio standard, utilise le ModuleScript ci-dessus. L’URL `main` suit les mises à jour ; pour figer une version, remplace `main` par un tag existant de la [page Releases](https://github.com/Gabibou455/GabibouUI/releases).
+
+## 2. Ajouter son premier menu
+
+Colle ce bloc **juste après la ligne de chargement choisie**, dans le même script :
+
+```lua
+local window = UI:CreateWindow("Mon menu")
+local tab = window:Tab("Accueil", "home")
+
+tab:Button("Dire bonjour", function()
+    window:Notify({Title = "Bonjour !", Kind = "success"})
+end)
+
+tab:Toggle("Activer les effets", {Value = false}, function(enabled)
+    print("Effets :", enabled)
+end)
+
+tab:Slider("Volume", {Min = 0, Max = 100, Value = 50}, function(value)
+    print("Volume :", value)
+end)
+```
+
+Tu obtiens une fenêtre **Mon menu**, un onglet **Accueil**, un bouton, un toggle et un slider. Le bouton affiche une notification ; les deux réglages affichent leur nouvelle valeur dans Output. Remplace les `print` par la logique de ton projet.
+
+## 3. Comprendre la forme des appels
+
+```lua
+local effects = tab:Toggle("Effets", {Id = "effects", Value = true}, function(enabled)
+    print(enabled)
+end)
+```
+
+| Élément | Signification |
+|---|---|
+| `"Effets"` | Le titre affiché |
+| `{Id = "effects", Value = true}` | Les options ; ici un identifiant et la valeur initiale |
+| `function(enabled) ... end` | La callback appelée après un changement utilisateur |
+| `effects` | Le composant retourné, utile pour `Get()`, `Set()` ou `SetEnabled()` |
+
+La même création peut s’écrire avec une table unique :
+
+```lua
+local effects = tab:Toggle({
+    Id = "effects",
+    Title = "Effets",
+    Value = true,
+    Callback = function(enabled)
+        print(enabled)
+    end,
+})
+```
+
+Ces deux blocs montrent deux façons de créer **le même** composant : choisis-en une. Un `Id` doit être unique dans sa fenêtre.
+
+La valeur initiale ne lance pas la callback. Pour modifier une valeur ensuite : `effects:Set(false, true)` la change et appelle la callback si elle a changé ; `effects:Set(false)` la change silencieusement.
+
+Suite : [exemple complet](exemple-complet.md) ou [tous les composants](composants.md).

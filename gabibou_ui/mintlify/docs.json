@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Gabibou UI",
-  "description": "Build responsive Roblox interfaces in Luau with controls, themes, icons, loading screens, and lifecycle helpers.",
+  "description": "Documentation française de Gabibou UI : exemple complet, composants, mobile et référence API.",
   "colors": {
     "primary": "#737373",
     "light": "#D4D4D8",
@@ -12,7 +12,12 @@
     "default": "dark"
   },
   "contextual": {
-    "options": ["copy", "mcp", "cursor", "vscode"]
+    "options": [
+      "copy",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "navigation": {
     "tabs": [
@@ -20,17 +25,59 @@
         "tab": "Guide",
         "groups": [
           {
-            "group": "Start here",
+            "group": "Commencer",
             "pages": [
               "index",
               "getting-started/quickstart",
-              "getting-started/installation"
+              "examples/quickstart"
             ]
           },
           {
-            "group": "Examples",
+            "group": "Construire son interface",
             "pages": [
-              "examples/quickstart",
+              "customization/controls",
+              "customization/appearance-and-layout",
+              "customization/values-and-config",
+              "guide/notifications-commandes",
+              "guide/chargement-acces",
+              "guide/depannage"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Référence",
+        "pages": [
+          "reference/api",
+          "reference/customization",
+          "reference/icon-catalogue"
+        ]
+      },
+      {
+        "tab": "Avancé",
+        "groups": [
+          {
+            "group": "Installation et design",
+            "pages": [
+              "getting-started/installation",
+              "customization/design-your-interface",
+              "customization/icons-and-branding"
+            ]
+          },
+          {
+            "group": "Flux spécialisés",
+            "pages": [
+              "customization/commands-and-presets",
+              "customization/loading-screens",
+              "customization/key-systems",
+              "customization/events-and-lifecycle",
+              "customization/animations-and-components",
+              "customization/notifications"
+            ]
+          },
+          {
+            "group": "Exemples détaillés",
+            "pages": [
               "examples/loading",
               "examples/discord-prompt",
               "examples/key-discord",
@@ -41,42 +88,13 @@
             ]
           },
           {
-            "group": "Customize",
+            "group": "IA et vérification",
             "pages": [
-              "customization/controls",
-              "customization/values-and-config",
-              "customization/commands-and-presets",
-              "customization/appearance-and-layout",
-              "customization/icons-and-branding",
-              "customization/loading-screens",
-              "customization/key-systems",
-              "customization/events-and-lifecycle",
-              "customization/animations-and-components",
-              "customization/notifications"
-            ]
-          },
-          {
-            "group": "API reference",
-            "pages": [
-              "reference/api",
-              "reference/customization",
-              "reference/icon-catalogue",
+              "getting-started/use-with-ai",
+              "ai/agent-guide",
               "reference/quality"
             ]
           }
-        ]
-      },
-      {
-        "tab": "Design",
-        "pages": [
-          "customization/design-your-interface"
-        ]
-      },
-      {
-        "tab": "AI",
-        "pages": [
-          "getting-started/use-with-ai",
-          "ai/agent-guide"
         ]
       }
     ]

@@ -1,0 +1,92 @@
+# Exemple complet à copier
+
+Ce menu règle les ombres et la luminosité du client Roblox, change le thème de la fenêtre et propose une réinitialisation, des commandes, des profils et un éditeur d’apparence.
+
+**Studio :** installe `ReplicatedStorage.GabibouUI` comme indiqué dans [Démarrer](demarrer.md), puis copie tout le bloc dans un LocalScript sous `StarterPlayerScripts`. Lance Play.
+
+**Client compatible :** remplace la ligne `require` par la ligne de chargement distante fournie en commentaire. Ne conserve qu’une seule déclaration de `UI`.
+
+<!-- example:menu-complet -->
+```lua
+-- Studio : ModuleScript GabibouUI dans ReplicatedStorage,
+-- puis ce code dans un LocalScript sous StarterPlayerScripts.
+local UI = require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
+-- Client compatible : remplace uniquement le require ci-dessus par :
+-- local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
+
+local Lighting = game:GetService("Lighting")
+local defaults = {
+    shadows = Lighting.GlobalShadows,
+    brightness = Lighting.Brightness,
+    theme = "Graphite",
+}
+
+local window = UI:CreateWindow("Mon menu", {
+    Id = "GabibouQuickstart",
+    Design = "Atelier",
+    Theme = defaults.theme,
+    Responsive = {TouchTarget = 48},
+    Layout = {MobileTabPosition = "Bottom"},
+})
+
+local tab = window:Tab("Reglages", "settings")
+local graphics = tab:Section("Affichage du jeu")
+
+graphics:Toggle("Ombres", {Id = "shadows", Value = defaults.shadows}, function(enabled)
+    Lighting.GlobalShadows = enabled
+end)
+
+graphics:Slider("Luminosite", {
+    Id = "brightness", Min = 0, Max = 5, Step = 0.1, Value = defaults.brightness,
+}, function(value)
+    Lighting.Brightness = value
+end)
+
+tab:Dropdown("Theme", {
+    Id = "theme", Options = {"Graphite", "Aurora", "Ember"}, Value = defaults.theme,
+}, function(theme)
+    window:SetTheme(theme)
+end)
+
+tab:Button("Reinitialiser les reglages", {Text = "Reinitialiser", Variant = "Secondary"}, function()
+    window:SetValues(defaults, true)
+    window:Notify({Title = "Reglages reinitialises", Kind = "success"})
+end)
+
+-- L'editeur de profils restaure les champs sans lancer leurs callbacks.
+-- Ce bouton applique explicitement les valeurs affichees au jeu.
+tab:Button("Appliquer les valeurs affichees", {Text = "Appliquer"}, function()
+    local values = window:GetValues()
+    Lighting.GlobalShadows = values.shadows
+    Lighting.Brightness = values.brightness
+    window:SetTheme(values.theme)
+end)
+
+window:Command({
+    Id = "status", Title = "Afficher le statut", Icon = "info",
+    Callback = function()
+        window:Notify({Title = "Interface prete", Content = "Version " .. UI.Version})
+    end,
+})
+
+tab:Button("Commandes", {Text = "Ouvrir"}, function()
+    window:OpenCommands()
+end)
+
+window:Presets({Title = "Profils"})
+window:Appearance({Title = "Apparence"})
+```
+<!-- /example:menu-complet -->
+
+## Ce que tu peux essayer
+
+1. Change **Ombres** ou **Luminosite** : l’affichage du jeu change sur ton client.
+2. Choisis un thème : l’interface change de couleur.
+3. Presse **Reinitialiser** : les réglages reviennent aux valeurs relevées au démarrage.
+4. Ouvre **Commandes**, puis **Afficher le statut** : une notification affiche la version chargée.
+5. Enregistre un profil dans **Profils**, change des réglages, puis recharge-le. L’éditeur restaure les champs silencieusement : retourne dans **Reglages** et presse **Appliquer** pour envoyer ces valeurs aux propriétés du jeu.
+6. Ouvre **Apparence** pour modifier le style du menu.
+
+Les profils de cet exemple restent en mémoire pendant la vie de la fenêtre. Les changements graphiques sont locaux. Pour les garder après destruction de la fenêtre ou fermeture du jeu, ajoute ton stockage comme décrit dans [Valeurs et profils](valeurs-profils.md).
+
+[Télécharger le LocalScript](https://github.com/Gabibou455/GabibouUI/blob/main/docs/examples/menu-complet.luau).

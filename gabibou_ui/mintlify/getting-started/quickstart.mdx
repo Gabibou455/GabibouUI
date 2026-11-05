@@ -1,106 +1,88 @@
 ---
-title: Quickstart
-description: Load Gabibou UI and build a small menu with a toggle and slider.
+title: "Installer et créer son menu"
+description: "Guide pratique Gabibou UI : installer et créer son menu"
 ---
 
-## 1. Load the library
+{/* Generated from docs/demarrer.md by sync_docs.cjs. */}
 
-Follow [Installation](/getting-started/installation) for your environment. In a client editor that supports `loadstring` and `game:HttpGet`, this one line loads the published library:
+## 1. Choisir le chargement
 
-```lua
-local UI = loadstring(game:HttpGet('https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau'))()
-```
+### Dans Roblox Studio
 
-In Roblox Studio, use the ModuleScript loader from Installation instead. Keep the `UI` variable name so the examples below work as written.
-
-## 2. Add a window, tab, and controls
-
-Paste these lines directly after the loader:
+1. Ouvre [le module Gabibou UI](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui.luau), puis copie son contenu complet.
+2. Dans `ReplicatedStorage`, crée un **ModuleScript** nommé exactement `GabibouUI`. Remplace son contenu par le module copié.
+3. Dans `StarterPlayer > StarterPlayerScripts`, crée un **LocalScript**.
+4. Colle cette ligne au début du LocalScript :
 
 ```lua
-local window = UI:CreateWindow('My project')
-local tab = window:Tab('Settings', 'settings')
-
-tab:Toggle('Show effects', function(enabled)
-    print('Effects enabled:', enabled)
-end)
-
-tab:Slider('Volume', {Min = 0, Max = 100, Value = 50}, function(value)
-    print('Volume:', value)
-end)
+local UI = require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
 ```
 
-Run the script. Click **Show effects** or drag **Volume**; each control calls its function with the new value. `window` is the panel, `tab` is a page in that panel, and each control is added to the tab. The callback runs when a player changes the control.
+Lance **Play** pour voir l’interface. Le code du menu s’exécute côté client.
 
-![Running rc.21 Gabibou UI demo with a button, one toggle off, one toggle on, and a slider](/images/controls-examples.png)
+### Dans un client proposant `loadstring` et `game:HttpGet`
 
-*A separate live rc.21 demo; its control labels and values differ from this Quickstart example.*
-
-## Choose a look (optional)
-
-Design presets are part of the 1.5.0-rc.21 release candidate. If your installed copy includes the `Design` option, replace Step 2's `CreateWindow` line with this one to use Atelier:
+Utilise cette ligne de chargement :
 
 ```lua
-local window = UI:CreateWindow('My project', {Design = 'Atelier'})
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
 ```
 
-Check `UI.Version` to identify your installed copy. For setup and all design options, see [Design your interface](/customization/design-your-interface).
+Ce chargement nécessite les deux fonctions indiquées. Pour un LocalScript Roblox Studio standard, utilise le ModuleScript ci-dessus. L’URL `main` suit les mises à jour ; pour figer une version, remplace `main` par un tag existant de la [page Releases](https://github.com/Gabibou455/GabibouUI/releases).
 
-| Preset | Palette and spacing | Corners | Tabs and navigation |
-|---|---|---|---|
-| Studio | Graphite, Comfortable | Balanced | Left, Soft |
-| Minimal | Graphite, Compact | Sharp | Left, Classic |
-| Command | Near-black, Spacious | Balanced | Top, Pill |
-| Atelier | Monochrome, Comfortable | Balanced | Left, Rail |
+## 2. Ajouter son premier menu
 
-## Connect a control to your project
-
-In Step 2, replace the existing **Show effects** toggle with this version. Its callback connects the toggle to your project state, and `effectsToggle` keeps a handle for later updates:
+Colle ce bloc **juste après la ligne de chargement choisie**, dans le même script :
 
 ```lua
-local effectsEnabled = false
-local effectsToggle = tab:Toggle('Show effects', {Value = effectsEnabled}, function(enabled)
-    effectsEnabled = enabled -- connect your effect system here
+local window = UI:CreateWindow("Mon menu")
+local tab = window:Tab("Accueil", "home")
+
+tab:Button("Dire bonjour", function()
+    window:Notify({Title = "Bonjour !", Kind = "success"})
 end)
 
--- Later, update the control and run its callback:
-effectsToggle:Set(true, true)
+tab:Toggle("Activer les effets", {Value = false}, function(enabled)
+    print("Effets :", enabled)
+end)
+
+tab:Slider("Volume", {Min = 0, Max = 100, Value = 50}, function(value)
+    print("Volume :", value)
+end)
 ```
 
-Change `'Show effects'` to your control's label and set `effectsEnabled` to the starting value you want. `Set(value, true)` updates the control and calls its callback when the value changes; `Set(value)` or `Set(value, false)` updates it without calling the callback. A returned control handle also has methods such as `SetTitle` and `SetEnabled`.
+Tu obtiens une fenêtre **Mon menu**, un onglet **Accueil**, un bouton, un toggle et un slider. Le bouton affiche une notification ; les deux réglages affichent leur nouvelle valeur dans Output. Remplace les `print` par la logique de ton projet.
 
-## 3. Try other controls
-
-Use the same `tab` variable to add controls. These short examples show the common controls:
+## 3. Comprendre la forme des appels
 
 ```lua
-tab:Button('Say hello', function()
-    print('Hello!')
+local effects = tab:Toggle("Effets", {Id = "effects", Value = true}, function(enabled)
+    print(enabled)
 end)
-
-tab:Dropdown('Quality', {Options = {'Low', 'Medium', 'High'}, Value = 'Medium'}, function(value)
-    print('Quality:', value)
-end)
-
-tab:Input('Player name', {Placeholder = 'Type a name'}, function(value)
-    print('Name:', value)
-end)
-
-tab:Keybind('Toggle menu', {Value = 'F6'}, function(key)
-    print('Pressed:', key)
-end)
-
-tab:ColorPicker('Highlight', {Value = '#78BEFF'}, function(color)
-    print('Highlight:', color)
-end)
-
-tab:Paragraph({Title = 'Tip', Description = 'You can add a short note to a tab.'})
 ```
 
-A **button** runs an action. A **dropdown** chooses from `Options`. An **input** returns text. A **keybind** listens for a key. A **color picker** returns the chosen color. A **paragraph** displays information and has no callback. For all options and value types, see [Controls](/customization/controls).
+| Élément | Signification |
+|---|---|
+| `"Effets"` | Le titre affiché |
+| `{Id = "effects", Value = true}` | Les options ; ici un identifiant et la valeur initiale |
+| `function(enabled) ... end` | La callback appelée après un changement utilisateur |
+| `effects` | Le composant retourné, utile pour `Get()`, `Set()` ou `SetEnabled()` |
 
-## Group controls and tabs
+La même création peut s’écrire avec une table unique :
 
-Add a section heading within a tab with `tab:Section('Audio')`, then call controls on the returned section. Add a category heading to the navigation rail with `window:Category('Settings')`, then create tabs beneath it with `category:Tab('Audio', 'volume-2')`. See [Design your interface](/customization/design-your-interface) for a complete category example.
+```lua
+local effects = tab:Toggle({
+    Id = "effects",
+    Title = "Effets",
+    Value = true,
+    Callback = function(enabled)
+        print(enabled)
+    end,
+})
+```
 
-Next, see [Appearance and layout](/customization/appearance-and-layout) to change how the window looks.
+Ces deux blocs montrent deux façons de créer **le même** composant : choisis-en une. Un `Id` doit être unique dans sa fenêtre.
+
+La valeur initiale ne lance pas la callback. Pour modifier une valeur ensuite : `effects:Set(false, true)` la change et appelle la callback si elle a changé ; `effects:Set(false)` la change silencieusement.
+
+Suite : [exemple complet](/examples/quickstart) ou [tous les composants](/customization/controls).
