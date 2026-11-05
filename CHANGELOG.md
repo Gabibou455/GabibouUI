@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — mobile layout
+
+- Use mobile navigation and stacked controls on short touch landscapes; configure the height threshold with `Responsive.LandscapeHeight` (default 500 px, 0 disables the rule).
+- Recover the entire panel inside the safe area after rotation or keyboard changes, preserving ordinary header dragging between viewport changes.
+- Keep tabs on short layouts above 140 px, shorten the compact header, and hide the footer and its branding to leave more page space.
+- Distinguish slider taps, horizontal adjustments and vertical page swipes. Restore the previous page scrolling state after release, cancellation, focus loss, hide, disable or destruction.
+- Center slider tracks in their touch areas and enlarge mobile knobs to 20 px.
+- Keep phone toggles beside their labels when space permits, while preserving explicit below placement and narrow-width stacking.
+- These are local changes with Luau regression coverage; native rendering and physical-device touch validation remain pending.
+
 ## 1.5.0-rc.26
 
 - Callback errors show the player a short notification named after the control ("Auto farm failed") with the script path and line number removed. The full error is still in `window.LastError` and the output.

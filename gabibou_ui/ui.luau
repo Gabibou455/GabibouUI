@@ -133,11 +133,16 @@ function Window:_BeginPointerGesture(kind,input)
     self._gesture={kind=kind,input=input,origin=Vector2.new(input.Position.X,input.Position.Y),position=self._position,size=self._desiredSize}
     return true
 end
+function Window:_ClearPointerGesture()
+    local g=self._gesture
+    self._gesture=nil
+    if g and g.page and g.page.Parent then g.page.ScrollingEnabled=g.scrollingEnabled end
+end
 function Window:_UpdatePointerGesture(input)
-    if self.Destroyed then self._gesture=nil;return false end
+    if self.Destroyed then self:_ClearPointerGesture();return false end
     local g=self._gesture
     if not g then return false end
-    if input==g.input and input.UserInputState==Enum.UserInputState.Cancel then self._gesture=nil;return false end
+    if input==g.input and input.UserInputState==Enum.UserInputState.Cancel then self:_ClearPointerGesture();return false end
     if not gesture_input_matches(g,input) then return false end
     local position=Vector2.new(input.Position.X,input.Position.Y)
     if g.kind=="drag" then
@@ -146,12 +151,28 @@ function Window:_UpdatePointerGesture(input)
         if not g.moved then g.moved=true;self._positionSpec=nil end
         self._position=g.position+delta;self:_Layout()
     elseif g.kind=="resize" then self:SetSize(g.size.X+position.X-g.origin.X,g.size.Y+position.Y-g.origin.Y)
-    elseif g.kind=="slider" and not g.control.Destroyed then g.control:_Pointer(position.X)
+    elseif g.kind=="slider" and not g.control.Destroyed then
+        if g.pending then
+            local delta=position-g.origin
+            if delta.Magnitude<6 then return false end
+            -- A vertical swipe belongs to the page; it must not alter the value.
+            if math.abs(delta.Y)>=math.abs(delta.X) then self:_ClearPointerGesture();return false end
+            g.pending=false;g.page=g.control.Tab.Page;g.scrollingEnabled=g.page.ScrollingEnabled
+            g.page.ScrollingEnabled=false
+        end
+        g.control:_Pointer(position.X)
     else return false end
     return true
 end
 function Window:_EndPointerGesture(input)
-    if self._gesture and input==self._gesture.input then self._gesture=nil;return true end
+    local g=self._gesture
+    if g and input==g.input then
+        if g.pending and input.UserInputState~=Enum.UserInputState.Cancel then
+            local delta=Vector2.new(input.Position.X,input.Position.Y)-g.origin
+            if delta.Magnitude<6 and not g.control.Destroyed then g.control:_Pointer(input.Position.X)end
+        end
+        self:_ClearPointerGesture();return true
+    end
     return false
 end
 function Window:_TrackBindingTarget(instance)
@@ -271,7 +292,7 @@ function Window:SetWatermark(value)
     self:_Layout()
     return self
 end
-function Window:_Viewport()
+function Window:_Viewport(ignoreKeyboard)
     local size
     if self.Canvas and self.Canvas.AbsoluteSize.X>0 and self.Canvas.AbsoluteSize.Y>0 then size=self.Canvas.AbsoluteSize
     else
@@ -280,7 +301,7 @@ function Window:_Viewport()
     local top,bottom=GuiService:GetGuiInset()
     size=size-top-bottom
     end
-    if UIS.OnScreenKeyboardVisible and UIS.OnScreenKeyboardPosition.Y>0 then
+    if not ignoreKeyboard and UIS.OnScreenKeyboardVisible and UIS.OnScreenKeyboardPosition.Y>0 then
         local origin=self.Canvas and self.Canvas.AbsolutePosition.Y or 0
         size=Vector2.new(size.X,math.max(1,math.min(size.Y,UIS.OnScreenKeyboardPosition.Y-origin)))
     end
@@ -293,7 +314,8 @@ function Window:_Layout()
     local margin=self.Responsive.Margin
     local width=math.max(1,math.min(self._desiredSize.X,viewport.X-margin*2))
     local height=math.max(1,math.min(self._desiredSize.Y,viewport.Y-margin*2))
-    local mobile=width<self.Responsive.Breakpoint
+    local safeViewport=self:_Viewport(true)
+    local mobile=Logic.mobile(width,safeViewport.X,safeViewport.Y,UIS.TouchEnabled,self.Responsive)
     local compact=height<420
     local tiny=height<260
     local minimal=height<140
@@ -305,6 +327,14 @@ function Window:_Layout()
         local p,a=self._positionSpec,self._anchorPoint
         position=Vector2.new(viewport.X*p.X.Scale+p.X.Offset-width*a.X,viewport.Y*p.Y.Scale+p.Y.Offset-height*a.Y)
     end
+    -- Rotation and keyboard changes recover the whole panel, even after a
+    -- deliberate offscreen drag. Ordinary dragging keeps its existing freedom.
+    if self._layoutViewport~=viewport then
+        self:_ClearPointerGesture()
+        local x,y=Logic.fitPosition(position.X,position.Y,viewport.X,viewport.Y,width,height,margin)
+        position=Vector2.new(x,y)
+        self._layoutViewport=viewport
+    end
     -- Keep mouse-first desktop windows fully visible. On touch screens, retain a reachable
     -- header grip while allowing the rest of a viewport-filling window to move offscreen.
     local grip=Vector2.new(math.min(width,72),math.min(height,72))
@@ -313,7 +343,8 @@ function Window:_Layout()
     self:_Arrange(width,height,mobile,compact,tiny,minimal)
     self._headerWash.Visible=self.Layout.ShowHeader and not minimal
     if self._headerDivider then self._headerDivider.Visible=self._headerWash.Visible end
-    self._headerWash.Size=UDim2.new(1,0,0,math.min(height,self.Layout.HeaderHeight+16))
+    self._headerWash.Size=UDim2.new(1,0,0,math.min(height,compact and math.min(self.Layout.HeaderHeight,64)or self.Layout.HeaderHeight+16))
+    if self._headerDivider then self._headerDivider.Position=UDim2.new(0,18,0,(compact and math.min(self.Layout.HeaderHeight,64)or self.Layout.HeaderHeight)-4)end
     self._subtitle.Visible=not compact
     self._resize.Visible=not mobile and not tiny and self.Layout.Resizable
     self:_LayoutNavigation(self.HorizontalTabs)
@@ -361,7 +392,7 @@ function Window:_CancelInteraction(root)
         if not target.Destroyed then target:_Render()end
     end
     if belongs(self._dropdownControl)then self:_CloseDropdown()end
-    if self._gesture and (not root or belongs(self._gesture.control))then self._gesture=nil end
+    if self._gesture and (not root or belongs(self._gesture.control))then self:_ClearPointerGesture()end
     release_focus(root or self.Root)
 end
 function Window:_ForgetTree(root)
@@ -463,7 +494,7 @@ function Window:Hide()
     if self.Destroyed then return false end
     self:_CancelInteraction(self.Root)
     local changed=not self.Closed
-    self.Closed=true;self:_CloseDropdown();self._gesture=nil
+    self.Closed=true;self:_CloseDropdown();self:_ClearPointerGesture()
     if self._capture then self._capture:_Render();self._capture=nil end
     if self._modal then self:_ForgetTree(self._modal);self._modal:Destroy() end
     self.Root.Visible=false;self.Reopen.Visible=true
@@ -516,7 +547,7 @@ end
 function Window:Destroy()
     if self.Destroyed then return true end
     self:_CancelBranding()
-    self.Destroyed=true;self._gesture=nil;self._capture=nil
+    self.Destroyed=true;self:_ClearPointerGesture();self._capture=nil
     release_focus(self.Root);self:_DisconnectEvents(self)
     self:_CloseDropdown()
     disconnect(self._connections,self)
@@ -569,10 +600,11 @@ function Library:CreateWindow(options)
     assert(typeof(anchor)=="Vector2" and Logic.finite(anchor.X) and Logic.finite(anchor.Y) and anchor.X>=0 and anchor.X<=1 and anchor.Y>=0 and anchor.Y<=1,"AnchorPoint must be within 0..1")
     local responsive=options.Responsive or {}
     assert(type(responsive)=="table","Responsive options must be a table")
-    responsive={Breakpoint=responsive.Breakpoint or 620,TouchTarget=responsive.TouchTarget or 44,Margin=responsive.Margin or 12}
+    responsive={Breakpoint=responsive.Breakpoint or 620,TouchTarget=responsive.TouchTarget or 44,Margin=responsive.Margin or 12,LandscapeHeight=responsive.LandscapeHeight or 500}
     assert(Logic.finite(responsive.Breakpoint) and responsive.Breakpoint>=320 and responsive.Breakpoint<=1000,"Responsive.Breakpoint must be 320..1000")
     assert(Logic.finite(responsive.TouchTarget) and responsive.TouchTarget>=44 and responsive.TouchTarget<=72,"Responsive.TouchTarget must be 44..72")
     assert(Logic.finite(responsive.Margin) and responsive.Margin>=4 and responsive.Margin<=40,"Responsive.Margin must be 4..40")
+    assert(Logic.finite(responsive.LandscapeHeight) and responsive.LandscapeHeight>=0 and responsive.LandscapeHeight<=700,"Responsive.LandscapeHeight must be 0..700")
     assert(Logic.finite(options.Width or 800) and Logic.finite(options.Height or 590),"Window size must be finite")
     local id=tostring(options.Id or "GabibouUI")
     local key=options.ToggleKey or Enum.KeyCode.RightControl
@@ -662,7 +694,7 @@ function Library:CreateWindow(options)
         for _,release in pairs(self._pressedButtons)do release(input)end
     end)
     self:_Connect(UIS.WindowFocusReleased,function()
-        self._gesture=nil;if self._capture then self._capture:_Render();self._capture=nil end
+        self:_ClearPointerGesture();if self._capture then self._capture:_Render();self._capture=nil end
         for _,release in pairs(self._pressedButtons)do release(nil)end
     end)
     -- Typing into any text box ends a pending key capture instead of leaving it stuck.
@@ -829,7 +861,8 @@ function Control:_Layout(mobile)
         self._colorInput.Size=UDim2.new(1,0,0,target)
     end
     local available=math.max(1,self.Window.PageHost.Size.X.Offset-self.Window.Style.RowPadding*2-4)
-    mobile=mobile or rightWidth+140>available or placement=="Below" or (self.Kind=="ColorPicker" and self._expanded==true)
+    -- A switch fits beside its label on phones; wide inputs still stack below.
+    mobile=(mobile and self.Kind~="Toggle")or rightWidth+140>available or placement=="Below" or (self.Kind=="ColorPicker" and self._expanded==true)
     self._text.Position=not mobile and placement=="Left" and UDim2.fromOffset(rightWidth+14,0)or UDim2.new()
     self._text.Size=UDim2.new(1,mobile and 0 or -(rightWidth+14),0,0)
     if mobile then
@@ -850,6 +883,7 @@ function Control:_Layout(mobile)
         elseif self.Kind=="Slider" then
             self._input.Size=UDim2.new(1,0,0,target)
             self.Right.Size=UDim2.new(mobile and 1 or 0,mobile and 0 or rightWidth,0,target+18)
+            self._knob.Size=UDim2.fromOffset(mobile and 20 or 14,mobile and 20 or 14)
         else self._input.Size=UDim2.new(1,0,0,target) end
     end
 end
@@ -869,7 +903,7 @@ function Control:SetEnabled(value)
     if not value then release_focus(self.Root) end
     if not value and self.Window._capture==self then self:_Render();self.Window._capture=nil end
     if not value and self.Window._dropdownControl==self then self.Window:_CloseDropdown() end
-    if not value and self.Window._gesture and self.Window._gesture.control==self then self.Window._gesture=nil end
+    if not value and self.Window._gesture and self.Window._gesture.control==self then self.Window:_ClearPointerGesture()end
     if not value and self.Kind=="ColorPicker" then self._expanded=false;self._paletteBody.Visible=false;self:_Layout(self.Window.Mobile);self._colorInput.TextEditable=false
     elseif value and self.Kind=="ColorPicker" then self._colorInput.TextEditable=self._expanded end
     if self.Kind=="ColorPicker" then self._colorInput.Active=value and self._expanded end
@@ -904,7 +938,7 @@ function Control:Destroy()
     self.Window._pressedButtons[self]=nil
     if self.Window._dropdownControl==self then self.Window:_CloseDropdown() end
     if self.Window._capture==self then self.Window._capture=nil end
-    if self.Window._gesture and self.Window._gesture.control==self then self.Window._gesture=nil end
+    if self.Window._gesture and self.Window._gesture.control==self then self.Window:_ClearPointerGesture()end
     self.Window.Controls[self.Id]=nil
     self.Window:_ForgetTree(self.Root);self.Root:Destroy()
     if self._separator then self.Window:_ForgetTree(self._separator);self._separator:Destroy()end
@@ -1031,9 +1065,9 @@ function Container:Slider(options)
     local control=self:_Row("Slider",options,140,true);control.Min=minimum;control.Max=maximum;control.Step=step;control.Value=initial
     control._value=self.Window:_Label(control.Right,"",12,"Text");control._value.TextXAlignment=Enum.TextXAlignment.Right;control._value.Size=UDim2.new(1,0,0,16);control._value.AutomaticSize=Enum.AutomaticSize.None
     control._input=create("TextButton",{Text="",BackgroundTransparency=1,Size=UDim2.new(1,0,0,28),Position=UDim2.fromOffset(0,17),AutoButtonColor=false,Selectable=true},control.Right)
-    local track=create("Frame",{Size=UDim2.new(1,0,0,5),Position=UDim2.fromOffset(0,11),BorderSizePixel=0},control._input);corner(track,3);self.Window:_Color(track,"BackgroundColor3","Raised")
+    local track=create("Frame",{Size=UDim2.new(1,0,0,5),Position=UDim2.new(0,0,.5,-2),BorderSizePixel=0},control._input);corner(track,3);self.Window:_Color(track,"BackgroundColor3","Raised")
     control._fill=create("Frame",{Size=UDim2.fromScale(0,1),BorderSizePixel=0},track);corner(control._fill,3);self.Window:_Color(control._fill,"BackgroundColor3","Accent")
-    control._knob=create("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromScale(0,.5),AnchorPoint=Vector2.new(.5,.5),BorderSizePixel=0},track);corner(control._knob,7);self.Window:_Color(control._knob,"BackgroundColor3","Accent")
+    control._knob=create("Frame",{Size=UDim2.fromOffset(14,14),Position=UDim2.fromScale(0,.5),AnchorPoint=Vector2.new(.5,.5),BorderSizePixel=0},track);corner(control._knob,10);self.Window:_Color(control._knob,"BackgroundColor3","Accent")
     function control:_Render()
         local ratio=(self.Value-self.Min)/(self.Max-self.Min)
         self._value.Text=string.format("%.4g",self.Value)
@@ -1059,7 +1093,9 @@ function Container:Slider(options)
         if not control.Enabled then return end
         if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
             if self.Window._gesture then return end
-            self.Window._gesture={kind="slider",control=control,input=input};control:_Pointer(input.Position.X)
+            local touch=input.UserInputType==Enum.UserInputType.Touch
+            self.Window._gesture={kind="slider",control=control,input=input,pending=touch,origin=Vector2.new(input.Position.X,input.Position.Y)}
+            if not touch then control:_Pointer(input.Position.X)end
         elseif input.KeyCode==Enum.KeyCode.Left or input.KeyCode==Enum.KeyCode.DPadLeft then control:Set(control.Value-control.Step,true)
         elseif input.KeyCode==Enum.KeyCode.Right or input.KeyCode==Enum.KeyCode.DPadRight then control:Set(control.Value+control.Step,true) end
     end,control)
@@ -1211,7 +1247,7 @@ function Window:Confirm(options)
     assert(options.BeforeConfirm==nil or type(options.BeforeConfirm)=="function","Confirm.BeforeConfirm must be a function")
     if self._modal then return false end
     self:_CancelInteraction(self.Root)
-    self:_CloseDropdown();self._gesture=nil
+    self:_CloseDropdown();self:_ClearPointerGesture()
     if self._capture then self._capture:_Render();self._capture=nil end
     local overlay=create("TextButton",{Name="Confirmation",Text="",AutoButtonColor=false,BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.35,Size=UDim2.fromScale(1,1),ZIndex=50},self.Canvas)
     local popup=create("Frame",{Size=UDim2.new(0,math.min(380,self:_Viewport().X-32),0,0),AutomaticSize=Enum.AutomaticSize.Y,Position=UDim2.fromScale(.5,.5),AnchorPoint=Vector2.new(.5,.5),BorderSizePixel=0,ZIndex=51},overlay)

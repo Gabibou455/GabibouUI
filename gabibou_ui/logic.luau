@@ -1,5 +1,17 @@
 -- Pure, engine-independent rules shared by the library and its tests.
 local Logic = {}
+-- Use the unoccluded safe area for device classification: opening a keyboard
+-- on a desktop/tablet must not turn it into a landscape phone.
+function Logic.mobile(width,safeWidth,safeHeight,touch,responsive)
+    return width<responsive.Breakpoint or (touch and safeWidth>safeHeight
+        and safeHeight<=responsive.LandscapeHeight)
+end
+function Logic.fitPosition(x,y,viewportWidth,viewportHeight,width,height,margin)
+    local minX=math.min(margin,math.max(0,(viewportWidth-width)/2))
+    local minY=math.min(margin,math.max(0,(viewportHeight-height)/2))
+    return math.clamp(x,minX,math.max(minX,viewportWidth-width-minX)),
+        math.clamp(y,minY,math.max(minY,viewportHeight-height-minY))
+end
 function Logic.finite(value)
     return type(value)=="number" and value==value and math.abs(value)<math.huge
 end

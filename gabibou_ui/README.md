@@ -10,6 +10,22 @@ Add the optional appearance editor with `window:Appearance()`. It provides theme
 
 Add named profiles with `window:Presets()`, or use `window:Presets({StorageKey = "my-app"})` when your window has a Read/Write storage adapter. Register searchable actions with `window:Command({...})` and open them from Ctrl+K or `window:OpenCommands()`. The [commands and presets guide](mintlify/customization/commands-and-presets.mdx) and included examples explain each setup.
 
+## Mobile layout
+
+Phone windows adapt automatically in portrait and landscape. Short touch landscapes use horizontal tabs and stacked controls, and compact layouts free space by hiding the subtitle, search box and footer. Tabs remain available above 140 px of usable panel height. Rotation and on-screen keyboard changes bring a dragged panel back inside the safe area.
+
+Sliders distinguish a horizontal adjustment from a vertical page swipe. Tap to select a value, or drag horizontally; vertical swipes leave the value unchanged. Mobile slider knobs are larger, with a hit area of at least 44 px. Toggles stay beside their labels when there is enough room, saving vertical space; wide inputs stack below their labels.
+
+```lua
+local window = UI:CreateWindow({
+    Title = "My project",
+    Responsive = {TouchTarget = 48, Margin = 12, LandscapeHeight = 500},
+    Layout = {MobileTabPosition = "Bottom"},
+})
+```
+
+`LandscapeHeight` is the maximum safe screen height that selects the mobile layout on a touch landscape (default 500 px, range 0–700; use 0 to disable this extra rule). Opening a tablet's keyboard does not change its device classification. Local geometry and gesture regression tests cover these changes; Roblox rendering and physical phone gestures still need device testing.
+
 ## Remote loading from GitHub
 
 For client environments that expose `loadstring` and `game:HttpGet`, load the standalone module without installing it:

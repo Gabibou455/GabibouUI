@@ -83,7 +83,7 @@ function Window:_Arrange(width,height,mobile,compact,tiny,minimal)
     local l=self.Layout
     self.Panel.BackgroundTransparency=l.PanelTransparency
     local pad=l.ContentPadding
-    local header=l.ShowHeader and not minimal and l.HeaderHeight or 0
+    local header=l.ShowHeader and not minimal and (compact and math.min(l.HeaderHeight,64)or l.HeaderHeight)or 0
     local footerText={}
     if self.ShowWatermark then footerText[#footerText+1]="Gabibou UI  "..Library.Version end
     if not mobile then footerText[#footerText+1]=self.ToggleKey.Name.." to hide" end
@@ -92,8 +92,8 @@ function Window:_Arrange(width,height,mobile,compact,tiny,minimal)
     local footerBrand=not tiny and width>=320 and l.ShowFooter and
         (brandingPlacement=="BottomRight" or brandingPlacement=="BothRight")
     local footerHasContent=#footerText>0 or footerBrand
-    local footer=l.ShowFooter and not tiny and footerHasContent and l.FooterHeight or (tiny and 12 or pad)
-    local placement=mobile and l.MobileTabPosition or l.TabPosition
+    local footer=l.ShowFooter and not compact and footerHasContent and l.FooterHeight or pad
+    local placement=(mobile or tiny)and l.MobileTabPosition or l.TabPosition
     local horizontal=placement=="Top"or placement=="Bottom"
     if self.HorizontalTabs~=horizontal then self.Nav.CanvasPosition=Vector2.zero end
     self.HorizontalTabs=horizontal;self.TabPlacement=placement
@@ -103,15 +103,18 @@ function Window:_Arrange(width,height,mobile,compact,tiny,minimal)
     for _,tab in ipairs(self.Tabs)do tabHeight=math.max(tabHeight,tab.Layout.Height or 0)end
     local rail=math.min(l.SidebarWidth,math.max(1,width-pad*2-l.ContentGap-100))
     local railX=placement=="Right"and width-pad-rail or pad
-    self.Header.Position=UDim2.fromOffset(pad,9);self.Header.Visible=l.ShowHeader and not minimal
-    for _,button in ipairs(self._windowButtons)do button.Visible=l.ShowHeader and not minimal end
+    self.Header.Position=UDim2.fromOffset(pad,compact and 2 or 9);self.Header.Visible=l.ShowHeader and not minimal
+    for index,button in ipairs(self._windowButtons)do
+        button.Visible=l.ShowHeader and not minimal
+        button.Position=UDim2.new(1,index==1 and -104 or -54,0,compact and 8 or 16)
+    end
     self.Search.Visible=showSearch
     self.Search.Position=UDim2.fromOffset(horizontal and pad or railX,header+(horizontal and 0 or 16))
     self.Search.Size=UDim2.fromOffset(horizontal and math.max(1,width-pad*2)or rail,searchHeight)
     local navY=header+(showSearch and(searchHeight+l.SearchGap+(horizontal and 0 or 16))or 0)
-    local contentX=(not horizontal and not tiny and placement=="Left")and pad+rail+l.ContentGap or pad
-    local contentWidth=math.max(1,width-pad*2-((not horizontal and not tiny)and(rail+l.ContentGap)or 0))
-    self.Nav.Visible=not tiny
+    local contentX=(not horizontal and not minimal and placement=="Left")and pad+rail+l.ContentGap or pad
+    local contentWidth=math.max(1,width-pad*2-((not horizontal and not minimal)and(rail+l.ContentGap)or 0))
+    self.Nav.Visible=not minimal
     self.Nav.Position=UDim2.fromOffset(horizontal and pad or railX,placement=="Bottom"and math.max(header,height-footer-tabHeight-l.SearchGap)or navY)
     self.Nav.Size=UDim2.fromOffset(horizontal and math.max(1,width-pad*2)or rail,horizontal and tabHeight+4 or math.max(1,height-navY-footer))
     self.Nav.ScrollingDirection=horizontal and Enum.ScrollingDirection.X or Enum.ScrollingDirection.Y
@@ -122,12 +125,11 @@ function Window:_Arrange(width,height,mobile,compact,tiny,minimal)
     self.PageTitle.Visible=showTitle;self.PageTitle.Position=UDim2.fromOffset(contentX,header+16);self.PageTitle.Size=UDim2.fromOffset(contentWidth,math.max(1,l.PageTitleHeight-12))
     local pageY
     if minimal then pageY=math.min(12,math.max(0,height-1))
-    elseif tiny then pageY=l.ShowHeader and math.min(70,height-1)or pad
     elseif horizontal then pageY=placement=="Top"and navY+tabHeight+14 or header+(showSearch and searchHeight+l.SearchGap or pad)
     else pageY=header+(showTitle and l.PageTitleHeight+16 or 0)end
-    local bottomReserve=footer+(placement=="Bottom"and not tiny and tabHeight+l.SearchGap or 0)
+    local bottomReserve=footer+(placement=="Bottom"and not minimal and tabHeight+l.SearchGap or 0)
     self.PageHost.Position=UDim2.fromOffset(contentX,pageY);self.PageHost.Size=UDim2.fromOffset(contentWidth,math.max(1,height-pageY-bottomReserve))
-    self.Footer.Visible=l.ShowFooter and not tiny and #footerText>0
+    self.Footer.Visible=l.ShowFooter and not compact and #footerText>0
     for _,tab in ipairs(self.Tabs)do local flow=tab.Page:FindFirstChildOfClass("UIListLayout");if flow then flow.Padding=UDim.new(0,l.SectionGap)end end
 end
 function Control:SetLayout(options)

@@ -121,7 +121,7 @@ function Window:_LayoutBranding(width, height, minimal, tiny)
     local compactLogo = width < 320
     local showMark = branding.Placement == "TopLeft" and not compactLogo
     local showTop = hasTopRight(branding.Placement) and not compactLogo and not minimal and self.Layout.ShowHeader
-    local showBottom = hasBottomRight(branding.Placement) and not compactLogo and not tiny and self.Layout.ShowFooter
+    local showBottom = hasBottomRight(branding.Placement) and not compactLogo and height>=420 and not tiny and self.Layout.ShowFooter
     self.Mark.Visible = showMark
     self.Header.Size = UDim2.new(1, showTop and -188 or -112, 0, 60)
 
@@ -134,7 +134,7 @@ function Window:_LayoutBranding(width, height, minimal, tiny)
 
     if self._brandTop then
         self._brandTop.Frame.Visible = showTop
-        self._brandTop.Frame.Position = UDim2.new(1, -158, 0, 18)
+        self._brandTop.Frame.Position = UDim2.new(1, -158, 0, height<420 and 8 or 18)
     end
     if self._brandBottom then
         self._brandBottom.Frame.Visible = showBottom

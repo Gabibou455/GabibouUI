@@ -1,5 +1,15 @@
 # Quality status: 1.5.0-rc.26
 
+## Current main: mobile improvements — 2026-11-05
+
+Standalone SHA-256: `80fa6d1c9d2ba86d6417e98847f901b801f7c575dd780b87265313855b9f15b7`.
+
+The current main branch adds touch landscape detection, safe-area recovery after rotation or keyboard changes, compact headers with accessible tabs on short screens, slider gesture intent handling and inline phone toggles when space permits. `Responsive.LandscapeHeight` defaults to 500 px; 0 disables the additional touch landscape rule. The existing rc.26 release tag is unchanged.
+
+Validation on the modified production Luau code: 50 mobile geometry and gesture assertions passed using lightweight GUI data objects; 42 logic scenarios passed; 10 drag wiring checks and the Luau bounds/pointer harness passed. The standalone module, demo and four modified source files compiled with official Luau. The standalone build is deterministic. All 28 Mintlify pages compiled, with 28 navigation pages and no broken local links detected.
+
+The mobile checks cover ten viewport sizes, portrait/landscape rotation, tablet keyboard classification, top/bottom tabs, slider pointer ownership, tap versus scroll intent, restoration of page scrolling and compact toggle placement. No Roblox client or Studio instance was connected for this update. Native event routing, rendering, physical phone gestures and keyboard behavior remain unverified. These results do not establish a bug-free library.
+
 ## Release candidate: rc.26
 
 Standalone SHA-256: `341c5c013a0b84b38f76257578703e8bc7df10cf27f6f3a62969a39d482c3d77`.

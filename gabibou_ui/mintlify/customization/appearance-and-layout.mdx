@@ -39,7 +39,11 @@ For valid values and ranges, see [API reference](/reference/api). Reduced motion
 
 ## Responsive settings
 
-Responsive layout is enabled by default. `Responsive` accepts a table with `Breakpoint` (320–1000 px; default 620), `TouchTarget` (44–72 px; default 44), and `Margin` (4–40 px; default 12). The library adapts navigation and controls to window size, safe insets, and the on-screen keyboard. Test your own custom content on the devices you support; automated layouts do not verify physical-device input.
+Responsive layout is enabled by default. `Responsive` accepts a table with `Breakpoint` (320–1000 px; default 620), `TouchTarget` (44–72 px; default 44), `Margin` (4–40 px; default 12), and `LandscapeHeight` (0–700 px; default 500). A touch screen in landscape uses mobile navigation when its safe height is at most `LandscapeHeight`, even when the window exceeds the width breakpoint. Set this option to 0 to disable the extra landscape rule. Classification uses the safe screen before keyboard occlusion, so opening a tablet's keyboard does not classify it as a phone.
+
+Rotation and keyboard changes recover the whole panel inside the safe area. Short layouts reduce header space and hide the subtitle, search and footer; tabs remain visible when at least 140 px of panel height is available. Mobile sliders have larger knobs: horizontal drags adjust their value, vertical swipes scroll the page without changing it, and taps select a value on release. The page's previous scrolling state is restored when a horizontal slider drag ends or is cancelled.
+
+The library adapts navigation and controls to window size, safe insets, and the on-screen keyboard. Test your own custom content on the devices you support; automated layouts do not verify physical-device input.
 
 ## Layout options
 
