@@ -1,39 +1,39 @@
 ---
-title: "Options et valeurs par défaut"
-description: "Guide pratique Gabibou UI : options et valeurs par défaut"
+title: "Options and defaults"
+description: "Practical Gabibou UI guide: options and defaults"
 ---
 
 {/* Generated from docs/reference/options.md by sync_docs.cjs. */}
 
-Ces tableaux sont générés depuis les fichiers Luau par `node gabibou_ui/sync_docs.cjs`. Ils décrivent les sources de ce dépôt.
+These tables are generated from production Luau sources by `node gabibou_ui/sync_docs.cjs`. They describe the source in this repository.
 
-## Fenêtre
+## Window
 
-`UI:CreateWindow(title, options)` accepte notamment `Id`, `Title`, `Subtitle`, `Design`, `Theme`, `Style`, `Motion`, `Branding`, `Layout`, `Navigation`, `Notifications`, `Responsive`, `Width`, `Height`, `Position`, `AnchorPoint`, `ToggleKey`, `ShowWatermark`, `ReducedMotion`, `Parent`, `DisplayOrder`, `DiscordPrompt` et `Storage`.
+`UI:CreateWindow(title, options)` accepts `Id`, `Title`, `Subtitle`, `Design`, `Theme`, `Style`, `Motion`, `Branding`, `Layout`, `Navigation`, `Notifications`, `Responsive`, `Width`, `Height`, `Position`, `AnchorPoint`, `ToggleKey`, `ShowWatermark`, `ReducedMotion`, `Parent`, `DisplayOrder`, `DiscordPrompt` and `Storage`.
 
-| Option | Défaut et limites |
+| Option | Default and limits |
 |---|---|
-| `Width`, `Height` | 800 × 590 ; bornés à 320–1400 et 300–1000 px |
-| `Theme` | `Graphite` ; accepte aussi `Aurora`, `Ember` ou une table de couleurs |
+| `Width`, `Height` | 800 x 590; clamped to 320-1400 and 300-1000 px |
+| `Theme` | `Graphite`; also accepts `Aurora`, `Ember` or a color-token table |
 | `ToggleKey` | `Enum.KeyCode.RightControl` |
 | `DisplayOrder` | 90 |
 | `ShowWatermark` | `true` |
-| `Parent` | `PlayerGui` du joueur local |
+| `Parent` | Local player's `PlayerGui` |
 
 ## Responsive
 
-| Option | Valeur par défaut |
+| Option | Default |
 |---|---|
 | `Breakpoint` | `620` |
 | `TouchTarget` | `44` |
 | `Margin` | `12` |
 | `LandscapeHeight` | `500` |
 
-Plages : `Breakpoint` 320–1000, `TouchTarget` 44–72, `Margin` 4–40, `LandscapeHeight` 0–700. Pour les gestes et orientations : [Apparence et mobile](/customization/appearance-and-layout).
+Ranges: `Breakpoint` 320-1000, `TouchTarget` 44-72, `Margin` 4-40, `LandscapeHeight` 0-700. For gestures and orientation changes, see [Appearance and mobile](/customization/appearance-and-layout).
 
-## Disposition : `Layout`
+## Layout
 
-| Option | Défaut | Plage ou choix |
+| Option | Default | Range or choices |
 |---|---|---|
 | `TabPosition` | `"Left"` | Left, Right, Top, Bottom |
 | `MobileTabPosition` | `"Top"` | Top, Bottom |
@@ -55,16 +55,16 @@ Plages : `Breakpoint` 320–1000, `TouchTarget` 44–72, `Margin` 4–40, `Lands
 | `SectionGap` | `12` | 0–48 |
 | `PanelTransparency` | `.06` | 0–1 |
 | `ControlsPosition` | `"Right"` | Left, Right, Below |
-| `Draggable` | `true` | Booléen |
-| `Resizable` | `true` | Booléen |
-| `ShowSearch` | `true` | Booléen |
-| `ShowFooter` | `true` | Booléen |
-| `ShowHeader` | `true` | Booléen |
-| `ShowPageTitle` | `true` | Booléen |
+| `Draggable` | `true` | Boolean |
+| `Resizable` | `true` | Boolean |
+| `ShowSearch` | `true` | Boolean |
+| `ShowFooter` | `true` | Boolean |
+| `ShowHeader` | `true` | Boolean |
+| `ShowPageTitle` | `true` | Boolean |
 
-## Style : `Style`
+## Style
 
-| Option | Valeur par défaut |
+| Option | Default |
 |---|---|
 | `Font` | `Enum.Font.Gotham` |
 | `FontBold` | `Enum.Font.GothamBold` |
@@ -76,9 +76,9 @@ Plages : `Breakpoint` 320–1000, `TouchTarget` 44–72, `Margin` 4–40, `Lands
 | `ControlRadius` | `8` |
 | `RowPadding` | `12` |
 
-## Animation : `Motion`
+## Motion
 
-| Option | Valeur par défaut |
+| Option | Default |
 |---|---|
 | `Duration` | `0.16` |
 | `Style` | `Enum.EasingStyle.Quad` |
@@ -87,16 +87,16 @@ Plages : `Breakpoint` 320–1000, `TouchTarget` 44–72, `Margin` 4–40, `Lands
 | `Reverses` | `false` |
 | `Delay` | `0` |
 
-## Navigation : `Navigation`
+## Navigation
 
-| Option | Valeur par défaut |
+| Option | Default |
 |---|---|
 | `Variant` | `"Soft"` |
 | `IconVariant` | `"Outline"` |
 
-## Notifications : `Notifications`
+## Notifications
 
-| Option | Valeur par défaut |
+| Option | Default |
 |---|---|
 | `Position` | `"BottomRight"` |
 | `Width` | `340` |
@@ -107,16 +107,16 @@ Plages : `Breakpoint` 320–1000, `TouchTarget` 44–72, `Margin` 4–40, `Lands
 | `ShowProgress` | `true` |
 | `AnimationDuration` | `.18` |
 
-## Limites des options locales
+## Local layout limits
 
-Les contrôles acceptent `Layout = {Order, Width, Height, Position}`. `Order` est un entier entre -100000 et 100000, `Width` vaut 58–600 px, `Height` 44–160 px et `Position` accepte `Left`, `Right` ou `Below`. Les onglets acceptent `Order`, `Width`, `Height` et `IconSize` (12–40 px).
+Controls accept `Layout = {Order, Width, Height, Position}`. `Order` is an integer from -100000 to 100000, `Width` is 58-600 px, `Height` is 44-160 px and `Position` accepts `Left`, `Right` or `Below`. Tabs accept `Order`, `Width`, `Height` and `IconSize` (12-40 px).
 
-Les tailles de texte du style acceptent 10–32 ; les rayons 0–32 ; `RowPadding` 8–32. Les options de disposition et de style hors plage sont rejetées. `Duration` et `Delay` acceptent 0–30 secondes ; `RepeatCount` est un entier entre -1 et 100.
+Style text sizes accept 10-32, corner radii 0-32, and `RowPadding` 8-32. Out-of-range layout and style options are rejected. `Duration` and `Delay` accept 0-30 seconds; `RepeatCount` is an integer from -1 to 100.
 
-## Couleurs et icônes
+## Colors and icons
 
-Les tokens du thème sont `Background`, `Surface`, `Raised`, `Hover`, `Border`, `Text`, `Muted`, `Accent`, `AccentText`, `Success`, `Danger`. Une table de thème partielle complète ses couleurs avec celles de Graphite.
+Theme tokens are `Background`, `Surface`, `Raised`, `Hover`, `Border`, `Text`, `Muted`, `Accent`, `AccentText`, `Success`, `Danger`. Partial theme tables inherit omitted colors from Graphite.
 
-`Branding` accepte `Mode` (Initials, Avatar, Image), `Placement` (TopLeft, TopRight, BottomRight, BothRight), `Text`, `Image` et `UserId`. Les variantes d’icônes sont `Outline`, `Soft`, `Duotone`. Voir [Icônes](/reference/icon-catalogue).
+`Branding` accepts `Mode` (Initials, Avatar, Image), `Placement` (TopLeft, TopRight, BottomRight, BothRight), `Text`, `Image` and `UserId`. Icon variants are `Outline`, `Soft`, `Duotone`. See [Icons](/reference/icon-catalogue).
 
-Pour les méthodes : [API](/reference/api). Pour une option spécialisée de fournisseur, consulte aussi les exemples de raccordement du dépôt.
+See [API methods](/reference/api) for available calls and repository examples for provider-specific integration options.

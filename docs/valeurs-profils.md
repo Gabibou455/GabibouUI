@@ -1,75 +1,71 @@
-# Valeurs et profils
+# Values and profiles
 
-## Lire et changer un réglage
+## Read and update a setting
 
-Ce bloc suppose que `tab` et `window` existent :
+Use an existing `window` and `tab`:
 
 ```lua
 local volume = tab:Slider("Volume", {
     Id = "volume", Min = 0, Max = 100, Value = 50,
 }, function(value)
-    print("Nouveau volume :", value)
+    print("New volume:", value)
 end)
-
 print(volume:Get())
-volume:Set(75)       -- modifie sans callback
-volume:Set(30, true) -- appelle la callback si la valeur change
+volume:Set(75)       -- update silently
+volume:Set(30, true) -- callback runs if the value changes
 ```
 
-La callback ne s’exécute pas à la création. Si tu dois initialiser un système avec une valeur, applique aussi cette valeur explicitement dans ton code de démarrage.
+Creation does not run callbacks. Initialize your project behavior explicitly with the starting value when needed.
 
-## Retrouver un composant par son ID
+## Find a control
 
 ```lua
 local control = window:Get("volume")
 if control then
     control:SetEnabled(false)
-    control:SetTitle("Volume verrouillé")
+    control:SetTitle("Volume locked")
 end
 ```
 
-`Get(id)` retourne `nil` si l’ID n’existe pas. Les identifiants doivent être uniques dans la fenêtre. Fixe-les explicitement si tu veux conserver les mêmes noms entre deux versions du menu.
+`Get(id)` returns `nil` for unknown IDs. Use explicit, unique IDs when you need stable names across menu versions.
 
-## Lire et appliquer plusieurs valeurs
+## Apply several values
 
 ```lua
 local values = window:GetValues()
 print(values.volume)
-
 window:SetValues({volume = 50}, true)
 ```
 
-`GetValues()` renvoie une copie des valeurs persistantes. Les boutons et paragraphes n’y figurent pas. `SetValues` valide tous les IDs et toutes les valeurs avant de les appliquer ; un ID inconnu ou une valeur invalide rejette l’opération. Son deuxième argument active les callbacks pour les valeurs modifiées.
+`GetValues()` returns a copy of persistent values; buttons and paragraphs are excluded. `SetValues` validates every ID and value before applying changes. Unknown IDs or invalid values reject the operation. Its second argument enables callbacks for changed values.
 
-## Ajouter des profils nommés
+## Add named profiles
 
-Ajoute l’éditeur après la création de tes réglages :
+After creating your controls:
 
 ```lua
-window:Presets({Title = "Profils"})
+window:Presets({Title = "Profiles"})
 ```
 
-Le joueur peut enregistrer, charger et supprimer un profil depuis cet onglet. Le bouton **Load** de cet éditeur restaure les champs sans appeler leurs callbacks. Pour appliquer les réglages au comportement du jeu, fournis une action qui lit `GetValues()` et applique ces valeurs, comme dans [l’exemple complet](exemple-complet.md). Depuis le code, utilise `LoadPreset(name, true)` pour lancer les callbacks :
+The editor lets players save, load and delete profiles. Its **Load** button restores controls silently. Provide an Apply action that reads `GetValues()` to apply them to game behavior, as in the [complete example](exemple-complet.md). From code, pass `true` to run callbacks:
 
 ```lua
-local saved, reason = window:SavePreset("defaut")
+local saved, reason = window:SavePreset("default")
 if not saved then warn(reason) end
-
-local loaded, result = window:LoadPreset("defaut", true)
+local loaded, result = window:LoadPreset("default", true)
 if not loaded then warn(result) end
-
 print(window:GetPresetNames())
 ```
 
-Les noms acceptent 1–48 lettres, chiffres, `_` ou `-`. Sans stockage configuré, les profils restent en mémoire jusqu’à la destruction de la fenêtre. Le chargement ne lance les callbacks que si tu passes explicitement `true`.
+Names accept 1-48 letters, digits, `_` or `-`. Without storage, profiles remain in memory until window destruction. Loading runs callbacks only when explicitly passed `true`.
 
-## Exporter et restaurer un JSON
+## Export JSON
 
 ```lua
 local json = window:ExportConfig()
 window:ImportConfig(json, true)
 ```
 
-Le JSON contient les valeurs persistantes et le nom du thème intégré. Importer avec `true` appelle les callbacks des contrôles importés après application ; contrairement à `SetValues`, l’import n’émet pas l’événement `Changed` du contrôle. Les IDs absents de la fenêtre sont ignorés ; une valeur invalide pour un ID présent rejette l’import.
+JSON contains persistent values and the built-in theme name. Import with `true` calls imported controls' callbacks after applying values, but does not emit their `Changed` events. IDs absent from the window are ignored; invalid values for matching IDs reject import.
 
-Pour persister entre plusieurs lancements, fournis à la fenêtre un adaptateur `Storage = {Read = ..., Write = ...}`, puis configure `window:Presets({StorageKey = "mon_menu"})` **avant** de créer des profils. `Read(path)` doit renvoyer le JSON ou `nil` si absent ; `Write(path, contents)` écrit le JSON et signale ses échecs. Gabibou UI ne choisit pas de stockage à ta place. Dans Studio, les opérations DataStore passent par ton serveur, pas directement par un LocalScript.
+To persist across launches, provide `Storage = {Read = ..., Write = ...}` to the window and configure `window:Presets({StorageKey = "my_menu"})` **before** creating profiles. `Read(path)` returns JSON or `nil` if missing; `Write(path, contents)` writes JSON and reports failures. Gabibou UI does not choose storage automatically. In Studio, DataStore operations belong on your server, not in a LocalScript.

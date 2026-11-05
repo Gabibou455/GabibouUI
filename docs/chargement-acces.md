@@ -1,70 +1,67 @@
-# Chargement et accès par clé
+# Loading and key access
 
-Ces fonctionnalités sont facultatives. Un menu simple peut être créé directement avec [Démarrer](demarrer.md).
+These features are optional. A basic menu can use [Getting started](demarrer.md) directly.
 
-## Afficher la progression de la construction du menu
+## Show menu construction progress
 
-Après avoir chargé `UI`, ce bloc crée sa propre fenêtre :
+After loading `UI`, this block creates its own window:
 
 ```lua
 local window = UI:Create({
-    Id = "LoadedMenu",
-    Title = "Mon menu",
-    Loading = {Title = "Préparation", Variant = "Compact"},
+    Id = "LoadedMenu", Title = "My menu",
+    Loading = {Title = "Preparing", Variant = "Compact"},
     Tabs = {{
-        Title = "Accueil",
-        Icon = "home",
+        Title = "Home", Icon = "home",
         Controls = {{
-            Type = "Toggle", Id = "effects", Title = "Effets", Value = true,
-            Callback = function(enabled) print("Effets :", enabled) end,
+            Type = "Toggle", Id = "effects", Title = "Effects", Value = true,
+            Callback = function(enabled) print("Effects:", enabled) end,
         }},
     }},
 })
 ```
 
-`UI:Create` construit la fenêtre à partir d’une table. Chaque contrôle déclaratif doit posséder un `Id` unique. Son loader mesure la construction des composants.
+`Create` builds from a table. Every declarative control needs a unique `Id`. Its loader reports control construction progress.
 
-## Piloter un loader séparé
+## Drive a separate loader
 
 ```lua
-local loader = UI:CreateLoader({Title = "Préparation", Variant = "Centered", Height = 300})
-loader:SetProgress(0.25, "Lecture des préférences")
-loader:SetStatus("Préparation du menu")
-loader:Complete("Prêt")
+local loader = UI:CreateLoader({Title = "Preparing", Variant = "Centered", Height = 300})
+loader:SetProgress(0.25, "Reading preferences")
+loader:SetStatus("Preparing the menu")
+loader:Complete("Ready")
 ```
 
-Cet exemple montre les appels ; remplace les étapes par tes tâches réelles. Le pourcentage représente le travail annoncé par ton code. Les variantes sont `Compact`, `Centered` et `Minimal`. `SetProgress` accepte de 0 à 1. `Complete` termine puis détruit le loader ; `Destroy` l’annule.
+Replace these demonstration steps with real tasks. Progress represents work reported by your code. Variants are `Compact`, `Centered`, `Minimal`. `SetProgress` accepts 0-1; `Complete` finishes and destroys the loader; `Destroy` cancels it.
 
-## Valider une clé avec un serveur Roblox
+## Validate a key on a Roblox server
 
-Le contrat est simple : `Validate(key)` renvoie `true, result` pour accepter ou `false, message` pour refuser. La bibliothèque ne fournit pas ton système d’authentification.
+`Validate(key)` returns `true, result` to accept or `false, message` to reject. The library does not supply your authentication system.
 
-Dans Studio, le dépôt fournit deux scripts complémentaires :
+For Studio:
 
-1. Copie [key_server.example.luau](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/key_server.example.luau) dans un **Script** sous `ServerScriptService`. Remplace la clé `CHANGE_ME` dans ce script serveur.
-2. Copie [starter.luau](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/starter.luau) dans un **LocalScript** sous `StarterPlayerScripts` et conserve `ReplicatedStorage.GabibouUI`.
+1. Copy [key_server.example.luau](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/key_server.example.luau) into a Script under `ServerScriptService`. Replace `CHANGE_ME` in that server script.
+2. Copy [starter.luau](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/starter.luau) into a LocalScript under `StarterPlayerScripts`, keeping `ReplicatedStorage.GabibouUI` installed.
 
-Le script serveur crée `GabibouValidateKey`. Une fois ce serveur configuré, voici le raccordement client minimal après le chargement de `UI` :
+The server creates `GabibouValidateKey`. Once configured, client wiring after loading `UI` can use:
 
 ```lua
 local validateKey = game:GetService("ReplicatedStorage"):WaitForChild("GabibouValidateKey")
-
 UI:CreateKeySystem({
-    Title = "Accès au menu",
+    Title = "Menu access",
     Validate = function(key)
         return validateKey:InvokeServer(key)
     end,
     OnSuccess = function()
-        local window = UI:CreateWindow("Mon menu")
-        window:Tab("Accueil", "home"):Paragraph("Accès validé")
+        local window = UI:CreateWindow("My menu")
+        window:Tab("Home", "home"):Paragraph("Access granted")
     end,
 })
 ```
 
-Les clés et les décisions d’autorisation restent sur le serveur. Le dialogue client affiche un résultat ; chaque action serveur protégée doit vérifier l’autorisation du joueur.
+Keep keys and authorization decisions on the server. The client displays a result; every protected server action must check authorization.
 
-## Utiliser un fournisseur existant
+## Existing providers
 
-`UI:KeyProvider(name, options)` adapte un SDK que **tu fournis** en callback `Validate`. Noms pris en charge : `Luarmor`, `Vampauth`, `KeyAuth`, `Custom`. Il ne télécharge pas les SDK. Les [exemples de fournisseurs](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/mintlify/examples/key-providers.mdx) détaillent leurs options.
+`UI:KeyProvider(name, options)` adapts an SDK **you supply** into a `Validate` callback. Providers: `Luarmor`, `Vampauth`, `KeyAuth`, `Custom`. It does not download SDKs. See [provider examples](https://github.com/Gabibou455/GabibouUI/blob/main/gabibou_ui/mintlify/examples/key-providers.mdx).
 
-`UI:Launch(spec)` enchaîne une éventuelle validation de clé, les étapes `Steps`, le chargement et la création déclarative de la fenêtre. La session retournée expose `Status`, `Window`, `Loader`, `Gate`, `Cancel()` et `Destroy()`.
+`UI:Launch(spec)` coordinates key validation, `Steps`, loading and declarative creation. Its session exposes `Status`, `Window`, `Loader`, `Gate`, `Cancel()` and `Destroy()`.

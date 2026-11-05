@@ -1,31 +1,29 @@
-# Gabibou UI en une minute
+# Gabibou UI in one minute
 
-Gabibou UI construit des menus Roblox en Luau : fenêtres, onglets, boutons, réglages et notifications. L’affichage s’adapte au bureau et au mobile.
+Gabibou UI builds Roblox menus in Luau: windows, tabs, buttons, settings and notifications. It adapts to desktop and mobile screens.
 
-**Pour commencer, copie [l’exemple complet](exemple-complet.md).** Il contient le chargement de la bibliothèque, une fenêtre, des réglages fonctionnels et un bouton de réinitialisation.
+**Start with the [complete example](exemple-complet.md).** Copy one script to get working settings, a theme selector and a reset button.
 
-Les trois objets à connaître :
-
-| Objet | Ce qu’il représente | Exemple |
+| Object | What it represents | Example |
 |---|---|---|
-| `UI` | La bibliothèque chargée | `UI:CreateWindow("Mon menu")` |
-| `window` | Une fenêtre avec ses onglets | `window:Tab("Réglages", "settings")` |
-| `tab` ou `section` | L’endroit où ajouter des composants | `tab:Button("Bonjour", function() print("Bonjour") end)` |
+| `UI` | The loaded library | `UI:CreateWindow("My menu")` |
+| `window` | A window containing tabs | `window:Tab("Settings", "settings")` |
+| `tab` or `section` | Where you add controls | `tab:Button("Hello", function() print("Hello") end)` |
 
-Une **callback** est la fonction appelée lorsque le joueur utilise un composant. Un toggle lui transmet `true` ou `false`, un slider lui transmet un nombre.
+A **callback** runs when a player uses a control. A toggle passes `true` or `false`; a slider passes a number.
 
-## Trouver directement la bonne page
+## Find what you need
 
-| Je veux… | Page |
+| I want to... | Page |
 |---|---|
-| Installer la lib dans Studio ou la charger à distance | [Démarrer](demarrer.md) |
-| Copier un menu entier | [Exemple complet](exemple-complet.md) |
-| Ajouter un toggle, slider, dropdown ou champ de texte | [Composants](composants.md) |
-| Changer le thème, les onglets ou le comportement mobile | [Apparence et mobile](apparence-mobile.md) |
-| Lire une valeur, la changer ou enregistrer un profil | [Valeurs et profils](valeurs-profils.md) |
-| Afficher un message ou une confirmation | [Notifications et commandes](notifications-commandes.md) |
-| Ajouter un loader ou une saisie de clé | [Chargement et accès](chargement-acces.md) |
-| Comprendre une erreur | [Dépannage](depannage.md) |
-| Retrouver une méthode ou une valeur exacte | [API](reference/api.md) · [Options](reference/options.md) · [Icônes](reference/icones.md) |
+| Install the library | [Getting started](demarrer.md) |
+| Copy a working menu | [Complete example](exemple-complet.md) |
+| Add buttons, toggles, sliders or inputs | [Controls](composants.md) |
+| Change the theme or mobile layout | [Appearance and mobile](apparence-mobile.md) |
+| Read values and save profiles | [Values and profiles](valeurs-profils.md) |
+| Show messages or confirmations | [Notifications and commands](notifications-commandes.md) |
+| Add a loader or key screen | [Loading and access](chargement-acces.md) |
+| Fix a problem | [Troubleshooting](depannage.md) |
+| Find a method or exact default | [API](reference/api.md) / [Options](reference/options.md) / [Icons](reference/icones.md) |
 
-Les guides décrivent la branche `main` du [dépôt GabibouUI](https://github.com/Gabibou455/GabibouUI). Une version installée depuis un ancien tag peut avoir moins de fonctionnalités.
+These guides describe `main` in the [GabibouUI repository](https://github.com/Gabibou455/GabibouUI). An older installed tag may support fewer features.

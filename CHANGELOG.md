@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — English documentation
+
+- Publish the primary guide, navigation, generated references and complete example in English.
+- Keep the existing document paths and hosted routes so shared links continue to work.
+
 ## Unreleased — documentation
 
 - Add a French, GitBook-compatible guide with a clear start page, a complete downloadable menu, component examples, mobile guidance and troubleshooting.

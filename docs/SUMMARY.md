@@ -1,22 +1,22 @@
-# Sommaire
+# Summary
 
-## Commencer
+## Get started
 
-* [Gabibou UI en une minute](README.md)
-* [Installer et créer son menu](demarrer.md)
-* [Exemple complet à copier](exemple-complet.md)
+* [Gabibou UI in one minute](README.md)
+* [Install and create a menu](demarrer.md)
+* [Complete example to copy](exemple-complet.md)
 
-## Construire son interface
+## Build your interface
 
-* [Boutons et composants](composants.md)
-* [Apparence et mobile](apparence-mobile.md)
-* [Valeurs et profils](valeurs-profils.md)
-* [Notifications et commandes](notifications-commandes.md)
-* [Chargement et accès par clé](chargement-acces.md)
-* [Résoudre un problème](depannage.md)
+* [Buttons and controls](composants.md)
+* [Appearance and mobile](apparence-mobile.md)
+* [Values and profiles](valeurs-profils.md)
+* [Notifications and commands](notifications-commandes.md)
+* [Loading and key access](chargement-acces.md)
+* [Troubleshooting](depannage.md)
 
-## Référence
+## Reference
 
-* [Méthodes de l’API](reference/api.md)
-* [Options et valeurs par défaut](reference/options.md)
-* [Catalogue des icônes](reference/icones.md)
+* [API methods](reference/api.md)
+* [Options and defaults](reference/options.md)
+* [Icon catalogue](reference/icones.md)

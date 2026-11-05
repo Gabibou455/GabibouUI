@@ -1,25 +1,25 @@
-# Maintenir et publier la documentation
+# Maintain and publish documentation
 
-La source du guide utilisateur français est `docs/`, en Markdown compatible GitBook. Les sections d’options et le catalogue sont générés depuis les sources Luau. `gabibou_ui/mintlify` reste la racine de la documentation déjà hébergée et reçoit les mêmes guides par génération.
+The English user guide lives in `docs/` as GitBook-compatible Markdown. Default tables and the icon catalogue are generated from Luau source. `gabibou_ui/mintlify` receives the same guides for the existing hosted documentation.
 
-## Modifier les guides
+## Edit the guide
 
-1. Modifie les Markdown dans `docs/`. Pour le menu complet, modifie `docs/examples/menu-complet.luau`.
-2. Lance `node gabibou_ui/sync_docs.cjs` depuis la racine du dépôt.
-3. Lance `node gabibou_ui/check_docs.cjs`. Définis `LUAU_COMPILE_BIN` vers l’exécutable officiel Luau pour compiler les exemples en plus des vérifications documentaires.
-4. Commits et push sur `main` mettent à jour les fichiers suivis par la documentation hébergée. Vérifie son déploiement avant d’annoncer une publication réussie.
+1. Edit Markdown in `docs/`. For the complete menu, edit `docs/examples/menu-complet.luau`.
+2. Run `node gabibou_ui/sync_docs.cjs` from the repository root.
+3. Run `node gabibou_ui/check_docs.cjs`. Set `LUAU_COMPILE_BIN` to the official Luau compiler to include snippet compilation.
+4. Commit and push to `main`, then verify the hosted deployment before reporting it as published.
 
-Ne modifie pas manuellement les pages Mintlify portant le commentaire `Generated from docs/`. Les liens internes du Markdown sont transformés vers leurs routes Mintlify, et les sources restent lisibles directement sur GitHub.
+Do not edit Mintlify pages marked `Generated from docs/` manually. Generation converts internal Markdown links to Mintlify routes. Existing document filenames and routes are retained to preserve shared links; all user-facing content is English.
 
-## Connecter GitBook
+## Connect GitBook
 
-Le dépôt est préparé pour Git Sync selon la [configuration officielle GitBook](https://gitbook.com/docs/docs-as-code/git-sync/content-configuration).
+The repository includes [official Git Sync configuration](https://gitbook.com/docs/docs-as-code/git-sync/content-configuration).
 
-1. Connecte-toi à ton organisation GitBook et crée ou choisis le site/espace de Gabibou UI.
-2. Configure GitHub Sync sur `Gabibou455/GabibouUI`, branche `main`.
-3. Pour une configuration au niveau du dépôt, conserve le project directory à la racine : `.gitbook.yaml` sélectionne `docs/`. Si l’interface propose une association de répertoire pour un espace, associe cet espace à `docs` : `docs/.gitbook.yaml` sélectionne alors sa racine locale.
-4. Choisis le premier import **GitHub → GitBook**. `docs/SUMMARY.md` définit le sommaire ; `docs/README.md` définit l’accueil. Évite un premier import GitBook → GitHub qui pourrait remplacer la documentation préparée.
-5. Vérifie les pages et l’exemple dans Preview, puis publie le site avec son sous-domaine disponible. Un domaine personnalisé ou un abonnement payant doit être décidé par le propriétaire.
-6. Une fois l’URL publique vérifiée, ajoute-la au README du dépôt. Tant que ce n’est pas fait, les liens pointent vers le guide lisible sur GitHub et le site Mintlify existant.
+1. Sign in to the GitBook organization and select the Gabibou UI site and space.
+2. Configure GitHub Sync for `Gabibou455/GabibouUI`, branch `main`.
+3. For repository-root configuration, keep Project directory at the root: `.gitbook.yaml` selects `docs/`. For a space directory mapping, select `docs`: its own `.gitbook.yaml` selects the local root.
+4. Choose the initial direction **GitHub to GitBook**. `docs/SUMMARY.md` defines navigation and `docs/README.md` is the first page. Avoid an initial GitBook-to-GitHub sync that could overwrite prepared content.
+5. Review pages and code in Preview, then publish with an available GitBook subdomain. The owner must decide on paid subscriptions or custom domains.
+6. After verifying the public GitBook URL, add it to the repository README. Until then, links use the readable GitHub guide and existing Mintlify site.
 
-La création des fichiers de configuration ne crée pas de compte ou de site GitBook et ne prouve pas qu’une synchronisation ou une publication ait eu lieu.
+Configuration files alone do not create an account, connect Git Sync or publish a GitBook site. A URL-based import was performed during migration, but its page order and external links require review before publication. Prefer Git Sync from the canonical Markdown for the final site.

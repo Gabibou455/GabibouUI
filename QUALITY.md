@@ -1,5 +1,9 @@
 # Quality status: 1.5.0-rc.26
 
+## English documentation update — 2026-11-05
+
+The primary 12-page guide, navigation, generated option/icon references and downloadable complete menu are now in English. Existing filenames and routes are retained for link compatibility. Validation passed for all 31 hosted MDX pages, all canonical/navigation links and fragments, literal snippet API/icon names, and compilation of all 31 current Luau code blocks. These are documentation checks; native Roblox execution was not performed. Library runtime source is unchanged.
+
 ## Documentation update — 2026-11-05
 
 The primary French guide has 12 GitBook-compatible Markdown pages. The same content generates 12 pages in the existing Mintlify documentation, whose full navigation retains 31 pages including specialist material in an Advanced tab. Default option tables and the 96-icon catalogue are generated from production source declarations.

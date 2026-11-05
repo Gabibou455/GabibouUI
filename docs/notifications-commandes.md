@@ -1,28 +1,25 @@
-# Notifications et commandes
+# Notifications and commands
 
-Ces blocs utilisent le `window` et le `tab` créés dans [Démarrer](demarrer.md).
+These examples use the `window` and `tab` from [Getting started](demarrer.md).
 
-## Afficher un message
+## Show a message
 
 ```lua
 window:Notify({
-    Title = "Enregistré",
-    Content = "Tes réglages ont été appliqués.",
-    Kind = "success",
-    Duration = 4,
+    Title = "Saved", Content = "Your settings have been applied.",
+    Kind = "success", Duration = 4,
 })
 ```
 
-`Kind` accepte `info`, `success`, `warning` et `error`. `Duration` est en secondes. La méthode renvoie une notification disposant de `Dismiss()` et `Destroy()`.
+Kinds: `info`, `success`, `warning`, `error`. Duration is in seconds. The returned notification has `Dismiss()` and `Destroy()`.
 
-## Demander une confirmation
+## Ask for confirmation
 
 ```lua
-tab:Button("Réinitialiser", function()
+tab:Button("Reset", function()
     window:Confirm({
-        Title = "Réinitialiser le volume ?",
-        Content = "Le volume reviendra à 50.",
-        ConfirmText = "Réinitialiser",
+        Title = "Reset volume?", Content = "Volume will return to 50.",
+        ConfirmText = "Reset",
         Callback = function()
             local volume = window:Get("volume")
             if volume then volume:Set(50, true) end
@@ -31,28 +28,24 @@ tab:Button("Réinitialiser", function()
 end)
 ```
 
-La callback ne s’exécute qu’après confirmation. Annuler ne la lance pas. `Confirm` renvoie `false` si une autre confirmation est déjà ouverte.
+The callback runs only after confirmation. Cancel does not run it. `Confirm` returns `false` if another confirmation is open.
 
-## Ajouter une commande recherchable
+## Register a searchable command
 
 ```lua
 window:Command({
-    Id = "show_status",
-    Title = "Afficher le statut",
-    Keywords = {"status", "info"},
-    Icon = "info",
+    Id = "show_status", Title = "Show status", Keywords = {"status", "info"}, Icon = "info",
     Callback = function()
-        window:Notify({Title = "Interface prête", Kind = "success"})
+        window:Notify({Title = "Interface ready", Kind = "success"})
     end,
 })
-
-tab:Button("Ouvrir les commandes", function()
+tab:Button("Open commands", function()
     window:OpenCommands()
 end)
 ```
 
-Le bouton permet d’ouvrir la palette au toucher. Sur ordinateur, `Ctrl+K` tente de l’ouvrir ; l’environnement peut intercepter ce raccourci. Utilise les flèches et Entrée, ou active une commande à la souris/au toucher. `window:CloseCommands()` ferme la palette et `window:RemoveCommand("show_status")` retire la commande.
+Keep the visible button for touch users. On desktop, `Ctrl+K` attempts to open the palette; your environment may intercept it. Use arrows and Enter, mouse or touch to activate results. `CloseCommands()` closes the palette; `RemoveCommand("show_status")` removes a command.
 
-## Proposer un lien Discord
+## Offer a Discord link
 
-`window:PromptDiscord(urlOrOptions)` ouvre le dialogue d’invitation pour l’URL que tu fournis. Tu peux aussi passer `DiscordPrompt` à la création de la fenêtre. Cette option est désactivée par défaut ; elle ne rejoint jamais un serveur automatiquement. Utilise seulement une invitation réelle de ton projet.
+`window:PromptDiscord(urlOrOptions)` opens an invite dialog using your supplied URL. Alternatively, pass `DiscordPrompt` when creating the window. It is disabled by default and never joins a server automatically. Use a real invitation for your project.

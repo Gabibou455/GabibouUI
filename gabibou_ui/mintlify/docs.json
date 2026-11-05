@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Gabibou UI",
-  "description": "Documentation française de Gabibou UI : exemple complet, composants, mobile et référence API.",
+  "description": "Gabibou UI documentation: a complete example, controls, mobile layouts and API reference.",
   "colors": {
     "primary": "#737373",
     "light": "#D4D4D8",
@@ -25,7 +25,7 @@
         "tab": "Guide",
         "groups": [
           {
-            "group": "Commencer",
+            "group": "Get started",
             "pages": [
               "index",
               "getting-started/quickstart",
@@ -33,7 +33,7 @@
             ]
           },
           {
-            "group": "Construire son interface",
+            "group": "Build your interface",
             "pages": [
               "customization/controls",
               "customization/appearance-and-layout",
@@ -46,7 +46,7 @@
         ]
       },
       {
-        "tab": "Référence",
+        "tab": "Reference",
         "pages": [
           "reference/api",
           "reference/customization",
@@ -54,10 +54,10 @@
         ]
       },
       {
-        "tab": "Avancé",
+        "tab": "Advanced",
         "groups": [
           {
-            "group": "Installation et design",
+            "group": "Installation and design",
             "pages": [
               "getting-started/installation",
               "customization/design-your-interface",
@@ -65,7 +65,7 @@
             ]
           },
           {
-            "group": "Flux spécialisés",
+            "group": "Specialized workflows",
             "pages": [
               "customization/commands-and-presets",
               "customization/loading-screens",
@@ -76,7 +76,7 @@
             ]
           },
           {
-            "group": "Exemples détaillés",
+            "group": "Detailed examples",
             "pages": [
               "examples/loading",
               "examples/discord-prompt",
@@ -88,7 +88,7 @@
             ]
           },
           {
-            "group": "IA et vérification",
+            "group": "AI and verification",
             "pages": [
               "getting-started/use-with-ai",
               "ai/agent-guide",

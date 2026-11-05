@@ -1,17 +1,17 @@
-# Exemple complet à copier
+# Complete example to copy
 
-Ce menu règle les ombres et la luminosité du client Roblox, change le thème de la fenêtre et propose une réinitialisation, des commandes, des profils et un éditeur d’apparence.
+This menu adjusts local Roblox shadows and brightness, changes the window theme and includes reset, commands, profiles and an appearance editor.
 
-**Studio :** installe `ReplicatedStorage.GabibouUI` comme indiqué dans [Démarrer](demarrer.md), puis copie tout le bloc dans un LocalScript sous `StarterPlayerScripts`. Lance Play.
+**Studio:** install `ReplicatedStorage.GabibouUI` using [Getting started](demarrer.md), then paste the entire block into a LocalScript under `StarterPlayerScripts`. Start Play.
 
-**Client compatible :** remplace la ligne `require` par la ligne de chargement distante fournie en commentaire. Ne conserve qu’une seule déclaration de `UI`.
+**Compatible client:** replace the `require` line with the remote loader in the comments. Keep only one `UI` declaration.
 
 <!-- example:menu-complet -->
 ```lua
--- Studio : ModuleScript GabibouUI dans ReplicatedStorage,
--- puis ce code dans un LocalScript sous StarterPlayerScripts.
+-- Studio: put the GabibouUI ModuleScript in ReplicatedStorage,
+-- then put this code in a LocalScript under StarterPlayerScripts.
 local UI = require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
--- Client compatible : remplace uniquement le require ci-dessus par :
+-- Compatible client: replace only the require above with:
 -- local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
 
 local Lighting = game:GetService("Lighting")
@@ -21,7 +21,7 @@ local defaults = {
     theme = "Graphite",
 }
 
-local window = UI:CreateWindow("Mon menu", {
+local window = UI:CreateWindow("My menu", {
     Id = "GabibouQuickstart",
     Design = "Atelier",
     Theme = defaults.theme,
@@ -29,14 +29,14 @@ local window = UI:CreateWindow("Mon menu", {
     Layout = {MobileTabPosition = "Bottom"},
 })
 
-local tab = window:Tab("Reglages", "settings")
-local graphics = tab:Section("Affichage du jeu")
+local tab = window:Tab("Settings", "settings")
+local graphics = tab:Section("Game display")
 
-graphics:Toggle("Ombres", {Id = "shadows", Value = defaults.shadows}, function(enabled)
+graphics:Toggle("Shadows", {Id = "shadows", Value = defaults.shadows}, function(enabled)
     Lighting.GlobalShadows = enabled
 end)
 
-graphics:Slider("Luminosite", {
+graphics:Slider("Brightness", {
     Id = "brightness", Min = 0, Max = 5, Step = 0.1, Value = defaults.brightness,
 }, function(value)
     Lighting.Brightness = value
@@ -48,14 +48,14 @@ tab:Dropdown("Theme", {
     window:SetTheme(theme)
 end)
 
-tab:Button("Reinitialiser les reglages", {Text = "Reinitialiser", Variant = "Secondary"}, function()
+tab:Button("Reset settings", {Text = "Reset", Variant = "Secondary"}, function()
     window:SetValues(defaults, true)
-    window:Notify({Title = "Reglages reinitialises", Kind = "success"})
+    window:Notify({Title = "Settings reset", Kind = "success"})
 end)
 
--- L'editeur de profils restaure les champs sans lancer leurs callbacks.
--- Ce bouton applique explicitement les valeurs affichees au jeu.
-tab:Button("Appliquer les valeurs affichees", {Text = "Appliquer"}, function()
+-- The profile editor restores controls without running callbacks.
+-- Apply displayed values to the game explicitly.
+tab:Button("Apply displayed values", {Text = "Apply"}, function()
     local values = window:GetValues()
     Lighting.GlobalShadows = values.shadows
     Lighting.Brightness = values.brightness
@@ -63,30 +63,30 @@ tab:Button("Appliquer les valeurs affichees", {Text = "Appliquer"}, function()
 end)
 
 window:Command({
-    Id = "status", Title = "Afficher le statut", Icon = "info",
+    Id = "status", Title = "Show status", Icon = "info",
     Callback = function()
-        window:Notify({Title = "Interface prete", Content = "Version " .. UI.Version})
+        window:Notify({Title = "Interface ready", Content = "Version " .. UI.Version})
     end,
 })
 
-tab:Button("Commandes", {Text = "Ouvrir"}, function()
+tab:Button("Commands", {Text = "Open"}, function()
     window:OpenCommands()
 end)
 
-window:Presets({Title = "Profils"})
-window:Appearance({Title = "Apparence"})
+window:Presets({Title = "Profiles"})
+window:Appearance({Title = "Appearance"})
 ```
 <!-- /example:menu-complet -->
 
-## Ce que tu peux essayer
+## Try it
 
-1. Change **Ombres** ou **Luminosite** : l’affichage du jeu change sur ton client.
-2. Choisis un thème : l’interface change de couleur.
-3. Presse **Reinitialiser** : les réglages reviennent aux valeurs relevées au démarrage.
-4. Ouvre **Commandes**, puis **Afficher le statut** : une notification affiche la version chargée.
-5. Enregistre un profil dans **Profils**, change des réglages, puis recharge-le. L’éditeur restaure les champs silencieusement : retourne dans **Reglages** et presse **Appliquer** pour envoyer ces valeurs aux propriétés du jeu.
-6. Ouvre **Apparence** pour modifier le style du menu.
+1. Change Shadows or Brightness: your local game view changes.
+2. Choose a theme: the interface changes color.
+3. Press Reset: settings return to their startup values.
+4. Open Commands, then Show status: a notification displays the loaded version.
+5. Save a profile in Profiles, change settings, then load it. The editor restores fields silently: return to Settings and press Apply to send the displayed values to game properties.
+6. Open Appearance to customize the menu.
 
-Les profils de cet exemple restent en mémoire pendant la vie de la fenêtre. Les changements graphiques sont locaux. Pour les garder après destruction de la fenêtre ou fermeture du jeu, ajoute ton stockage comme décrit dans [Valeurs et profils](valeurs-profils.md).
+Profiles remain in memory for the window's lifetime; graphics changes are local. To persist profiles across restarts, see [Values and profiles](valeurs-profils.md).
 
-[Télécharger le LocalScript](https://github.com/Gabibou455/GabibouUI/blob/main/docs/examples/menu-complet.luau).
+[Download the LocalScript](https://github.com/Gabibou455/GabibouUI/blob/main/docs/examples/menu-complet.luau).

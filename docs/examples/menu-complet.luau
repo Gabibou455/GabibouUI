@@ -1,7 +1,7 @@
--- Studio : ModuleScript GabibouUI dans ReplicatedStorage,
--- puis ce code dans un LocalScript sous StarterPlayerScripts.
+-- Studio: put the GabibouUI ModuleScript in ReplicatedStorage,
+-- then put this code in a LocalScript under StarterPlayerScripts.
 local UI = require(game:GetService("ReplicatedStorage"):WaitForChild("GabibouUI"))
--- Client compatible : remplace uniquement le require ci-dessus par :
+-- Compatible client: replace only the require above with:
 -- local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Gabibou455/GabibouUI/main/gabibou_ui.luau"))()
 
 local Lighting = game:GetService("Lighting")
@@ -11,7 +11,7 @@ local defaults = {
     theme = "Graphite",
 }
 
-local window = UI:CreateWindow("Mon menu", {
+local window = UI:CreateWindow("My menu", {
     Id = "GabibouQuickstart",
     Design = "Atelier",
     Theme = defaults.theme,
@@ -19,14 +19,14 @@ local window = UI:CreateWindow("Mon menu", {
     Layout = {MobileTabPosition = "Bottom"},
 })
 
-local tab = window:Tab("Reglages", "settings")
-local graphics = tab:Section("Affichage du jeu")
+local tab = window:Tab("Settings", "settings")
+local graphics = tab:Section("Game display")
 
-graphics:Toggle("Ombres", {Id = "shadows", Value = defaults.shadows}, function(enabled)
+graphics:Toggle("Shadows", {Id = "shadows", Value = defaults.shadows}, function(enabled)
     Lighting.GlobalShadows = enabled
 end)
 
-graphics:Slider("Luminosite", {
+graphics:Slider("Brightness", {
     Id = "brightness", Min = 0, Max = 5, Step = 0.1, Value = defaults.brightness,
 }, function(value)
     Lighting.Brightness = value
@@ -38,14 +38,14 @@ tab:Dropdown("Theme", {
     window:SetTheme(theme)
 end)
 
-tab:Button("Reinitialiser les reglages", {Text = "Reinitialiser", Variant = "Secondary"}, function()
+tab:Button("Reset settings", {Text = "Reset", Variant = "Secondary"}, function()
     window:SetValues(defaults, true)
-    window:Notify({Title = "Reglages reinitialises", Kind = "success"})
+    window:Notify({Title = "Settings reset", Kind = "success"})
 end)
 
--- L'editeur de profils restaure les champs sans lancer leurs callbacks.
--- Ce bouton applique explicitement les valeurs affichees au jeu.
-tab:Button("Appliquer les valeurs affichees", {Text = "Appliquer"}, function()
+-- The profile editor restores controls without running callbacks.
+-- Apply displayed values to the game explicitly.
+tab:Button("Apply displayed values", {Text = "Apply"}, function()
     local values = window:GetValues()
     Lighting.GlobalShadows = values.shadows
     Lighting.Brightness = values.brightness
@@ -53,15 +53,15 @@ tab:Button("Appliquer les valeurs affichees", {Text = "Appliquer"}, function()
 end)
 
 window:Command({
-    Id = "status", Title = "Afficher le statut", Icon = "info",
+    Id = "status", Title = "Show status", Icon = "info",
     Callback = function()
-        window:Notify({Title = "Interface prete", Content = "Version " .. UI.Version})
+        window:Notify({Title = "Interface ready", Content = "Version " .. UI.Version})
     end,
 })
 
-tab:Button("Commandes", {Text = "Ouvrir"}, function()
+tab:Button("Commands", {Text = "Open"}, function()
     window:OpenCommands()
 end)
 
-window:Presets({Title = "Profils"})
-window:Appearance({Title = "Apparence"})
+window:Presets({Title = "Profiles"})
+window:Appearance({Title = "Appearance"})

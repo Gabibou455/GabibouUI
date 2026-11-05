@@ -1,17 +1,17 @@
-# Catalogue des icônes
+# Icon catalogue
 
-96 dessins intégrés, utilisables par nom ou ID. Ce sont des IDs internes Gabibou UI, pas des IDs d’images Roblox. Les dessins intégrés ne nécessitent aucun téléchargement d’image.
+96 built-in drawings, usable by name or ID. These are internal Gabibou UI IDs, not Roblox image asset IDs. Built-in drawings require no image downloads.
 
 ```lua
-local tab = window:Tab("Accueil", "home")
-tab:Button("Actualiser", {Icon = "refresh", IconVariant = "Duotone"}, function()
-    print("Actualisation")
+local tab = window:Tab("Home", "home")
+tab:Button("Refresh", {Icon = "refresh", IconVariant = "Duotone"}, function()
+    print("Refresh")
 end)
 ```
 
-Ce bloc utilise un `window` existant. Les variantes sont `Outline` (défaut), `Soft` et `Duotone`. Les noms sont sensibles à la casse.
+This block uses an existing `window`. Variants are `Outline` (default), `Soft` and `Duotone`. Names are case-sensitive.
 
-| ID | Nom |
+| ID | Name |
 |---:|---|
 | 1 | `home` |
 | 2 | `sliders` |
@@ -110,4 +110,4 @@ Ce bloc utilise un `window` existant. Les variantes sont `Outline` (défaut), `S
 | 95 | `sword` |
 | 96 | `flag` |
 
-`UI:GetIconId("home")` renvoie 1 ; `UI:GetIconName(1)` renvoie `home`. Les dessins personnalisés enregistrés avec `RegisterIcon` obtiennent des IDs à partir de 1000. Pour prévisualiser les fichiers PNG/SVG hors ligne, télécharge l’archive du projet puis ouvre `GabibouUI_Icons/index.html`.
+`UI:GetIconId("home")` returns 1; `UI:GetIconName(1)` returns `home`. Custom drawings registered with `RegisterIcon` receive IDs starting at 1000. For offline PNG/SVG previews, download the project archive and open `GabibouUI_Icons/index.html`.

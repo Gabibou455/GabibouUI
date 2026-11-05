@@ -1,36 +1,34 @@
 ---
-title: "Apparence et mobile"
-description: "Guide pratique Gabibou UI : apparence et mobile"
+title: "Appearance and mobile"
+description: "Practical Gabibou UI guide: appearance and mobile"
 ---
 
 {/* Generated from docs/apparence-mobile.md by sync_docs.cjs. */}
 
-## Choisir un design
+## Choose a design
 
-Passe les options lors de la création de ta fenêtre :
+Replace your window creation with:
 
 ```lua
-local window = UI:CreateWindow("Mon menu", {
-    Design = "Atelier",
-    Width = 800,
-    Height = 590,
+local window = UI:CreateWindow("My menu", {
+    Design = "Atelier", Width = 800, Height = 590,
     Responsive = {TouchTarget = 48, LandscapeHeight = 500},
     Layout = {MobileTabPosition = "Bottom"},
 })
 ```
 
-Ce bloc remplace la création de `window` dans ton script ; ajoute ensuite tes onglets et composants.
+Then add your tabs and controls.
 
-| Design | Aspect | Navigation |
+| Design | Appearance | Navigation |
 |---|---|---|
-| `Studio` | Graphite, espacement confortable | Gauche, `Soft` |
-| `Minimal` | Graphite, compact, angles nets | Gauche, `Classic` |
-| `Command` | Presque noir, espacé | Haut, `Pill` |
-| `Atelier` | Monochrome, confortable | Gauche, `Rail` |
+| `Studio` | Graphite, comfortable | Left, `Soft` |
+| `Minimal` | Graphite, compact, sharp | Left, `Classic` |
+| `Command` | Near-black, spacious | Top, `Pill` |
+| `Atelier` | Monochrome, comfortable | Left, `Rail` |
 
-`Theme`, `Style`, `Layout` et `Navigation` explicites prennent le dessus sur le preset. Un design plus précis s’écrit par exemple `Design = {Preset = "Atelier", Accent = Color3.fromRGB(120, 184, 255), Radius = 12}`.
+Explicit `Theme`, `Style`, `Layout` and `Navigation` override the preset. A custom schema can use `Design = {Preset = "Atelier", Accent = Color3.fromRGB(120, 184, 255), Radius = 12}`.
 
-## Modifier une fenêtre existante
+## Update an existing window
 
 ```lua
 window:SetTheme("Aurora")
@@ -40,42 +38,41 @@ window:SetNavigation({Variant = "Rail", IconVariant = "Outline"})
 window:SetReducedMotion(true)
 ```
 
-Thèmes disponibles : `Graphite`, `Aurora`, `Ember`. Variantes de navigation : `Classic`, `Soft`, `Pill`, `Rail`.
+Themes: `Graphite`, `Aurora`, `Ember`. Navigation: `Classic`, `Soft`, `Pill`, `Rail`.
 
-Pour laisser le joueur choisir son apparence :
+To let players customize their interface:
 
 ```lua
-window:Appearance({Title = "Apparence"})
+window:Appearance({Title = "Appearance"})
 ```
 
-Cela ajoute un onglet d’édition. Ses réglages sont exclus des profils de l’application.
+This adds an editor tab whose settings are excluded from application profiles.
 
-## Comportement mobile
+## Mobile behavior
 
-La fenêtre tient compte de la zone sûre et du clavier. Les champs larges passent sous leurs titres ; les toggles restent à côté du texte si la largeur le permet. Les onglets deviennent horizontaux sur une fenêtre étroite ou un téléphone tactile en paysage.
+The window accounts for safe insets and the keyboard. Wide inputs stack below their labels; toggles stay inline when room permits. Narrow windows and short touch landscapes use horizontal tabs.
 
-| Option `Responsive` | Défaut | Plage |
+| Responsive option | Default | Range |
 |---|---:|---|
-| `Breakpoint` | 620 | 320–1000 px : largeur de fenêtre sous laquelle utiliser le mode mobile |
-| `TouchTarget` | 44 | 44–72 px : taille minimale des contrôles concernés |
-| `Margin` | 12 | 4–40 px : marge autour de la fenêtre |
-| `LandscapeHeight` | 500 | 0–700 px : hauteur sûre maximale déclenchant le mode mobile en paysage tactile ; 0 désactive cette règle |
+| `Breakpoint` | 620 | 320-1000 px: window width below which mobile layout applies |
+| `TouchTarget` | 44 | 44-72 px: minimum size of affected controls |
+| `Margin` | 12 | 4-40 px: outer margin |
+| `LandscapeHeight` | 500 | 0-700 px: maximum safe height selecting mobile layout on a touch landscape; 0 disables this rule |
 
-Le classement paysage utilise l’écran avant l’ouverture du clavier : le clavier d’une tablette ne la transforme pas en téléphone. Après rotation ou changement de clavier, une fenêtre déplacée hors écran revient dans la zone visible.
+Landscape classification uses the safe screen before keyboard occlusion. A tablet keyboard does not classify the tablet as a phone. Rotation and keyboard changes recover a dragged panel inside the visible area.
 
-Sur un écran bas, l’en-tête est réduit et le sous-titre ainsi que le pied de fenêtre sont masqués. La recherche est masquée en mode compact sauf lorsqu’elle garde le focus, et reste masquée lorsque le panneau mesure moins de 260 px de haut. Les onglets restent affichés à partir de 140 px de hauteur de panneau. Le rendu et les gestes sur téléphone physique restent à tester dans ton projet.
+Short layouts reduce the header and hide the subtitle and footer. Compact layouts hide search unless focused; panels below 260 px hide search even when focused. Tabs remain visible from 140 px of panel height. Test native rendering and gestures on physical devices in your project.
 
-## Icônes et logo
+## Icons and branding
 
 ```lua
-local home = window:Tab("Accueil", "home")
-home:Button("Actualiser", {Icon = "refresh", IconVariant = "Duotone"}, function()
-    print("Actualisation")
+local home = window:Tab("Home", "home")
+home:Button("Refresh", {Icon = "refresh", IconVariant = "Duotone"}, function()
+    print("Refresh")
 end)
-
 window:SetBranding({Mode = "Initials", Text = "G", Placement = "TopLeft"})
 ```
 
-Les noms et IDs sont dans le [catalogue](/reference/icon-catalogue). Un ID Gabibou UI n’est pas un ID d’image Roblox. `Mode = "Avatar"` utilise l’avatar ; `Mode = "Image"` nécessite une option `Image` contenant une URI `rbxassetid://` valide.
+See the [icon catalogue](/reference/icon-catalogue). Internal icon IDs are not Roblox image asset IDs. `Mode = "Avatar"` uses an avatar; `Mode = "Image"` requires a valid `Image` URI beginning with `rbxassetid://`.
 
-Les modifications avancées avec `SetPartLayout` imposent tes coordonnées après la disposition automatique : vérifie alors toi-même les petits écrans. Les [valeurs exactes](/reference/customization) permettent de retrouver toutes les options.
+`SetPartLayout` overrides apply after automatic layout, so check your coordinates on small screens. See [exact defaults](/reference/customization) for option tables.

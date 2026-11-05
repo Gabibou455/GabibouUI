@@ -2,7 +2,7 @@
 
 This folder is a self-contained Mintlify documentation root for Gabibou UI. It contains `docs.json` and all MDX pages referenced by its navigation. The pages do not link to source files outside this folder.
 
-The primary French guide is maintained as GitBook-compatible Markdown in `../../docs/`. Run `node gabibou_ui/sync_docs.cjs` from the repository root after editing it. Twelve generated pages share that content with this deployment. Navigation separates the short Guide, Reference and Advanced material; do not edit pages marked `Generated from docs/` directly. See `../../DOCS_PUBLISHING.md` for maintenance and GitBook setup.
+The primary English guide is maintained as GitBook-compatible Markdown in `../../docs/`. Run `node gabibou_ui/sync_docs.cjs` from the repository root after editing it. Twelve generated pages share that content with this deployment. Navigation separates the short Guide, Reference and Advanced material; do not edit pages marked `Generated from docs/` directly. See `../../DOCS_PUBLISHING.md` for maintenance and GitBook setup.
 
 ## Preview locally
 

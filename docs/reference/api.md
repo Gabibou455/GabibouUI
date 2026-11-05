@@ -1,115 +1,127 @@
-# Méthodes de l’API
+# API methods
 
-Cette page sert à retrouver un nom de méthode. Pour construire un menu, commence par [l’exemple complet](../exemple-complet.md). Les tableaux d’[options](options.md) donnent les valeurs par défaut ; le [catalogue](icones.md) liste les icônes.
+This page maps the public API by object. See the [customization reference](options.md) for defaults and ranges and the [icon catalogue](icones.md) for all built-in IDs. Task-specific guides have complete examples: [controls](../composants.md), [values](../valeurs-profils.md), [loading](https://gabibou-ui.mintlify.app/customization/loading-screens), [key systems](https://gabibou-ui.mintlify.app/customization/key-systems), and [events](https://gabibou-ui.mintlify.app/customization/events-and-lifecycle).
 
-## Bibliothèque `UI`
+## Library
 
-| Appel | Résultat ou usage |
+For the short API, use `UI:CreateWindow("My project")`, `window:Tab("Home", "home")`, and `tab:Button("Hello", callback)`. Add an options table after the title when needed; value controls can take a callback after that table. The [controls walkthrough](../composants.md) explains each control with a working example. Full options-table calls remain supported.
+
+Button options include `Text`, `Description`, `Icon`, `IconVariant`, and `Variant`. `Variant` accepts `Primary` (default), `Secondary`, or `Subtle` to set the visual emphasis of an action. See the [button example](../composants.md) for the options-table form.
+
+| Method | Purpose |
 |---|---|
-| `UI:CreateWindow(title, options?)` ou `UI:CreateWindow(options)` | Crée une fenêtre pour ajouter les composants en plusieurs étapes |
-| `UI:Create(spec)` | Crée une fenêtre depuis une table contenant `Tabs`, les contrôles et un éventuel `Loading` |
-| `UI:Launch(spec)` | Retourne une session qui coordonne clé, chargement, étapes et fenêtre |
-| `UI:CreateLoader(options)` | Crée un loader séparé |
-| `UI:CreateKeySystem(options)` | Crée un dialogue de clé ; `Validate(key)` est obligatoire |
-| `UI:KeyProvider(name, options)` | Adapte un SDK fourni en fonction `Validate` |
-| `UI:Design(schemaOrName)` | Renvoie une copie validée d’un design |
-| `UI:RegisterDesign(name, schema)` | Enregistre un design ; refuse un nom existant |
-| `UI:GetDesignNames()` / `UI:UnregisterDesign(name)` | Liste ou retire les designs personnalisés |
-| `UI:SetStyle(options)` / `UI:SetMotion(options)` | Défauts d’apparence et animation des futures fenêtres |
-| `UI:SetLayout(options)` / `UI:SetNotifications(options)` | Défauts de disposition et notifications des futures fenêtres |
-| `UI:DestroyAll()` | Détruit les fenêtres, loaders, gates et sessions de cette instance de bibliothèque |
+| `UI:Create(spec)` | Validate and build a declarative window from root options plus `Tabs` and optional `Loading`. |
+| `UI:CreateWindow(title, options?)` / `UI:CreateWindow(options)` | Create a window for step-by-step construction. |
+| `UI:Design(optionsOrName)` | Validate and clone a design schema or return a fresh copy of a named design. |
+| `UI:RegisterDesign(name, schema)` | Validate and register a reusable custom design schema. |
+| `UI:GetDesignNames()` | Return a fresh list of built-in and registered design names. |
+| `UI:UnregisterDesign(name)` | Remove a registered custom design; built-in presets are protected. |
+| `UI:Launch(spec)` | Coordinate optional key gate, loading, startup steps, and window creation. |
+| `UI:CreateLoader(options)` | Create a standalone loading screen. |
+| `UI:CreateKeySystem(options)` | Create a standalone key-entry gate. |
+| `UI:KeyProvider(name, options)` | Adapt a supported provider SDK or custom validator to the key gate's `Validate(key)` callback. |
+| `UI:DestroyAll()` | Destroy all windows, key gates, loaders, and launch sessions owned by this library instance. |
+| `UI:SetLayout(options)` | Set defaults for future windows. |
+| `UI:SetStyle(options)` / `UI:SetMotion(options)` | Set style and animation defaults for future windows. |
+| `UI:SetNotifications(options)` | Set toast defaults for future windows. |
+| `UI:RegisterComponent(name, builder)` | Register a reusable custom control. |
+| `UI:GetComponentNames()` / `UI:UnregisterComponent(name, expectedBuilder)` | List or remove custom component registrations. |
+| `UI:GetIconNames()` / `UI:GetIconId(name)` / `UI:GetIconName(idOrName)` | Look up built-in and registered icons. |
+| `UI:GetIconCatalogue()` / `UI:GetIconVariants()` | Return the icon catalogue or supported visual variants. |
+| `UI:RegisterIcon(name, builder)` / `UI:UnregisterIcon(name, expectedBuilder)` | Register or safely remove an icon builder. |
+| `UI:Icon(parent, idOrName, options)` | Draw an icon into a parent GUI object. |
 
-## Fenêtre `window`
+## Window creation options
 
-| Appel | Résultat ou usage |
+`CreateWindow` and the root of `Create`/`Launch` accept `Id`, `Title`, `Subtitle`, `Theme`, `Style`, `Motion`, `Branding`, `Layout`, `Notifications`, `Navigation`, `Responsive`, `Position`, `AnchorPoint`, `Width`, `Height`, `ToggleKey`, `ShowWatermark`, `DiscordPrompt`, `ReducedMotion`, `Parent`, `DisplayOrder`, and `Storage`. `DiscordPrompt` is disabled when omitted; setting it to an invite URL or options table opts in to showing the prompt after the window is created. `ShowWatermark` defaults to `true`; set it to `false` to hide the footer name and version while keeping the desktop hide-key hint and other actions. `Create` additionally accepts `Tabs` and `Loading`; `Launch` passes its root `DiscordPrompt` to the window it creates and adds `KeySystem`, `Loading`, `Steps`, `OnReady`, `OnError`, and `OnCancel`.
+
+Window, loader, and key-gate constructors accept `Design` as a schema table or registered design name. Declarative `Create` and `Launch` pass it through to the surfaces they create. `UI:Design(options)` validates and clones an options table; `UI:Design(name)` returns a fresh copy of a built-in or registered schema. Built-in presets are `Studio`, `Minimal`, `Command`, and `Atelier`. Atelier uses a monochrome palette, Comfortable density, Balanced corners, Left tabs, Rail navigation, and `0.08` panel transparency. `RegisterDesign(name, schema)` accepts a schema table, rejects duplicate and built-in names with `false`, and returns `true` when registration succeeds. `GetDesignNames()` returns a fresh list with built-ins first and custom names in registration order. `UnregisterDesign(name)` removes registered names and returns a boolean; built-in names are protected. Names are exact and case-sensitive, valid UTF-8, 1–64 bytes, contain a non-whitespace character, and contain no control characters. Custom schemas use a built-in `Preset`; they cannot inherit from other custom designs. Preset values are starting values; explicit constructor `Theme`, `Style`, `Layout`, and `Navigation` options take precedence. The `Design` schema has `Preset`, `Accent`, `Transparency`, `Radius`, `Density`, `Tabs`, and `Navigation`. See the single-page [Design guide](https://gabibou-ui.mintlify.app/customization/design-your-interface) for exact values and complete examples.
+
+Defaults include `Title = "Gabibou UI"`, `Theme = "Graphite"`, `Width = 800` (clamped to 320–1400), `Height = 590` (clamped to 300–1000), `ToggleKey = Enum.KeyCode.RightControl`, and `DisplayOrder = 90`. The default GUI parent is the local player's `PlayerGui`. `Responsive` defaults are `Breakpoint = 620`, `TouchTarget = 44`, and `Margin = 12`, and `LandscapeHeight = 500`.
+
+`Tabs` is a dense, nonempty array. Each tab needs a nonempty `Title` and accepts `Category` (a category title string), `Icon`, `IconVariant`, `Layout`, `Controls`, and `Sections`. Tabs with the same `Category` title share a heading. Each section has a `Title` and optional `Controls`. Each declarative control requires a unique, nonempty `Id` (maximum 96 characters, without control characters).
+
+## Window methods
+
+| Method | Purpose |
 |---|---|
-| `window:Tab(title, iconOrOptions?)` ou `window:Tab(options)` | Crée un onglet |
-| `window:Category(titleOrOptions)` | Crée ou retrouve une catégorie d’onglets |
-| `window:SelectTab(tab)` | Sélectionne un onglet de cette fenêtre |
-| `window:Get(id)` | Renvoie le contrôle, ou `nil` |
-| `window:GetValues()` / `window:SetValues(values, fireCallbacks?)` | Lit ou applique les valeurs persistantes |
-| `window:SearchFor(query)` | Filtre les contrôles par recherche |
-| `window:Hide()` / `window:Show()` / `window:Toggle()` | Change la visibilité |
-| `window:SetSize(width, height)` | Change les dimensions souhaitées, dans les limites de la bibliothèque |
-| `window:SetPosition(position, anchor?)` | Positionne la fenêtre avec `UDim2` et un éventuel `Vector2` d’ancrage |
-| `window:SetTheme(nameOrColors)` | Change le thème de la fenêtre existante |
-| `window:SetStyle(options)` / `window:SetMotion(options)` | Change son style ou ses animations |
-| `window:SetReducedMotion(enabled)` | Active ou désactive les animations réduites |
-| `window:SetWatermark(enabled)` | Affiche ou masque le nom et la version dans le pied de fenêtre |
-| `window:SetLayout(options)` / `window:SetNavigation(options)` / `window:SetBranding(options)` | Change la disposition, navigation ou le logo |
-| `window:Appearance(options?)` | Ajoute l’onglet d’édition de l’apparence |
-| `window:Notify(options)` | Renvoie une notification avec `Dismiss()` et `Destroy()` |
-| `window:Confirm(options)` | Ouvre une confirmation ; renvoie `false` si une autre est ouverte |
-| `window:SetNotifications(options)` | Change les défauts de ses notifications |
-| `window:PromptDiscord(urlOrOptions)` | Ouvre le dialogue d’invitation ; renvoie succès et éventuelle raison |
-| `window:Command(options)` / `window:RemoveCommand(id)` | Enregistre ou retire une commande |
-| `window:OpenCommands()` / `window:CloseCommands()` | Ouvre ou ferme la palette de commandes |
-| `window:Presets(options?)` | Ajoute l’éditeur de profils |
-| `window:SavePreset(name)` / `window:LoadPreset(name, fireCallbacks?)` | Enregistre ou applique un profil ; renvoie succès et résultat/raison |
-| `window:DeletePreset(name)` / `window:GetPresetNames()` | Supprime ou liste les profils |
-| `window:ExportConfig()` / `window:ImportConfig(json, fireCallbacks?)` | Exporte ou restaure le JSON de configuration |
-| `window:SaveConfig(name)` / `window:LoadConfig(name, fireCallbacks?)` | Utilise l’adaptateur `Storage.Read/Write` fourni à la fenêtre |
-| `window:GetParts()` | Renvoie les instances GUI nommées |
-| `window:SetPartLayout(name, options)` / `window:ResetPartLayout(name)` | Impose ou réinitialise la disposition d’une partie GUI |
-| `window:Animate(instance, properties, options?)` | Anime une instance appartenant à la fenêtre |
-| `window:BindColor(instance, property, token)` | Lie une couleur d’instance à un token du thème |
-| `window:On(name, callback)` / `window:Connect(signal, callback)` | Abonnement à un événement de la lib ou à un signal Roblox |
-| `window:Own(resource)` / `window:OnDestroy(callback)` | Nettoyage de ressources à la destruction |
-| `window:Destroy()` | Détruit la fenêtre et ses ressources |
+| `Tab(title, iconOrOptions?)` / `Tab(options)`, `SelectTab(tab)` | Add or select a tab. |
+| `Category(titleOrOptions)` | Get or create a named tab category. A category options table accepts `Title`; repeated calls for the same title return the same category. |
+| `Appearance(options?)` | Add an optional editor tab for theme, accent, transparency, navigation and motion. Accepts `Title`, an icon name or ID in `Icon`, and an optional control-ID prefix in `Id`. Returns the tab; its controls are nonpersistent. See [the design guide](https://gabibou-ui.mintlify.app/customization/design-your-interface). |
+| `Command(options)`, `RemoveCommand(id)`, `OpenCommands()`, `CloseCommands()` | Register actions and open or close a searchable palette. Registration returns a removable handle. See [Commands and presets](https://gabibou-ui.mintlify.app/customization/commands-and-presets). |
+| `Presets(options?)`, `SavePreset(name)`, `LoadPreset(name, fireCallbacks?)`, `DeletePreset(name)`, `GetPresetNames()` | Add a profiles editor or manage snapshots in code. Session memory is the default; `StorageKey` opts into the window's configured Read/Write adapter. |
+| `SearchFor(query)` | Apply a search query to controls. |
+| `Get(id)`, `GetValues()`, `SetValues(values, fireCallbacks)` | Read controls and persistent values. |
+| `Hide()`, `Show()`, `Toggle()` | Change window visibility. |
+| `SetSize(width, height)`, `SetPosition(position, anchor)` | Set the window dimensions or position. |
+| `SetTheme(value)`, `SetStyle(options)`, `SetMotion(options)`, `SetReducedMotion(enabled)` | Update appearance and managed animation behavior. |
+| `SetWatermark(enabled)` | Show or hide the footer name and library version. |
+| `PromptDiscord(urlOrOptions)` | Immediately open an optional Discord invite prompt; returns `true` if it opens, otherwise `false, reason`. |
+| `SetLayout(options)`, `SetNavigation(options)`, `SetBranding(options)` | Update layout and navigation settings. |
+| `SetNotifications(options)`, `Notify(options)`, `Confirm(options)` | Configure or show feedback UI. |
+| `ExportConfig()`, `ImportConfig(json, fireCallbacks)`, `SaveConfig(name)`, `LoadConfig(name, fireCallbacks)` | Export and restore persistent values. |
+| `GetParts()`, `SetPartLayout(name, options)`, `ResetPartLayout(name)` | Access and reposition named GUI parts. |
+| `Animate(instance, properties, options)`, `BindColor(instance, property, token)` | Manage animations and theme-bound colors. |
+| `On(name, callback)`, `Connect(signal, callback)`, `Own(resource)`, `OnDestroy(callback)` | Subscribe and register owner-scoped cleanup. |
+| `Destroy()` | Release the window and its owned UI resources. |
 
-## Onglets, sections et catégories
+## Category methods
 
-`tab:Section(titleOrOptions)` renvoie une section. Un onglet et une section acceptent `Button`, `Toggle`, `Slider`, `Dropdown`, `Input`, `Keybind`, `ColorPicker`, `Paragraph`, `Custom` et `Add`. Voir [Composants](../composants.md) pour les paramètres.
+`window:Category("General")` and `window:Category({Title = "General"})` get or create a category. `category:Tab(title, iconOrOptions?)` adds a tab to it. A tab can also declare `Category = "General"` in `window:Tab({Title = "Home", Category = "General"})` or in a declarative `Create` tab spec; a matching category is reused or created automatically.
 
-Une catégorie expose `category:Tab(title, iconOrOptions?)`, `category:SetTitle(title)` et `category:Destroy()` ; sa destruction détruit aussi ses onglets.
-
-`tab:SetOrder(order)` et `section:SetOrder(order)` changent l’ordre visuel. `tab:SetLayout(options)` change les options locales de navigation. `SetVisible(enabled)` et `Destroy()` sont aussi disponibles sur ces conteneurs.
-
-## Composant `control`
-
-| Appel | Usage |
+| Method | Purpose |
 |---|---|
-| `control:Get()` | Valeur courante d’un contrôle à valeur |
-| `control:Set(value, fireCallback?)` | Modifie la valeur ; callback seulement si `true` et valeur changée |
-| `control:SetTitle(text)` / `control:SetDescription(text)` | Change le texte |
-| `control:SetEnabled(enabled)` / `control:SetVisible(visible)` | Activation ou visibilité |
-| `control:SetLayout(options)` / `control:SetOrder(order)` | Disposition ou ordre |
-| `control:GetParts()` | Instances GUI exposées par le composant |
-| `control:Animate(properties, options?)` | Anime la racine du composant |
-| `control:On(name, callback)` / `control:Connect(signal, callback)` / `control:Own(resource)` | Événements, signaux et nettoyage |
-| `control:Destroy()` | Retire le composant et libère ses ressources |
+| `Tab(title, iconOrOptions?)` / `Tab(options)` | Add a tab to this category. |
+| `SetTitle(title)` | Rename the category heading. |
+| `Destroy()` | Destroy this category and all of its tabs. |
 
-Le dropdown ajoute `SetOptions(options, value?)`. Le ColorPicker ajoute `GetColor()`. Le Custom ajoute `SetHeight(height)`. Les boutons et paragraphes n’ont pas de valeur persistante à lire avec `Get()` ou modifier avec `Set()`.
+## Control and section methods
 
-## Composants personnalisés
+Create built-in controls with `Toggle`, `Slider`, `Dropdown`, `Input`, `Keybind`, `ColorPicker`, `Button`, `Paragraph`, or `Custom` on a section or tab. `tab:Section({Title = "..."})` creates a section; `section:Add(name, options)` creates a registered component.
 
-```lua
-local custom = tab:Custom({
-    Title = "Mon contenu", Height = 60,
-    Build = function(content)
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.fromScale(1, 1)
-        label.BackgroundTransparency = 1
-        label.Text = "Contenu Roblox personnalisé"
-        label.Parent = content
-    end,
-})
-```
+Controls expose `Get`, `Set(value, fireCallback)`, `SetTitle`, `SetDescription`, `SetVisible`, `SetEnabled`, `SetLayout`, `SetOrder`, `GetParts`, `Animate`, `On`, `Connect`, `Own`, and `Destroy`. Custom controls additionally expose `SetHeight`. `ColorPicker` exposes `GetColor()`.
 
-Ce bloc utilise un `tab` existant. `Build(content, control, window)` reçoit le frame où créer tes instances. Pour réutiliser un composant, enregistre son builder avec `UI:RegisterComponent(name, builder)`, puis crée-le avec `tab:Add(name, options)`. `UI:GetComponentNames()` les liste ; `UI:UnregisterComponent(name, expectedBuilder)` retire un enregistrement.
+## Key gate
 
-## Icônes
+`UI:KeyProvider(name, options)` returns a `Validate(key)` callback for `CreateKeySystem` or `Launch`. Provider names are case-insensitive: `Luarmor`, `Vampauth`, `KeyAuth`, and `Custom`. SDK objects and callbacks are supplied explicitly; this method does not load third-party code. See [provider examples](https://gabibou-ui.mintlify.app/examples/key-providers) for exact option shapes.
 
-`UI:Icon(parent, idOrName, options)` dessine une icône. `GetIconNames`, `GetIconId`, `GetIconName`, `GetIconCatalogue` et `GetIconVariants` lisent le catalogue. `RegisterIcon(name, builder)` et `UnregisterIcon(name, expectedBuilder)` gèrent les dessins personnalisés. Voir [Icônes](icones.md).
+| Provider | Options | Acceptance |
+|---|---|---|
+| `Luarmor` | `{SDK = api, ScriptId = "..."}` | `api.check_key(key)` returns a table whose `code` is exactly `KEY_VALID`. |
+| `Vampauth` | `{SDK = Vampauth, ProjectId = "...", AuthSecret = "...", HWID? = "..."}` | `Vampauth.new({projectId, authSecret, hwid?})` creates a client; `client:Check(key)` returns `true, result` or `false, reason`. |
+| `KeyAuth` | `{Initialize = function() ..., License = function(key, context) ... end}` | Initialization returns `true, context` or `{success = true, context = ...}`; license validation returns a boolean plus result/message or a table with boolean `success`. |
+| `Custom` | `{Validate = function(key) ... end}` | Uses the supplied validator directly. |
 
-## Loader, dialogue de clé et session
+The Luarmor adapter reserves each SDK table for one `ScriptId`: the same table may be reused for that same ID, but a different ID needs a different SDK instance. It also fails closed if `sdk.script_id` changes after the provider is created. Provider errors fail closed and are converted to retryable status messages. KeyAuth initialization is lazy, shared across concurrent checks made through that provider callback, and retried after a failed initialization. Keep the `Validate` function's result contract: `true, result` accepts; `false, message` rejects. A client-side gate is not an authorization boundary; check protected actions on a trusted server.
 
-| Objet | Méthodes publiques |
-|---|---|
-| `loader` | `SetProgress(ratio, status?)`, `SetStatus(text)`, `Update(options)`, `Run(steps)`, `GetParts()`, `SetPartLayout(name, options)`, `ResetPartLayout(name)`, `Own(resource)`, `Complete(status?)`, `Destroy()` |
-| `gate` | `Submit(key)`, `Cancel()`, `Destroy()`, `Update(options)`, `GetParts()`, `SetPartLayout(name, options)`, `ResetPartLayout(name)`, `CopyDiscordLink()`, `GetKey()` |
-| `session` | `Cancel()`, `Destroy()` ; propriétés `Status`, `Window`, `Loader`, `Gate`, `LastError` |
+`UI:CreateKeySystem(options)` requires `Validate(key)` and optionally accepts `OnSuccess(gate, result)`, `OnCancel(gate)`, and `GetKey`. `GetKey` can be an HTTPS URL/string, `{Url, Text, Copy}`, a custom `function(gate)`, or `false` to disable. `gate:GetKey()` runs a single-flight key-link/custom action and returns a success boolean plus optional reason. It exposes `Submit(key)`, `Cancel()`, `Destroy()`, `Update(options)`, `GetParts()`, `SetPartLayout(name, options)`, `ResetPartLayout(name)`, `CopyDiscordLink()`, and `GetKey()`. `GetParts()` includes `CredentialWell`, `GetKeyButton`, `KeyLink`, and `KeyLinkStatus`. Layout methods accept named parts from `GetParts()` except the fixed `Overlay` and `Card`; options are `Position`, `Size`, `AnchorPoint`, and `Visible`. Overrides persist across responsive reflow and `Update`. For parts inside the scroll content, a finite vertical extent is required; moved content expands the scroll area to keep it reachable. Custom positions can overlap other controls. See the [Design guide](https://gabibou-ui.mintlify.app/customization/design-your-interface) for a short example.
 
-`gate:Cancel()` annule une tentative et conserve le dialogue ; `gate:Destroy()` le ferme. Une session `Launch` expose les statuts `WaitingForKey`, `Loading`, `Ready`, `Failed` ou `Destroyed`.
+Default `Logo` is `"Avatar"`; set it to `false` to show `MarkText`, or use an `rbxassetid://` URI. Default `SubmitText` is `Verify key`. Width defaults to 420 px (range 280–600). Automatic card heights are 332 px without Discord/GetKey, 394 px with Discord, 404 px with GetKey, and 462 px with both; `Height` accepts 280–560 px. See [Key systems](https://gabibou-ui.mintlify.app/customization/key-systems) for link behavior, Discord, and validation details.
 
-Les exemples de raccordement sont dans [Chargement et accès](../chargement-acces.md). Pour les SDK de fournisseurs, le stockage et les autres flux spécialisés, les [guides avancés existants](https://github.com/Gabibou455/GabibouUI/tree/main/gabibou_ui/mintlify) restent disponibles dans le dépôt.
+## Discord prompt
+
+`window:PromptDiscord(urlOrOptions)` opens a community invite modal immediately. It accepts a code, `https://discord.gg/{code}`, or `https://discord.com/invite/{code}`; accepted links normalize to `https://discord.gg/{code}`. It returns `true` when opened or `false, reason` when unavailable, already open, or already shown for that invite during this library instance. The root `DiscordPrompt` option opts in to showing it after window creation; `Launch` passes that option to its window.
+
+Options are `Url` (required), `Title`, `Content`, `JoinText`, `ContinueText`, `Copy(url)`, `Open(url)`, and `OncePerSession`. Defaults are `Title = "Join the community"`, `Content = "Join the Gabibou UI community for updates and help."`, `JoinText = "Copy invite"`, `ContinueText = "Not now"`, and `OncePerSession = true`. A supplied `Open` or `Copy` callback runs only after the corresponding user action; callback results of `nil` or `true` signal success. `false` or a thrown error keeps the dialog open and leaves the normalized invite available for manual copying. Without a callback, the existing clipboard function is used when available; in Studio the link remains selectable for manual copying. The modal never opens a browser or joins a server by itself. `OncePerSession` is in-memory only and can be set to `false` to show the same invite again. The fixed modal credit is `Gabibou UI · by Gabibou`, independent of `ShowWatermark`. See [Discord prompt examples](https://gabibou-ui.mintlify.app/examples/discord-prompt) and [Notifications and confirmation](https://gabibou-ui.mintlify.app/customization/notifications).
+
+## Loader
+
+`UI:CreateLoader(options)` exposes `SetProgress`, `SetStatus`, `Update`, `Run`, `GetParts`, `SetPartLayout`, `ResetPartLayout`, `Own`, `Complete`, and `Destroy`. `GetParts()` includes `StatusPanel`, which can be positioned or resized with `SetPartLayout`. Fields include `Progress`, `Status`, `Completed`, `Destroyed`, and `LastError`. See [Loading screens](https://gabibou-ui.mintlify.app/customization/loading-screens) for variant and content customization.
+
+## Launch session
+
+`UI:Launch(spec)` returns a session with `Status`, `LastError`, `Gate`, `Loader`, `Window`, `Cancel()`, and `Destroy()`. Status values are `WaitingForKey`, `Loading`, `Ready`, `Failed`, and `Destroyed`. Callbacks are `OnReady(window, session)`, `OnError(message, session)`, and `OnCancel(session)`.
+
+## Theme tokens and motion fields
+
+Theme names are `Graphite`, `Aurora`, and `Ember`. Theme tokens are `Background`, `Surface`, `Raised`, `Hover`, `Border`, `Text`, `Muted`, `Accent`, `AccentText`, `Success`, and `Danger`.
+
+Style fields are `Font`, `FontBold`, `TextSize`, `DescriptionSize`, `TitleSize`, `WindowRadius`, `SectionRadius`, `ControlRadius`, and `RowPadding`. Motion fields are `Duration`, `Style`, `Direction`, `RepeatCount`, `Reverses`, and `Delay`. See [Appearance and layout](../apparence-mobile.md) for behavior and ranges.
+
+## Configuration limits
+
+- Input length defaults to 120; supported maximum is 4096.
+- Key input defaults to 256 UTF-8 characters; supported maximum is 4096.
+- Persistent configuration JSON is limited to 256 KiB.
+- The library uses no implicit filesystem adapter. Pass `Storage.Read` and `Storage.Write` when saving profiles.
+- Custom interface builders can have side effects that schema validation cannot predict. A failed build cleans up the new partial window but does not restore a same-ID window that was already replaced.
